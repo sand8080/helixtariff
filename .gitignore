@@ -1,0 +1,12 @@
+*.pyc
+.project
+.settings
+.pydevproject
+build-stamp
+configure-stamp
+dist
+debian/files
+debian/python-helixtariff.postrm.debhelper
+debian/python-helixtariff.debhelper.log
+debian/python-helixtariff.substvars
+debian/python-helixtariff
