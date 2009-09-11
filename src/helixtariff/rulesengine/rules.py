@@ -1,18 +1,3 @@
-class Condition(object):
-    def comply(self, req_context):
-        pass
-
-class ConcreteCond(object):
-    def __init__(self, client_id):
-        self.client_id = client_id
-
-    def comply(self, req_context):
-        client = getattr(req_context, 'client', None)
-        if client:
-            return client.id == self.client_id
-        else:
-            return False
-
 class Rule(object):
     def __init__(self, cond, action):
         self.cond = cond
