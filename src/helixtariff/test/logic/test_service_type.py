@@ -1,7 +1,8 @@
 import unittest
 
-from helixtariff.test.db_based_test import DbBasedTestCase
+from helixcore.server.exceptions import DataIntegrityError
 
+from helixtariff.test.db_based_test import DbBasedTestCase
 from helixtariff.conf.db import transaction
 from helixtariff.logic.actions import handle_action
 from helixtariff.logic.selector import get_service_type_by_name
@@ -32,6 +33,11 @@ class ServiceTypeTestCase(DbBasedTestCase):
         t_new = self.get_service_type(new_name)
         self.assertEqual(t_old.id, t_new.id)
         self.assertEquals(t_new.name, new_name)
+
+    def test_delete_serveice_type(self):
+        self.test_add_serveice_type()
+        handle_action('delete_service_type', self.add_data)
+        self.assertRaises(DataIntegrityError, self.get_service_type, self.add_data['name'])
 
 
 if __name__ == '__main__':
