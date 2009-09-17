@@ -1,4 +1,5 @@
-import logging
+#import logging
+import logging.handlers
 from settings import log_filename, log_level, log_console, log_format
 
 def init_logger():

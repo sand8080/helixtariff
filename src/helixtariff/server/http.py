@@ -1,15 +1,14 @@
-
 from eventlet import api, httpd, util
 import logging
 
-from helixbilling.conf.settings import server_http_addr, server_http_port
+from helixcore.server.api import Api as HelixApi
+from helixcore.server.response import response_error, response_app_error
+from helixcore.server.errors import RequestProcessingError
 
-from helixcore.server.api.api import Api as HelixApi
-from helixbilling.logic.actions import handle_action
-from helixbilling.logic.response import response_error, response_app_error
-from helixbilling.error.errors import RequestProcessingError
-from helixbilling.conf.log import logger
-from helixbilling.validator.validator import validate
+from helixtariff.conf.settings import server_http_addr, server_http_port
+from helixtariff.logic.actions import handle_action
+from helixtariff.conf.log import logger
+from helixtariff.validator.validator import validate
 
 util.wrap_socket_with_coroutine_socket()
 
@@ -18,7 +17,6 @@ class Handler(object):
         self.helix_api = HelixApi(validate)
 
     def handle_request(self, req):
-
         raw_data = req.read_body()
         logger.info('HTTP req from %s: %s' % (str(req.socket().getpeername()), raw_data))
 
@@ -45,10 +43,10 @@ class Handler(object):
         'Convert obj to bytes'
         req.write(str(obj))
 
-def run():
-    class ServerLog(object):
-        def write(self, s, l=0): #IGNORE:W0613
-            logger.info('server: %s' % s)
+class ServerLog(object):
+    def write(self, s, l=0): #IGNORE:W0613
+        logger.info('server: %s' % s)
 
+def run():
     #blocking
     httpd.server(api.tcp_listener((server_http_addr, server_http_port)), Handler(), max_size=5000, log=ServerLog())

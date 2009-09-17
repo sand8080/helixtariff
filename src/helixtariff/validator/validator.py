@@ -25,7 +25,8 @@ iso_datetime_validator = re.compile(r"""
 
 PING = {
 }
-# --- currency ---
+
+# --- service type ---
 ADD_SERVICE_TYPE = {
     'name': Text(),
 }
@@ -39,10 +40,26 @@ DELETE_SERVICE_TYPE = {
     'name': Text(),
 }
 
+# --- service set descr ---
+ADD_SERVICE_SET_DESCR = {
+    'name': Text(),
+}
+
+MODIFY_SERVICE_SET_DESCR = {
+    'name': Text(),
+    'new_name': Text(),
+}
+
+DELETE_SERVICE_SET_DESCR = {
+    'name': Text(),
+}
+
+
 action_to_scheme_map = {
-     'add_service_type': Scheme(ADD_SERVICE_TYPE),
-     'modify_service_type': Scheme(MODIFY_SERVICE_TYPE),
-     'delete_service_type': Scheme(DELETE_SERVICE_TYPE),
+    'ping': Scheme(PING),
+    'add_service_type': Scheme(ADD_SERVICE_TYPE),
+    'modify_service_type': Scheme(MODIFY_SERVICE_TYPE),
+    'delete_service_type': Scheme(DELETE_SERVICE_TYPE),
 }
 
 class ValidationError(RequestProcessingError):

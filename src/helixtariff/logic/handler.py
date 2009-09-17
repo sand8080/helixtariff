@@ -12,6 +12,9 @@ class Handler(object):
     '''
     Handles all API actions. Method names are called like actions.
     '''
+    def ping(self, data): #IGNORE:W0613
+        return response_ok()
+
     # server_type
     @transaction()
     def add_service_type(self, data, curs=None):

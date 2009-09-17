@@ -2,6 +2,7 @@
 .project
 .settings
 .pydevproject
+log
 build-stamp
 configure-stamp
 dist
