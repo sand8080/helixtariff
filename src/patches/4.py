@@ -1,4 +1,4 @@
-def apply(curs):
+def apply(curs): #IGNORE:W0622
     print 'Creating table service_set'
     curs.execute(
     '''
