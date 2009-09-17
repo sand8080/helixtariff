@@ -1,10 +1,9 @@
-import helixcore.mapping.actions as actions
+from helixcore.mapping import actions
 from helixcore.db.cond import Eq
 from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.server.exceptions import DataIntegrityError
 
 from helixtariff.domain.objects import ServiceType, ServiceSetDescr
-
 
 def get_obj_by_field(curs, cls, field, value, for_update):
     try:

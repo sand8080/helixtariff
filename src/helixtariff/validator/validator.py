@@ -27,18 +27,18 @@ PING = {
 }
 
 # --- service type ---
-ADD_SERVICE_TYPE = {
+SERVICE_TYPE = {
     'name': Text(),
 }
+
+ADD_SERVICE_TYPE = SERVICE_TYPE
 
 MODIFY_SERVICE_TYPE = {
     'name': Text(),
     'new_name': Text(),
 }
 
-DELETE_SERVICE_TYPE = {
-    'name': Text(),
-}
+DELETE_SERVICE_TYPE = SERVICE_TYPE
 
 # --- service set descr ---
 ADD_SERVICE_SET_DESCR = {
@@ -54,12 +54,34 @@ DELETE_SERVICE_SET_DESCR = {
     'name': Text(),
 }
 
+# --- service set ---
+ADD_TO_SERVICE_SET = {
+    'name': Text(),
+    'types': [SERVICE_TYPE],
+}
+
+#MODIFY_SERVICE_SET_DESCR = {
+#    'name': Text(),
+#    'new_name': Text(),
+#}
+#
+#DELETE_SERVICE_SET_DESCR = {
+#    'name': Text(),
+#}
+
 
 action_to_scheme_map = {
     'ping': Scheme(PING),
+
     'add_service_type': Scheme(ADD_SERVICE_TYPE),
     'modify_service_type': Scheme(MODIFY_SERVICE_TYPE),
     'delete_service_type': Scheme(DELETE_SERVICE_TYPE),
+
+    'add_service_set_descr': Scheme(ADD_SERVICE_SET_DESCR),
+    'modify_service_set_descr': Scheme(MODIFY_SERVICE_SET_DESCR),
+    'delete_service_set_descr': Scheme(DELETE_SERVICE_SET_DESCR),
+
+    'add_to_service_set': Scheme(ADD_TO_SERVICE_SET),
 }
 
 class ValidationError(RequestProcessingError):
