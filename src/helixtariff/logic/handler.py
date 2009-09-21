@@ -1,5 +1,5 @@
 from helixcore.mapping.actions import insert, update, delete, get_list
-from helixcore.db.cond import In
+from helixcore.db.sql import In
 #from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.server.response import response_ok
 #from helixcore.server.exceptions import ActionNotAllowedError, DataIntegrityError
@@ -60,7 +60,7 @@ class Handler(object):
         descr = get_service_set_descr_by_name(curs, data['name'])
         types =  get_list(curs, ServiceType, In('name', data['types']))
         for t in types:
-            s = ServiceSet({'service_type_id': t.id, 'service_set_descr_id': descr.id})
+            s = ServiceSet(**{'service_type_id': t.id, 'service_set_descr_id': descr.id})
             insert(curs, s)
         return response_ok()
 

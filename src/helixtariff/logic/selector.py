@@ -1,5 +1,5 @@
 from helixcore.mapping import actions
-from helixcore.db.sql import Eq, Select
+from helixcore.db.sql import Eq, Scoped, Select, In
 from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.server.exceptions import DataIntegrityError
 
@@ -18,5 +18,9 @@ def get_service_type_by_name(curs, name, for_update=False):
 def get_service_set_descr_by_name(curs, name, for_update=False):
     return get_obj_by_field(curs, ServiceSetDescr, 'name', name, for_update)
 
-def get_service_set_by_descr_name(curs, name, for_update=False):
-    pass
+def get_service_types_by_descr_name(curs, name, for_update=False):
+    sel_descr_id = Select(ServiceSetDescr.table, columns='id', cond=Eq('name', name))
+    cond_descr_id = Eq('service_set_descr_id', Scoped(sel_descr_id))
+    sel_type_ids = Select(ServiceSet.table, columns='service_type_id', cond=cond_descr_id)
+    cond_type_in = In('id', Scoped(sel_type_ids))
+    return actions.get_list(curs, ServiceType, cond_type_in, order_by='id', for_update=for_update)
