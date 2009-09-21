@@ -16,7 +16,8 @@ class Eq(BinaryOperation):
         return self.lh == self.rh
 
 
-class DateEq():
+#class DateEq():
+#    pass
 
 #class MoreEq(Leaf):
 #    """

@@ -15,14 +15,14 @@ class ServiceSetDescrTestCase(DbBasedTestCase):
     def get_service_set_descr(self, name, curs=None):
         return get_service_set_descr_by_name(curs, name)
 
-    def test_add_serveice_set_descr(self):
+    def test_add_service_set_descr(self):
         handle_action('add_service_set_descr', self.add_data)
         t = self.get_service_set_descr(self.add_data['name'])
         self.assertTrue(t.id > 0)
         self.assertEquals(t.name, self.add_data['name'])
 
-    def test_modify_serveice_set_descr(self):
-        self.test_add_serveice_set_descr()
+    def test_modify_service_set_descr(self):
+        self.test_add_service_set_descr()
         old_name = self.add_data['name']
         t_old = self.get_service_set_descr(old_name)
 
@@ -34,8 +34,8 @@ class ServiceSetDescrTestCase(DbBasedTestCase):
         self.assertEqual(t_old.id, t_new.id)
         self.assertEquals(t_new.name, new_name)
 
-    def test_delete_serveice_set_descr(self):
-        self.test_add_serveice_set_descr()
+    def test_delete_service_set_descr(self):
+        self.test_add_service_set_descr()
         handle_action('delete_service_set_descr', self.add_data)
         self.assertRaises(DataIntegrityError, self.get_service_set_descr, self.add_data['name'])
 
