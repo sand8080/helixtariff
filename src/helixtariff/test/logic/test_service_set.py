@@ -36,6 +36,9 @@ class ServiceSetTestCase(DbBasedTestCase):
         for idx, t in enumerate(types):
             self.assertEqual(expected_types_names[idx], t.name)
 
+    def test_add_to_service_set(self):
+        self.add_to_service_set('automatic', ['register ru', 'prolong ru', 'register hn', 'prolong hn'])
+
     def test_delete_from_service_set(self):
         service_set_descr = 'automatic'
         types_names = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
@@ -47,6 +50,15 @@ class ServiceSetTestCase(DbBasedTestCase):
         self.assertEqual(len(expected_names), len(actual_types))
         for idx, t in enumerate(actual_types):
             self.assertEqual(expected_names[idx], t.name)
+
+    def test_delete_service_set(self):
+        service_set_descr = 'automatic'
+        types_names = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
+        self.add_to_service_set(service_set_descr, types_names)
+        handle_action('delete_service_set', {'name': service_set_descr})
+
+        actual_types = self.get_service_types_by_descr_name(service_set_descr)
+        self.assertEqual(0, len(actual_types))
 
 
 if __name__ == '__main__':

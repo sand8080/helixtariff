@@ -82,5 +82,12 @@ class Handler(object):
         cond_and = And(cond_set_descr_id, cond_types_ids)
         query = Delete(ServiceSet.table, cond=cond_and)
         curs.execute(*query.glue())
+        return response_ok()
 
+    @transaction()
+    def delete_service_set(self, data, curs=None):
+        query_set_descr_id = query_builder.select_service_set_descr_id(data['name'])
+        cond_set_descr_id = Eq('service_set_descr_id', Scoped(query_set_descr_id))
+        query = Delete(ServiceSet.table, cond=cond_set_descr_id)
+        curs.execute(*query.glue())
         return response_ok()
