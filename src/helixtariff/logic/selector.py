@@ -1,9 +1,9 @@
 from helixcore.mapping import actions
-from helixcore.db.sql import Eq, Scoped, Select, In
+from helixcore.db.sql import Eq, Scoped, Select, In, And
 from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.server.exceptions import DataIntegrityError
 
-from helixtariff.domain.objects import ServiceType, ServiceSetDescr, ServiceSet
+from helixtariff.domain.objects import ServiceType, ServiceSetDescr, ServiceSet, Tariff
 from helixtariff.logic import query_builder
 
 def get_obj_by_field(curs, cls, field, value, for_update):
@@ -23,3 +23,9 @@ def get_service_types_by_descr_name(curs, name, for_update=False):
     sel_type_ids = Select(ServiceSet.table, columns='service_type_id', cond=cond_descr_id)
     cond_type_in = In('id', Scoped(sel_type_ids))
     return actions.get_list(curs, ServiceType, cond_type_in, order_by='id', for_update=for_update)
+
+def get_tariff(curs, client_id, name, for_update=False):
+    cond_id = Eq('client_id', client_id)
+    cond_name = Eq('name', name)
+    cond = And(cond_id, cond_name)
+    return actions.get(curs, Tariff, cond=cond, for_update=for_update)

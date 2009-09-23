@@ -1,10 +1,6 @@
-from helixcore.validol.validol import Scheme, Text
+from helixcore.validol.validol import Scheme, Text, Optional
 from helixcore.server.errors import RequestProcessingError
 import re
-
-#amount_validator = (NonNegative(int), NonNegative(int))
-#nonnegative_amount_validator = (Positive(int), NonNegative(int))
-#locking_order_validator = AnyOf(None, [AnyOf('available_real_amount', 'available_virtual_amount')])
 
 iso_datetime_validator = re.compile(r"""
     (\d{2,4})
@@ -68,6 +64,19 @@ DELETE_SERVICE_SET = {
     'name': Text(),
 }
 
+# --- service set ---
+ADD_TARIFF = {
+    'service_set_descr_name': Text(),
+    'client_id': Text(),
+    'name': Text(),
+}
+
+MODIFY_TARIFF = {
+    'client_id': Text(),
+    'name': Text(),
+    'new_name': Optional(Text()),
+#    'service_set_descr_name': Text(), TODO. implement after service_set transition checker
+}
 
 action_to_scheme_map = {
     'ping': Scheme(PING),
@@ -83,6 +92,9 @@ action_to_scheme_map = {
     'add_to_service_set': Scheme(ADD_TO_SERVICE_SET),
     'delete_from_service_set': Scheme(DELETE_FROM_SERVICE_SET),
     'delete_service_set': Scheme(DELETE_SERVICE_SET),
+
+    'add_tariff': Scheme(ADD_TARIFF),
+    'modify_tariff': Scheme(ADD_TARIFF),
 }
 
 class ValidationError(RequestProcessingError):

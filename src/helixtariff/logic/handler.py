@@ -1,5 +1,5 @@
 from helixcore.mapping.actions import insert, update, delete, get_list
-from helixcore.db.sql import In, Eq, Delete, Scoped, And
+from helixcore.db.sql import In, Eq, Scoped, And, Insert, Delete
 #from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.server.response import response_ok
 from helixcore.server.exceptions import DataIntegrityError
@@ -7,7 +7,7 @@ from helixcore.server.exceptions import DataIntegrityError
 #from helixcore.server.exceptions import ActionNotAllowedError, DataIntegrityError
 
 from helixtariff.conf.db import transaction
-from helixtariff.domain.objects import ServiceType, ServiceSetDescr, ServiceSet
+from helixtariff.domain.objects import ServiceType, ServiceSetDescr, ServiceSet, Tariff
 from helixtariff.logic import query_builder
 from helixtariff.logic import selector
 
@@ -90,4 +90,23 @@ class Handler(object):
         cond_set_descr_id = Eq('service_set_descr_id', Scoped(query_set_descr_id))
         query = Delete(ServiceSet.table, cond=cond_set_descr_id)
         curs.execute(*query.glue())
+        return response_ok()
+
+    # tariff
+    @transaction()
+    def add_tariff(self, data, curs=None):
+        inserts = dict(data)
+        descr = selector.get_service_set_descr_by_name(curs, inserts['service_set_descr_name'])
+        del inserts['service_set_descr_name']
+        inserts['service_set_descr_id'] = descr.id
+        query = Insert(Tariff.table, inserts)
+        curs.execute(*query.glue())
+        return response_ok()
+
+    @transaction()
+    def modify_tariff(self, data, curs=None):
+        if 'new_name' in data:
+            t = selector.get_tariff(curs, data['client_id'], data['name'], for_update=True)
+            t.name = data['new_name']
+            update(curs, t)
         return response_ok()

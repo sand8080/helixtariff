@@ -14,3 +14,8 @@ class ServiceSetDescr(Mapped):
 class ServiceSet(Mapped):
     __slots__ = ['id', 'service_type_id', 'service_set_descr_id']
     table = 'service_set'
+
+
+class Tariff(Mapped):
+    __slots__ = ['id', 'service_set_descr_id', 'client_id', 'name']
+    table = 'tariff'
