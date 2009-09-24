@@ -110,3 +110,12 @@ class Handler(object):
             t.name = data['new_name']
             update(curs, t)
         return response_ok()
+
+    @transaction()
+    def delete_tariff(self, data, curs=None):
+        cond_client_id = Eq('client_id', data['client_id'])
+        cond_name = Eq('name', data['name'])
+        query = Delete(Tariff.table, And(cond_client_id, cond_name))
+        curs.execute(*query.glue())
+        return response_ok()
+
