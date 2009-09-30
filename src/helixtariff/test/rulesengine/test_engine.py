@@ -1,16 +1,22 @@
 import unittest
+import os
 
-from helixtariff.rulesengine.engine import Engine
-from helixtariff.server.request import PriceCalculationRequest
+#from helixtariff.rulesengine.rule_checker import RuleChecker
+from helixtariff.rulesengine.engine import Engine, EngineError
+from helixtariff.rulesengine.interaction import RequestPrice
+
 
 class EngineTestCase(unittest.TestCase):
-    eng = Engine()
+    def read_source(self, file_name):
+        file_path = os.path.join(os.path.realpath(os.path.dirname(__file__)), file_name)
+        f = open(file_path, 'r')
+        return f.read()
 
-    def test_process_unknown_request_type(self):
-        self.assertRaises(NotImplementedError, self.eng.process, '')
-
-    def test_process(self):
-        self.eng.process(PriceCalculationRequest('cli 1', 'noname', 'register ru', 'cust 7'))
+    def test_request_price(self):
+        e = Engine()
+        request = RequestPrice()
+        e.process(request)
+        self.assertRaises(EngineError, e.process, '')
 
 
 if __name__ == '__main__':

@@ -119,3 +119,14 @@ class Handler(object):
         curs.execute(*query.glue())
         return response_ok()
 
+    # rule
+    @transaction()
+    def add_rule(self, data, curs=None):
+        pass
+#        inserts = dict(data)
+#        descr = selector.get_service_set_descr_by_name(curs, inserts['service_set_descr_name'])
+#        del inserts['service_set_descr_name']
+#        inserts['service_set_descr_id'] = descr.id
+#        query = Insert(Tariff.table, inserts)
+#        curs.execute(*query.glue())
+#        return response_ok()

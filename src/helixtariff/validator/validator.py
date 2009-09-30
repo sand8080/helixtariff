@@ -78,6 +78,13 @@ MODIFY_TARIFF = {
 #    'service_set_descr_name': Text(), TODO. implement after service_set transition checker
 }
 
+# --- rule ---
+ADD_RULE = {
+    'tariff_name': Text(),
+    'service_name': Text(),
+    'rule': Text(),
+}
+
 DELETE_TARIFF = {
     'client_id': Text(),
     'name': Text(),
@@ -101,6 +108,8 @@ action_to_scheme_map = {
     'add_tariff': Scheme(ADD_TARIFF),
     'modify_tariff': Scheme(ADD_TARIFF),
     'delete_tariff': Scheme(DELETE_TARIFF),
+
+    'add_rule': Scheme(ADD_RULE),
 }
 
 class ValidationError(RequestProcessingError):

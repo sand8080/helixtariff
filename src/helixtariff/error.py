@@ -1,0 +1,2 @@
+class HelixtariffError(Exception):
+    pass

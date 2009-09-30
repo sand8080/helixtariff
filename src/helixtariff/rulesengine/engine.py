@@ -1,33 +1,35 @@
-from helixtariff.rulesengine.context import moc as context
-from helixtariff.server.request import PriceCalculationRequest
+from helixtariff.error import HelixtariffError
+from helixtariff.rulesengine.interaction import RequestPrice, ResponsePrice
+
+
+class EngineError(HelixtariffError):
+    pass
+
 
 class Engine(object):
+    def __init__(self):
+        self.handlers = {
+            RequestPrice: self.on_price_request,
+        }
+
     def process(self, request):
-        '''
-        Processing request as described in rule.
-        Rule.
-        Context used for external calls. Billing for example
-        '''
-        if isinstance(request, PriceCalculationRequest):
-            return self._handle_price_request(request)
-        else:
-            raise NotImplementedError('Processor for %s not implemnted' % request.__class__)
+        cls = request.__class__
+        if cls not in self.handlers:
+            raise EngineError('''Request of type %s can't be handled''' % cls.__name__)
+        handler = self.handlers[cls]
+        return handler(request)
 
-    def get_rule(self, _):
-        return 'if True: price = 3060'
+    def on_price_request(self, request):
+        from helixtariff.rulesengine.context import moc as context
+        rule = self.load_rule(request)
+        price = None
 
-    def add_line(self, to, line):
-        to.append('' + line)
-        print '####', to
+        exec rule
 
-    def create_frame(self, rule):
-        frame = 'from helixtariff.rulesengine.context import moc as context\n'
-        frame += 'price = 0\n'
-        frame += rule
-        frame += 'print price'
-        return frame
+        response = ResponsePrice(price)
+        response.check_valid()
+        return response
 
-    def _handle_price_request(self, request):
-        expr = self.create_frame(self.get_rule(request))
-        eval(expr)
-#        print context.get_customer_balance(request.customer_id)
+
+    def load_rule(self, request):
+        return ''
