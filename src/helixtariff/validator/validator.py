@@ -52,42 +52,45 @@ DELETE_SERVICE_SET_DESCR = {
 # --- service set ---
 ADD_TO_SERVICE_SET = {
     'name': Text(),
-    'types': [SERVICE_TYPE],
+    'types': [Text()],
 }
 
 DELETE_FROM_SERVICE_SET = {
     'name': Text(),
-    'types': [SERVICE_TYPE],
+    'types': [Text()],
 }
 
 DELETE_SERVICE_SET = {
     'name': Text(),
 }
 
-# --- service set ---
+# --- tariff ---
 ADD_TARIFF = {
-    'service_set_descr_name': Text(),
     'client_id': Text(),
     'name': Text(),
+    'service_set_descr_name': Text(),
+    'in_archive': bool,
 }
 
 MODIFY_TARIFF = {
     'client_id': Text(),
     'name': Text(),
-    'new_name': Optional(Text()),
+    Optional('new_name'): Text(),
+    Optional('new_in_archive'): bool,
 #    'service_set_descr_name': Text(), TODO. implement after service_set transition checker
-}
-
-# --- rule ---
-ADD_RULE = {
-    'tariff_name': Text(),
-    'service_name': Text(),
-    'rule': Text(),
 }
 
 DELETE_TARIFF = {
     'client_id': Text(),
     'name': Text(),
+}
+
+# --- rule ---
+ADD_RULE = {
+    'client_id': Text(),
+    'tariff_name': Text(),
+    'service_type_name': Text(),
+    'rule': Text(),
 }
 
 action_to_scheme_map = {
@@ -106,7 +109,7 @@ action_to_scheme_map = {
     'delete_service_set': Scheme(DELETE_SERVICE_SET),
 
     'add_tariff': Scheme(ADD_TARIFF),
-    'modify_tariff': Scheme(ADD_TARIFF),
+    'modify_tariff': Scheme(MODIFY_TARIFF),
     'delete_tariff': Scheme(DELETE_TARIFF),
 
     'add_rule': Scheme(ADD_RULE),

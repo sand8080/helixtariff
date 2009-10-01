@@ -1,31 +1,42 @@
+# -*- coding: utf-8 -*-
 import unittest
 
 from helixcore.server.exceptions import DataIntegrityError
-from helixcore.db.wrapper import EmptyResultSetError
 
 from helixtariff.test.db_based_test import ServiceTestCase
-from helixtariff.logic.actions import handle_action
 
 
 class RuleTestCase(ServiceTestCase):
     service_types = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
-    service_set_desr = 'automatic'
+    service_set_descr = 'automatic'
+    tariff = 'лунный свет'
     client_id = 'coyote client 34'
     name = 'happy new year'
 
-#    def setUp(self):
-#        super(TariffTestCase, self).setUp()
-#        self.add_descrs([self.service_set_desr])
-#        self.add_types(self.service_types)
-#        self.add_to_service_set(self.service_set_desr, self.service_types)
-#
-#    def test_add_tariff(self):
-#        self.add_tariff(self.service_set_desr, self.client_id, self.name)
-#
+    def setUp(self):
+        super(RuleTestCase, self).setUp()
+        self.add_descrs([self.service_set_descr])
+        self.add_types(self.service_types)
+        self.add_to_service_set(self.service_set_descr, self.service_types)
+        self.add_tariff(self.service_set_descr, self.client_id, self.tariff, False)
+
+    def test_add_rule(self):
+        rule = '''
+price = 100
+if context.get_balance(request.customer_id) > 500: price -= 30
+'''
+        self.add_rule(self.client_id, self.tariff, self.service_types[0], rule)
+
+    def test_add_rule_duplicate(self):
+        self.add_rule(self.client_id, self.tariff, self.service_types[0], '')
+        self.add_rule(self.client_id, self.tariff, self.service_types[1], '')
+        self.assertRaises(DataIntegrityError, self.add_rule, self.client_id, self.tariff, self.service_types[1], '')
+
+
 #    def test_add_tariff_failure(self):
-#        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_desr + 'fake', self.client_id, self.name)
-#        self.add_tariff(self.service_set_desr, self.client_id, self.name)
-#        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_desr, self.client_id, self.name)
+#        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_descr + 'fake', self.client_id, self.name)
+#        self.add_tariff(self.service_set_descr, self.client_id, self.name)
+#        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_descr, self.client_id, self.name)
 #
 #    def test_modify_tariff(self):
 #        self.test_add_tariff()

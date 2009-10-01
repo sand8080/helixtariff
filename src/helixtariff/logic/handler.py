@@ -1,15 +1,13 @@
 from helixcore.mapping.actions import insert, update, delete, get_list
 from helixcore.db.sql import In, Eq, Scoped, And, Insert, Delete
-#from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.server.response import response_ok
 from helixcore.server.exceptions import DataIntegrityError
 
-#from helixcore.server.exceptions import ActionNotAllowedError, DataIntegrityError
-
 from helixtariff.conf.db import transaction
-from helixtariff.domain.objects import ServiceType, ServiceSetDescr, ServiceSet, Tariff
+from helixtariff.domain.objects import ServiceType, ServiceSetDescr, ServiceSet, Tariff, Rule
 from helixtariff.logic import query_builder
 from helixtariff.logic import selector
+from helixtariff.rulesengine.checker import RuleChecker
 
 class Handler(object):
     '''
@@ -122,11 +120,13 @@ class Handler(object):
     # rule
     @transaction()
     def add_rule(self, data, curs=None):
-        pass
-#        inserts = dict(data)
-#        descr = selector.get_service_set_descr_by_name(curs, inserts['service_set_descr_name'])
-#        del inserts['service_set_descr_name']
-#        inserts['service_set_descr_id'] = descr.id
-#        query = Insert(Tariff.table, inserts)
-#        curs.execute(*query.glue())
-#        return response_ok()
+        RuleChecker().check(data['rule'])
+        tariff = selector.get_tariff(curs, data['client_id'], data['tariff_name'])
+        service_type = selector.get_service_type_by_name(curs, data['service_type_name'])
+        inserts = {
+            'tariff_id': tariff.id,
+            'service_type_id': service_type.id,
+            'rule': data['rule']
+        }
+        query = Insert(Rule.table, inserts)
+        curs.execute(*query.glue())

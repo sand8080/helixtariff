@@ -8,7 +8,8 @@ def apply(curs): #IGNORE:W0622
             service_set_descr_id integer NOT NULL,
             FOREIGN KEY (service_set_descr_id) REFERENCES service_set_descr(id),
             client_id VARCHAR NOT NULL,
-            name VARCHAR NOT NULL
+            name VARCHAR NOT NULL,
+            in_archive BOOLEAN DEFAULT FALSE
         )
     ''')
     print 'Creating unique index on tariff (client_id, name)'

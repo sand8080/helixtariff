@@ -20,6 +20,8 @@ class ServiceTestCase(DbBasedTestCase):
     def add_descrs(self, service_set_desrs):
         for d in service_set_desrs:
             handle_action('add_service_set_descr', {'name': d})
+            descr = self.get_service_set_descr_by_name(d)
+            self.assertEqual(d, descr.name)
 
     @transaction()
     def get_service_type(self, name, curs=None):
@@ -53,11 +55,12 @@ class ServiceTestCase(DbBasedTestCase):
     def get_tariff(self, client_id, name, curs=None):
         return selector.get_tariff(curs, client_id, name)
 
-    def add_tariff(self, servise_set_descr, client_id, name):
+    def add_tariff(self, servise_set_descr, client_id, name, in_archive):
         data = {
             'service_set_descr_name': servise_set_descr,
             'client_id': client_id,
             'name': name,
+            'in_archive': in_archive
         }
         handle_action('add_tariff', data)
         t = self.get_tariff(client_id, name)
@@ -66,3 +69,27 @@ class ServiceTestCase(DbBasedTestCase):
         self.assertEqual(descr.id, t.service_set_descr_id)
         self.assertEqual(client_id, t.client_id)
         self.assertEqual(name, t.name)
+
+    @transaction()
+    def get_rule(self, client_id, tariff_name, service_type_name, curs=None):
+        return selector.get_rule(curs, client_id, tariff_name, service_type_name)
+
+    def add_rule(self, client_id, tariff_name, service_type_name, rule):
+        data = {
+            'client_id': client_id,
+            'tariff_name': tariff_name,
+            'service_type_name': service_type_name,
+            'rule': rule,
+        }
+        handle_action('add_rule', data)
+        obj = self.get_rule(client_id, tariff_name, service_type_name)
+
+        service_type = self.get_service_type(service_type_name)
+        self.assertEqual(service_type_name, service_type.name)
+
+        tariff = self.get_tariff(client_id, tariff_name)
+        self.assertEqual(tariff_name, tariff.name)
+
+        self.assertEqual(tariff.id, obj.tariff_id)
+        self.assertEqual(service_type.id, obj.service_type_id)
+        self.assertEqual(rule, obj.rule)
