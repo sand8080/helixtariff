@@ -21,6 +21,22 @@ iso_datetime_validator = re.compile(r"""
 
 PING = {}
 
+# --- client ---
+ADD_CLIENT = {
+    'login': Text(),
+    'password': Text(),
+}
+
+MODIFY_CLIENT = {
+    'login': Text(),
+    Optional('new_login'): Text(),
+    Optional('new_password'): Text(),
+}
+
+DELETE_CLIENT = {
+    'login': Text(),
+}
+
 # --- service type ---
 SERVICE_TYPE = {
     'name': Text(),
@@ -95,6 +111,10 @@ ADD_RULE = {
 
 action_to_scheme_map = {
     'ping': Scheme(PING),
+
+    'add_client': Scheme(ADD_CLIENT),
+    'modify_client': Scheme(MODIFY_CLIENT),
+    'delete_client': Scheme(DELETE_CLIENT),
 
     'add_service_type': Scheme(ADD_SERVICE_TYPE),
     'modify_service_type': Scheme(MODIFY_SERVICE_TYPE),

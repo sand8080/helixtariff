@@ -1,27 +1,27 @@
 def apply(curs): #IGNORE:W0622
-    print 'Creating table rule'
+    print 'Creating table tariff'
     curs.execute(
     '''
-        CREATE TABLE rule (
+        CREATE TABLE tariff (
             id serial,
             PRIMARY KEY(id),
-            tariff_id integer NOT NULL,
-            FOREIGN KEY (tariff_id) REFERENCES tariff(id),
-            service_type_id integer NOT NULL,
-            FOREIGN KEY (service_type_id) REFERENCES service_type(id),
-            rule VARCHAR NOT NULL
+            service_set_descr_id integer NOT NULL,
+            FOREIGN KEY (service_set_descr_id) REFERENCES service_set_descr(id),
+            client_id varchar NOT NULL,
+            name varchar NOT NULL,
+            in_archive boolean DEFAULT FALSE
         )
     ''')
-    print 'Creating unique index on rule (tariff_id, service_type_id)'
+    print 'Creating unique index on tariff (client_id, name)'
     curs.execute(
     '''
-        CREATE UNIQUE INDEX tariff_id_service_type_id_idx ON rule (tariff_id, service_type_id)
+        CREATE UNIQUE INDEX tariff_client_id_name_idx ON tariff (client_id, name)
     '''
     )
 
 def revert(curs):
-    print 'Dropping unique index on rule (tariff_id, service_type_id)'
-    curs.execute('DROP INDEX tariff_id_service_type_id_idx')
-    print 'Dropping table rule'
-    curs.execute('DROP TABLE rule')
+    print 'Dropping unique index on tariff (client_id, name)'
+    curs.execute('DROP INDEX tariff_client_id_name_idx')
+    print 'Dropping table tariff'
+    curs.execute('DROP TABLE tariff')
 

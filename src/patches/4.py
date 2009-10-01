@@ -1,26 +1,23 @@
-def apply(curs): #IGNORE:W0622
-    print 'Creating table service_set'
+def apply(curs):  #IGNORE:W0622
+    print 'Creating table service_set_descr'
     curs.execute(
     '''
-        CREATE TABLE service_set (
+        CREATE TABLE service_set_descr (
             id serial,
-            PRIMARY KEY(id),
-            service_type_id integer NOT NULL,
-            FOREIGN KEY (service_type_id) REFERENCES service_type(id),
-            service_set_descr_id integer NOT NULL,
-            FOREIGN KEY (service_set_descr_id) REFERENCES service_set_descr(id)
+            name varchar NOT NULL,
+            PRIMARY KEY(id)
         )
     ''')
-    print 'Creating unique index on service_set (service_type_id, service_set_descr_id)'
+    print 'Creating unique index on service_set_descr name'
     curs.execute(
     '''
-        CREATE UNIQUE INDEX service_set_service_type_id_service_set_descr_id_idx ON service_set (service_type_id, service_set_descr_id)
+        CREATE UNIQUE INDEX service_set_descr_name_idx ON service_set_descr (name)
     '''
     )
 
 def revert(curs):
-    print 'Dropping unique index on service_set (service_type_id, service_set_descr_id)'
-    curs.execute('DROP INDEX service_set_service_type_id_service_set_descr_id_idx')
-    print 'Dropping table service_set'
-    curs.execute('DROP TABLE service_set')
+    print 'Dropping unique index on service_set_descr name'
+    curs.execute('DROP INDEX service_set_descr_name_idx')
+    print 'Dropping table service_set_descr'
+    curs.execute('DROP TABLE service_set_descr')
 

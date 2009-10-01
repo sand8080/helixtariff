@@ -1,16 +1,18 @@
 def apply(curs):  #IGNORE:W0622
-    print 'Creating table service_type'
+    print 'Creating table client'
     curs.execute(
     '''
-        CREATE TABLE service_type (
+        CREATE TABLE client (
             id serial,
-            name varchar NOT NULL,
+            login varchar NOT NULL,
+            password varchar NOT NULL,
             PRIMARY KEY(id),
-            UNIQUE(name)
+            UNIQUE(login)
         )
     ''')
 
+
 def revert(curs):
-    print 'Dropping table service_type'
-    curs.execute('DROP TABLE service_type')
+    print 'Dropping table client'
+    curs.execute('DROP TABLE client')
 

@@ -3,10 +3,9 @@ from helixcore.db.sql import Eq, Scoped, Select, In, And
 from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.server.exceptions import DataIntegrityError
 
-from helixtariff.domain.objects import ServiceType, ServiceSetDescr, ServiceSet, Tariff,\
-    Rule
+from helixtariff.domain.objects import ServiceType, ServiceSetDescr, ServiceSet, \
+    Tariff, Rule, Client
 from helixtariff.logic import query_builder
-from eventlet.api import select
 
 def get_obj_by_field(curs, cls, field, value, for_update):
     try:
@@ -19,6 +18,9 @@ def get_service_type_by_name(curs, name, for_update=False):
 
 def get_service_set_descr_by_name(curs, name, for_update=False):
     return get_obj_by_field(curs, ServiceSetDescr, 'name', name, for_update)
+
+def get_client_by_login(curs, login, for_update=False):
+    return get_obj_by_field(curs, Client, 'login', login, for_update)
 
 def get_service_types_by_descr_name(curs, name, for_update=False):
     cond_descr_id = Eq('service_set_descr_id', Scoped(query_builder.select_service_set_descr_id(name)))

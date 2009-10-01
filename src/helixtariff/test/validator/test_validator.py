@@ -6,6 +6,19 @@ from helixtariff.validator.validator import validate, ValidationError
 
 
 class ValidatorTestCase(RootTestCase):
+    def test_add_client(self):
+        validate('add_client', {'login': 'admin', 'password': 'crypted twice'})
+
+    def test_add_client_invalid(self):
+        self.assertRaises(ValidationError, validate, 'add_client', {'login': 'admin'})
+        self.assertRaises(ValidationError, validate, 'add_client', {'password': 'admin'})
+        self.assertRaises(ValidationError, validate, 'add_client', {})
+
+    def test_modify_client(self):
+        validate('modify_client', {'login': 'log', 'new_login': 'new_log'})
+        validate('modify_client', {'login': 'log', 'new_login': 'new_log', 'new_password': 'pw'})
+        validate('modify_client', {'login': 'log'})
+
     def test_add_service_type(self):
         validate('add_service_type', {'name': 'register_ru'})
 
@@ -16,7 +29,7 @@ class ValidatorTestCase(RootTestCase):
         validate('modify_service_type', {'name': 'register_ru', 'new_name': 'register_RU'})
 
     def test_modify_service_type_invalid(self):
-        self.assertRaises(ValidationError,validate, 'modify_service_type', {'name': 'cheli0s'})
+        self.assertRaises(ValidationError, validate, 'modify_service_type', {'name': 'cheli0s'})
 
     def test_delete_service_type(self):
         validate('delete_service_type', {'name': 'register_ru'})

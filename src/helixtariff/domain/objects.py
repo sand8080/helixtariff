@@ -1,8 +1,13 @@
 from helixcore.mapping.objects import Mapped
 
 
+class Client(Mapped):
+    __slots__ = ['id', 'login', 'password']
+    table = 'client'
+
+
 class ServiceType(Mapped):
-    __slots__ = ['id', 'name']
+    __slots__ = ['id', 'client_id', 'name']
     table = 'service_type'
 
 

@@ -17,6 +17,15 @@ class DbBasedTestCase(RootTestCase):
 
 
 class ServiceTestCase(DbBasedTestCase):
+    def add_client(self, login, password):
+        handle_action('add_client', {'login': login, 'password': password})
+        client = self.get_client_by_login(login)
+        self.assertEqual(login, client.login)
+
+    @transaction()
+    def get_client_by_login(self, login, curs=None):
+        return selector.get_client_by_login(curs, login)
+
     def add_descrs(self, service_set_desrs):
         for d in service_set_desrs:
             handle_action('add_service_set_descr', {'name': d})
@@ -24,13 +33,13 @@ class ServiceTestCase(DbBasedTestCase):
             self.assertEqual(d, descr.name)
 
     @transaction()
-    def get_service_type(self, name, curs=None):
+    def get_service_type_by_name(self, name, curs=None):
         return selector.get_service_type_by_name(curs, name)
 
     def add_types(self, service_types):
         for t in service_types:
             handle_action('add_service_type', {'name': t})
-            obj = self.get_service_type(t)
+            obj = self.get_service_type_by_name(t)
             self.assertTrue(obj.id > 0)
             self.assertEquals(obj.name, t)
 
@@ -84,7 +93,7 @@ class ServiceTestCase(DbBasedTestCase):
         handle_action('add_rule', data)
         obj = self.get_rule(client_id, tariff_name, service_type_name)
 
-        service_type = self.get_service_type(service_type_name)
+        service_type = self.get_service_type_by_name(service_type_name)
         self.assertEqual(service_type_name, service_type.name)
 
         tariff = self.get_tariff(client_id, tariff_name)

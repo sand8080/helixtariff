@@ -15,20 +15,20 @@ class ServiceTypeTestCase(ServiceTestCase):
     def test_modify_service_type(self):
         self.test_add_service_type()
         old_name = self.descr_name
-        t_old = self.get_service_type(old_name)
+        t_old = self.get_service_type_by_name(old_name)
 
         new_name = 'new' + old_name
         data = {'name': old_name, 'new_name': new_name}
         handle_action('modify_service_type', data)
 
-        t_new = self.get_service_type(new_name)
+        t_new = self.get_service_type_by_name(new_name)
         self.assertEqual(t_old.id, t_new.id)
         self.assertEquals(t_new.name, new_name)
 
     def test_delete_service_type(self):
         self.test_add_service_type()
         handle_action('delete_service_type', {'name': self.descr_name})
-        self.assertRaises(DataIntegrityError, self.get_service_type, self.descr_name)
+        self.assertRaises(DataIntegrityError, self.get_service_type_by_name, self.descr_name)
 
 
 if __name__ == '__main__':
