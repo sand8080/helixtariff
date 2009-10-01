@@ -7,14 +7,29 @@ from helixtariff.domain.objects import ServiceType, ServiceSetDescr, ServiceSet,
     Tariff, Rule, Client
 from helixtariff.logic import query_builder
 
-def get_obj_by_field(curs, cls, field, value, for_update):
+def get_obj_by_fields(curs, cls, fields, for_update):
+    '''
+    Returns object of class cls by anded conditions from fields.
+    fields is dictionary of {field: value}
+    '''
+    and_cond = None
+    for k, v in fields.items():
+        eq_cond = Eq(k, v)
+        if and_cond is None:
+            and_cond = eq_cond
+        else:
+            and_cond = And(and_cond, eq_cond)
     try:
-        return actions.get(curs, cls, Eq(field, value), for_update)
+        return actions.get(curs, cls, and_cond, for_update)
     except EmptyResultSetError:
-        raise DataIntegrityError('%s with %s = %s not found in system' % (cls, field, value))
+        raise DataIntegrityError('%s with %s not found in system' % (cls, fields))
 
-def get_service_type_by_name(curs, name, for_update=False):
-    return get_obj_by_field(curs, ServiceType, 'name', name, for_update)
+def get_obj_by_field(curs, cls, field, value, for_update):
+    return get_obj_by_fields(curs, cls, {field: value}, for_update)
+
+def get_service_type_by_name(curs, client_id, name, for_update=False):
+    fields = {'client_id': client_id, 'name': name}
+    return get_obj_by_fields(curs, ServiceType, fields, for_update)
 
 def get_service_set_descr_by_name(curs, name, for_update=False):
     return get_obj_by_field(curs, ServiceSetDescr, 'name', name, for_update)

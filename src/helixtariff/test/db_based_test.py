@@ -33,13 +33,13 @@ class ServiceTestCase(DbBasedTestCase):
             self.assertEqual(d, descr.name)
 
     @transaction()
-    def get_service_type_by_name(self, name, curs=None):
-        return selector.get_service_type_by_name(curs, name)
+    def get_service_type_by_name(self, client_id, name, curs=None):
+        return selector.get_service_type_by_name(curs, client_id, name)
 
-    def add_types(self, service_types):
+    def add_types(self, client_id, service_types):
         for t in service_types:
             handle_action('add_service_type', {'name': t})
-            obj = self.get_service_type_by_name(t)
+            obj = self.get_service_type_by_name(client_id, t)
             self.assertTrue(obj.id > 0)
             self.assertEquals(obj.name, t)
 

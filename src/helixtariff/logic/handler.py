@@ -11,12 +11,27 @@ from helixtariff.logic import query_builder
 from helixtariff.logic import selector
 from helixtariff.rulesengine.checker import RuleChecker
 
+
+def mix_client_id(method):
+    def decroated(self, data, curs):
+        data['client_id'] = self.get_client_id(curs, data)
+        method(self, data, curs)
+    return decroated
+
+
 class Handler(object):
+    # TODO: remove me after auth integrated into protocol
+    root_client_stub = 'root_client'
+
     '''
     Handles all API actions. Method names are called like actions.
     '''
     def ping(self, data): #IGNORE:W0613
         return response_ok()
+
+    # TODO: implement getting client_id from data
+    def get_client_id(self, curs, _):
+        return selector.get_client_by_login(curs, self.root_client_stub).id
 
     def get_fields_for_update(self, data, prefix_of_new='new_'):
         '''
@@ -58,19 +73,22 @@ class Handler(object):
 
     # server_type
     @transaction()
+    @mix_client_id
     def add_service_type(self, data, curs=None):
         insert(curs, ServiceType(**data))
         return response_ok()
 
     @transaction()
+    @mix_client_id
     def modify_service_type(self, data, curs=None):
-        loader = partial(selector.get_service_type_by_name, curs, data['name'], for_update=True)
+        loader = partial(selector.get_service_type_by_name, curs, data['client_id'], data['name'], for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
+    @mix_client_id
     def delete_service_type(self, data, curs=None):
-        t = selector.get_service_type_by_name(curs, data['name'], for_update=True)
+        t = selector.get_service_type_by_name(curs, data['client_id'], data['name'], for_update=True)
         delete(curs, t)
         return response_ok()
 

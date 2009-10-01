@@ -4,9 +4,10 @@ def apply(curs):  #IGNORE:W0622
     '''
         CREATE TABLE service_type (
             id serial,
-            client_id varchar NOT NULL,
+            client_id integer NOT NULL,
             name varchar NOT NULL,
-            PRIMARY KEY(id)
+            PRIMARY KEY(id),
+            FOREIGN KEY (client_id) REFERENCES client(id)
         )
     ''')
     print 'Creating unique index on service_type (client_id, name)'
