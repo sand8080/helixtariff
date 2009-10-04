@@ -1,7 +1,7 @@
 from functools import partial
 
-from helixcore.mapping.actions import insert, update, delete, get_list
-from helixcore.db.sql import In, Eq, Scoped, And, Insert, Delete
+import helixcore.mapping.actions as mapping
+from helixcore.db.sql import In, Eq, Scoped, And, Insert, Delete, Update
 from helixcore.server.response import response_ok
 from helixcore.server.exceptions import DataIntegrityError
 
@@ -51,12 +51,12 @@ class Handler(object):
             obj = load_obj_func()
             for f, new_f in to_update.items():
                 setattr(obj, f, data[new_f])
-            update(curs, obj)
+            mapping.update(curs, obj)
 
     # client
     @transaction()
     def add_client(self, data, curs=None):
-        insert(curs, Client(**data))
+        mapping.insert(curs, Client(**data))
         return response_ok()
 
     @transaction()
@@ -68,14 +68,14 @@ class Handler(object):
     @transaction()
     def delete_client(self, data, curs=None):
         obj = selector.get_client_by_login(curs, data['login'], for_update=True)
-        delete(curs, obj)
+        mapping.delete(curs, obj)
         return response_ok()
 
     # server_type
     @transaction()
     @mix_client_id
     def add_service_type(self, data, curs=None):
-        insert(curs, ServiceType(**data))
+        mapping.insert(curs, ServiceType(**data))
         return response_ok()
 
     @transaction()
@@ -89,14 +89,14 @@ class Handler(object):
     @mix_client_id
     def delete_service_type(self, data, curs=None):
         t = selector.get_service_type_by_name(curs, data['client_id'], data['name'], for_update=True)
-        delete(curs, t)
+        mapping.delete(curs, t)
         return response_ok()
 
     # server_set_descr
     @transaction()
     @mix_client_id
     def add_service_set_descr(self, data, curs=None):
-        insert(curs, ServiceSetDescr(**data))
+        mapping.insert(curs, ServiceSetDescr(**data))
         return response_ok()
 
     @transaction()
@@ -110,7 +110,7 @@ class Handler(object):
     @mix_client_id
     def delete_service_set_descr(self, data, curs=None):
         t = selector.get_service_set_descr_by_name(curs, data['name'], for_update=True)
-        delete(curs, t)
+        mapping.delete(curs, t)
         return response_ok()
 
     # server_set
@@ -118,14 +118,14 @@ class Handler(object):
     def add_to_service_set(self, data, curs=None):
         descr = selector.get_service_set_descr_by_name(curs, data['name'])
         types_names = data['types']
-        types = get_list(curs, ServiceType, In('name', types_names))
+        types = mapping.get_list(curs, ServiceType, In('name', types_names))
         if len(types_names) != len(types):
             expected = set(types_names)
             actual = set([t.name for t in types])
             raise DataIntegrityError('Requested types not found: %s' % ', '.join(expected.difference(actual)))
         for t in types:
             s = ServiceSet(**{'service_type_id': t.id, 'service_set_descr_id': descr.id})
-            insert(curs, s)
+            mapping.insert(curs, s)
         return response_ok()
 
     @transaction()
@@ -151,39 +151,56 @@ class Handler(object):
 
     # tariff
     @transaction()
+    @mix_client_id
     def add_tariff(self, data, curs=None):
-        inserts = dict(data)
-        descr = selector.get_service_set_descr_by_name(curs, inserts['service_set_descr_name'])
-        del inserts['service_set_descr_name']
-        inserts['service_set_descr_id'] = descr.id
-        query = Insert(Tariff.table, inserts)
-        curs.execute(*query.glue())
+        descr = selector.get_service_set_descr_by_name(curs, data['service_set_descr_name'])
+        del data['service_set_descr_name']
+        data['service_set_descr_id'] = descr.id
+        mapping.insert(curs, Tariff(**data))
         return response_ok()
 
     @transaction()
+    @mix_client_id
     def modify_tariff(self, data, curs=None):
         loader = partial(selector.get_tariff, curs, data['client_id'], data['name'], for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
+    @mix_client_id
     def delete_tariff(self, data, curs=None):
-        cond_client_id = Eq('client_id', data['client_id'])
-        cond_name = Eq('name', data['name'])
-        query = Delete(Tariff.table, And(cond_client_id, cond_name))
-        curs.execute(*query.glue())
+        obj = selector.get_tariff(curs, data['client_id'], data['name'])
+        mapping.delete(curs, obj)
         return response_ok()
 
     # rule
     @transaction()
+    @mix_client_id
     def add_rule(self, data, curs=None):
         RuleChecker().check(data['rule'])
         tariff = selector.get_tariff(curs, data['client_id'], data['tariff_name'])
+        del data['tariff_name']
+        data['tariff_id'] = tariff.id
+
         service_type = selector.get_service_type_by_name(curs, data['client_id'], data['service_type_name'])
-        inserts = {
-            'tariff_id': tariff.id,
-            'service_type_id': service_type.id,
-            'rule': data['rule']
-        }
-        query = Insert(Rule.table, inserts)
-        curs.execute(*query.glue())
+        del data['service_type_name']
+        data['service_type_id'] = service_type.id
+
+        del data['client_id']
+        mapping.insert(curs, Rule(**data))
+
+    @transaction()
+    @mix_client_id
+    def modify_rule(self, data, curs=None):
+        RuleChecker().check(data['new_rule'])
+        loader = partial(selector.get_rule, curs, data['client_id'], data['tariff_name'],
+            data['service_type_name'], True)
+        self.update_obj(curs, data, loader)
+        return response_ok()
+
+    @transaction()
+    @mix_client_id
+    def delete_rule(self, data, curs=None):
+        obj = selector.get_rule(curs, data['client_id'], data['tariff_name'], data['service_type_name'])
+        mapping.delete(curs, obj)
+        return response_ok()

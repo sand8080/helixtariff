@@ -1,62 +1,64 @@
 # -*- coding: utf-8 -*-
 import unittest
+from functools import partial
 
 from helixcore.server.exceptions import DataIntegrityError
+from helixcore.db.wrapper import EmptyResultSetError
 
 from helixtariff.test.db_based_test import ServiceTestCase
+from helixtariff.logic.actions import handle_action
 
 
 class RuleTestCase(ServiceTestCase):
-    service_types = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
-    service_set_descr = 'automatic'
-    tariff = 'лунный свет'
-    name = 'happy new year'
-
-    @property
-    def client_id(self):
-        return self.get_root_client().id
+    service_types_names = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
+    service_set_descr_name = 'automatic'
+    tariff_name = 'лунный свет'
 
     def setUp(self):
         super(RuleTestCase, self).setUp()
-        self.add_descrs([self.service_set_descr])
-        self.add_types(self.client_id, self.service_types)
-        self.add_to_service_set(self.service_set_descr, self.service_types)
-        self.add_tariff(self.service_set_descr, self.client_id, self.tariff, False)
+        self.add_descrs([self.service_set_descr_name])
+        self.add_types(self.service_types_names)
+        self.add_to_service_set(self.service_set_descr_name, self.service_types_names)
+        self.add_tariff(self.service_set_descr_name, self.tariff_name, False)
 
     def test_add_rule(self):
         rule = '''
 price = 100
 if context.get_balance(request.customer_id) > 500: price -= 30
 '''
-        self.add_rule(self.client_id, self.tariff, self.service_types[0], rule)
+        self.add_rule(self.tariff_name, self.service_types_names[0], rule)
 
     def test_add_rule_duplicate(self):
-        self.add_rule(self.client_id, self.tariff, self.service_types[0], '')
-        self.add_rule(self.client_id, self.tariff, self.service_types[1], '')
-        self.assertRaises(DataIntegrityError, self.add_rule, self.client_id, self.tariff, self.service_types[1], '')
+        self.add_rule(self.tariff_name, self.service_types_names[0], '')
+        self.add_rule(self.tariff_name, self.service_types_names[1], '')
+        self.assertRaises(DataIntegrityError, self.add_rule, self.tariff_name, self.service_types_names[1], '')
 
-#    def test_modify_tariff(self):
-#        self.test_add_tariff()
-#        new_name = 'new' + self.name
-#        data = {'client_id': self.client_id, 'name': self.name, 'new_name': new_name}
-#        handle_action('modify_tariff', data)
-#        t = self.get_tariff(self.client_id, new_name)
-#        self.assertEqual(new_name, t.name)
-#        self.assertEqual(self.client_id, t.client_id)
-#
-#    def test_modify_tariff_do_nothing(self):
-#        self.test_add_tariff()
-#        data = {'client_id': self.client_id, 'name': self.name}
-#        handle_action('modify_tariff', data)
-#        t = self.get_tariff(self.client_id, self.name)
-#        self.assertEqual(self.name, t.name)
-#        self.assertEqual(self.client_id, t.client_id)
-#
-#    def test_delete_tariff(self):
-#        self.test_add_tariff()
-#        data = {'client_id': self.client_id, 'name': self.name}
-#        handle_action('delete_tariff', data)
-#        self.assertRaises(EmptyResultSetError, self.get_tariff, self.client_id, self.name)
+    def test_modify_rule(self):
+        old_raw_rule = 'price = 10.01'
+        self.add_rule(self.tariff_name, self.service_types_names[0], old_raw_rule)
+        rule_loader = partial(self.get_rule, self.get_root_client().id, self.tariff_name, self.service_types_names[0])
+        old_rule_obj = rule_loader()
+
+        new_raw_rule = old_raw_rule + ' + 9.01'
+        data = {
+            'tariff_name': self.tariff_name,
+            'service_type_name': self.service_types_names[0],
+            'new_rule': new_raw_rule
+        }
+
+        handle_action('modify_rule', data)
+        new_rule_obj = rule_loader()
+        self.assertEqual(old_rule_obj.id, new_rule_obj.id)
+        self.assertEqual(old_rule_obj.tariff_id, new_rule_obj.tariff_id)
+        self.assertEqual(old_rule_obj.service_type_id, new_rule_obj.service_type_id)
+        self.assertEqual(new_raw_rule, new_rule_obj.rule)
+
+    def test_delete_rule(self):
+        self.add_rule(self.tariff_name, self.service_types_names[0], '')
+        data = {'tariff_name': self.tariff_name, 'service_type_name': self.service_types_names[0]}
+        handle_action('delete_rule', data)
+        self.assertRaises(EmptyResultSetError, self.get_rule, self.get_root_client().id,
+            self.tariff_name, self.service_types_names[0])
 
 
 if __name__ == '__main__':

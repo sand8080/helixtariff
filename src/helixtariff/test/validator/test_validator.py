@@ -56,7 +56,6 @@ class ValidatorTestCase(RootTestCase):
         validate(
             'add_tariff',
             {
-                'client_id': 'coyote_45',
                 'name': 'приведи друга',
                 'service_set_descr_name': 'exotic',
                 'in_archive': False,
@@ -64,35 +63,23 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_modify_tariff(self):
-        validate(
-            'modify_tariff',
-            {'client_id': 'coyote_45', 'name': 'приведи друга', 'new_name': 'для блондинок'}
-        )
-        validate(
-            'modify_tariff',
-            {'client_id': 'coyote_45', 'name': 'приведи друга', 'new_in_archive': True}
-        )
-        validate(
-            'modify_tariff',
-            {'client_id': 'coyote_45', 'name': 'приведи друга', 'new_name': 'для блондинок', 'new_in_archive': True}
-        )
-        validate('modify_tariff', {'client_id': 'coyote_45', 'name': 'приведи друга'})
-        validate('modify_tariff', {'name': 'приведи друга', 'client_id': 'coyote_45'})
+        validate('modify_tariff', {'name': 'приведи друга', 'new_name': 'для блондинок'})
+        validate('modify_tariff', {'name': 'приведи друга', 'new_in_archive': True})
+        validate('modify_tariff', {'name': 'приведи друга', 'new_name': 'для блондинок', 'new_in_archive': True})
+        validate('modify_tariff', {'name': 'приведи друга'})
 
     def test_delete_tariff(self):
-        validate('delete_tariff', {'client_id': 'coyote_45', 'name': 'приведи друга'})
+        validate('delete_tariff', {'name': 'приведи друга'})
 
     def test_add_rule(self):
-        validate(
-            'add_rule',
-            {
-                'client_id': 'coyote client 34',
-                'tariff_name': 'automatic',
-                'service_type_name': 'регистрация ru',
-                'rule': 'price = 10'
-            }
-        )
+        validate('add_rule', {'tariff_name': 'auto', 'service_type_name': 'ru', 'rule': 'price = 10'})
 
+    def test_modify_rule(self):
+        validate('modify_rule', {'tariff_name': 'auto', 'service_type_name': 'ru', 'new_rule': 'price = 20'})
+        self.assertRaises(ValidationError, validate, 'modify_rule', {'tariff_name': 'auto', 'service_type_name': 'ru'})
+
+    def test_delete_rule(self):
+        validate('delete_rule', {'tariff_name': 'auto', 'service_type_name': 'ru'})
 
 
 if __name__ == '__main__':

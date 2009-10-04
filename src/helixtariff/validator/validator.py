@@ -82,14 +82,12 @@ DELETE_SERVICE_SET = {
 
 # --- tariff ---
 ADD_TARIFF = {
-    'client_id': Text(),
     'name': Text(),
     'service_set_descr_name': Text(),
     'in_archive': bool,
 }
 
 MODIFY_TARIFF = {
-    'client_id': Text(),
     'name': Text(),
     Optional('new_name'): Text(),
     Optional('new_in_archive'): bool,
@@ -97,16 +95,25 @@ MODIFY_TARIFF = {
 }
 
 DELETE_TARIFF = {
-    'client_id': Text(),
     'name': Text(),
 }
 
 # --- rule ---
 ADD_RULE = {
-    'client_id': Text(),
     'tariff_name': Text(),
     'service_type_name': Text(),
     'rule': Text(),
+}
+
+MODIFY_RULE = {
+    'tariff_name': Text(),
+    'service_type_name': Text(),
+    'new_rule': Text(),
+}
+
+DELETE_RULE = {
+    'tariff_name': Text(),
+    'service_type_name': Text(),
 }
 
 action_to_scheme_map = {
@@ -133,6 +140,8 @@ action_to_scheme_map = {
     'delete_tariff': Scheme(DELETE_TARIFF),
 
     'add_rule': Scheme(ADD_RULE),
+    'modify_rule': Scheme(MODIFY_RULE),
+    'delete_rule': Scheme(DELETE_RULE),
 }
 
 class ValidationError(RequestProcessingError):

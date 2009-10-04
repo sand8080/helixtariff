@@ -14,7 +14,7 @@ class ServiceTypeTestCase(ServiceTestCase):
         self.client = self.get_root_client()
 
     def test_add_service_type(self):
-        self.add_types(self.client.id, [self.descr_name])
+        self.add_types([self.descr_name])
 
     def test_modify_service_type(self):
         self.test_add_service_type()

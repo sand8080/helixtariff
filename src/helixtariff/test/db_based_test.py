@@ -48,10 +48,10 @@ class ServiceTestCase(DbBasedTestCase):
     def get_service_type_by_name(self, client_id, name, curs=None):
         return selector.get_service_type_by_name(curs, client_id, name)
 
-    def add_types(self, client_id, service_types):
+    def add_types(self, service_types):
         for t in service_types:
             handle_action('add_service_type', {'name': t})
-            obj = self.get_service_type_by_name(client_id, t)
+            obj = self.get_service_type_by_name(self.get_root_client().id, t)
             self.assertTrue(obj.id > 0)
             self.assertEquals(obj.name, t)
 
@@ -76,14 +76,14 @@ class ServiceTestCase(DbBasedTestCase):
     def get_tariff(self, client_id, name, curs=None):
         return selector.get_tariff(curs, client_id, name)
 
-    def add_tariff(self, servise_set_descr, client_id, name, in_archive):
+    def add_tariff(self, servise_set_descr, name, in_archive):
         data = {
             'service_set_descr_name': servise_set_descr,
-            'client_id': client_id,
             'name': name,
             'in_archive': in_archive
         }
         handle_action('add_tariff', data)
+        client_id = self.get_root_client().id
         t = self.get_tariff(client_id, name)
         descr = self.get_service_set_descr_by_name(servise_set_descr)
         self.assertEqual(servise_set_descr, descr.name)
@@ -95,14 +95,15 @@ class ServiceTestCase(DbBasedTestCase):
     def get_rule(self, client_id, tariff_name, service_type_name, curs=None):
         return selector.get_rule(curs, client_id, tariff_name, service_type_name)
 
-    def add_rule(self, client_id, tariff_name, service_type_name, rule):
+    def add_rule(self, tariff_name, service_type_name, rule):
         data = {
-            'client_id': client_id,
             'tariff_name': tariff_name,
             'service_type_name': service_type_name,
             'rule': rule,
         }
         handle_action('add_rule', data)
+
+        client_id = self.get_root_client().id
         obj = self.get_rule(client_id, tariff_name, service_type_name)
 
         service_type = self.get_service_type_by_name(client_id, service_type_name)

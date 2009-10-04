@@ -8,55 +8,54 @@ from helixtariff.logic.actions import handle_action
 
 
 class TariffTestCase(ServiceTestCase):
-    service_types = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
-    service_set_descr = 'automatic'
+    service_types_names = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
+    service_set_descr_name = 'automatic'
     name = 'happy new year'
     in_archive = False
 
     @property
-    def client_id(self):
+    def root_client_id(self):
         return self.get_root_client().id
 
     def setUp(self):
         super(TariffTestCase, self).setUp()
-        self.add_descrs([self.service_set_descr])
-        self.add_types(self.client_id, self.service_types)
-        self.add_to_service_set(self.service_set_descr, self.service_types)
+        self.add_descrs([self.service_set_descr_name])
+        self.add_types(self.service_types_names)
+        self.add_to_service_set(self.service_set_descr_name, self.service_types_names)
 
     def test_add_tariff(self):
-        self.add_tariff(self.service_set_descr, self.client_id, self.name, self.in_archive)
+        self.add_tariff(self.service_set_descr_name, self.name, self.in_archive)
 
     def test_add_tariff_failure(self):
-        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_descr + 'fake',
-            self.client_id, self.name, self.in_archive
+        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_descr_name + 'fake',
+            self.name, self.in_archive
         )
-        self.add_tariff(self.service_set_descr, self.client_id, self.name, self.in_archive)
-        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_descr,
-            self.client_id, self.name, self.in_archive
+        self.add_tariff(self.service_set_descr_name, self.name, self.in_archive)
+        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_descr_name,
+            self.name, self.in_archive
         )
 
     def test_modify_tariff(self):
         self.test_add_tariff()
         new_name = 'new' + self.name
-        data = {'client_id': self.client_id, 'name': self.name, 'new_name': new_name, 'new_in_archive': not self.in_archive}
+        data = {'name': self.name, 'new_name': new_name, 'new_in_archive': not self.in_archive}
         handle_action('modify_tariff', data)
-        t = self.get_tariff(self.client_id, new_name)
+        t = self.get_tariff(self.root_client_id, new_name)
         self.assertEqual(new_name, t.name)
-        self.assertEqual(self.client_id, t.client_id)
+        self.assertEqual(self.root_client_id, t.client_id)
 
     def test_modify_tariff_do_nothing(self):
         self.test_add_tariff()
-        data = {'client_id': self.client_id, 'name': self.name}
+        data = {'name': self.name}
         handle_action('modify_tariff', data)
-        t = self.get_tariff(self.client_id, self.name)
+        t = self.get_tariff(self.root_client_id, self.name)
         self.assertEqual(self.name, t.name)
-        self.assertEqual(self.client_id, t.client_id)
+        self.assertEqual(self.root_client_id, t.client_id)
 
     def test_delete_tariff(self):
         self.test_add_tariff()
-        data = {'client_id': self.client_id, 'name': self.name}
-        handle_action('delete_tariff', data)
-        self.assertRaises(EmptyResultSetError, self.get_tariff, self.client_id, self.name)
+        handle_action('delete_tariff', {'name': self.name})
+        self.assertRaises(EmptyResultSetError, self.get_tariff, self.root_client_id, self.name)
 
 
 if __name__ == '__main__':

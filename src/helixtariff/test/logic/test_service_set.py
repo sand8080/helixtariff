@@ -6,12 +6,12 @@ from helixtariff.logic.actions import handle_action
 
 class ServiceSetTestCase(ServiceTestCase):
     service_set_desrs = ['automatic', 'exotic', 'full pack', 'manual']
-    service_types = ['register ru', 'prolong ru', 'register hn', 'prolong hn', 'register dj', 'prolong dj']
+    service_types_names = ['register ru', 'prolong ru', 'register hn', 'prolong hn', 'register dj', 'prolong dj']
 
     def setUp(self):
         super(ServiceSetTestCase, self).setUp()
         self.add_descrs(self.service_set_desrs)
-        self.add_types(self.get_root_client().id, self.service_types)
+        self.add_types(self.service_types_names)
 
     def test_add_to_service_set(self):
         self.add_to_service_set('automatic', ['register ru', 'prolong ru', 'register hn', 'prolong hn'])
