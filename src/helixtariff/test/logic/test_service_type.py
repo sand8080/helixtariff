@@ -4,7 +4,6 @@ from helixcore.server.exceptions import DataIntegrityError
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
-from helixtariff.logic.handler import Handler
 
 
 class ServiceTypeTestCase(ServiceTestCase):
@@ -12,9 +11,7 @@ class ServiceTypeTestCase(ServiceTestCase):
 
     def setUp(self):
         super(ServiceTypeTestCase, self).setUp()
-        login = Handler.root_client_stub
-        self.add_client(login, 'qazwsx')
-        self.client = self.get_client_by_login(login)
+        self.client = self.get_root_client()
 
     def test_add_service_type(self):
         self.add_types(self.client.id, [self.descr_name])

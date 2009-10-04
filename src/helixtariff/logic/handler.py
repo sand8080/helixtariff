@@ -94,17 +94,20 @@ class Handler(object):
 
     # server_set_descr
     @transaction()
+    @mix_client_id
     def add_service_set_descr(self, data, curs=None):
         insert(curs, ServiceSetDescr(**data))
         return response_ok()
 
     @transaction()
+    @mix_client_id
     def modify_service_set_descr(self, data, curs=None):
         loader = partial(selector.get_service_set_descr_by_name, curs, data['name'], for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
+    @mix_client_id
     def delete_service_set_descr(self, data, curs=None):
         t = selector.get_service_set_descr_by_name(curs, data['name'], for_update=True)
         delete(curs, t)
@@ -176,7 +179,7 @@ class Handler(object):
     def add_rule(self, data, curs=None):
         RuleChecker().check(data['rule'])
         tariff = selector.get_tariff(curs, data['client_id'], data['tariff_name'])
-        service_type = selector.get_service_type_by_name(curs, data['service_type_name'])
+        service_type = selector.get_service_type_by_name(curs, data['client_id'], data['service_type_name'])
         inserts = {
             'tariff_id': tariff.id,
             'service_type_id': service_type.id,

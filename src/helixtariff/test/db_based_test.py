@@ -7,6 +7,7 @@ from helixtariff.conf.settings import patch_table_name
 from helixtariff.test.test_environment import patches_path
 from helixtariff.logic.actions import handle_action
 from helixtariff.logic import selector
+from helixtariff.logic.handler import Handler
 
 from root_test import RootTestCase
 
@@ -17,14 +18,25 @@ class DbBasedTestCase(RootTestCase):
 
 
 class ServiceTestCase(DbBasedTestCase):
+    def setUp(self):
+        super(ServiceTestCase, self).setUp()
+        self.add_root_client()
+
     def add_client(self, login, password):
         handle_action('add_client', {'login': login, 'password': password})
         client = self.get_client_by_login(login)
         self.assertEqual(login, client.login)
 
+    def add_root_client(self):
+        login = Handler.root_client_stub
+        self.add_client(login, 'qazwsx')
+
     @transaction()
     def get_client_by_login(self, login, curs=None):
         return selector.get_client_by_login(curs, login)
+
+    def get_root_client(self):
+        return self.get_client_by_login(Handler.root_client_stub)
 
     def add_descrs(self, service_set_desrs):
         for d in service_set_desrs:
@@ -93,7 +105,7 @@ class ServiceTestCase(DbBasedTestCase):
         handle_action('add_rule', data)
         obj = self.get_rule(client_id, tariff_name, service_type_name)
 
-        service_type = self.get_service_type_by_name(service_type_name)
+        service_type = self.get_service_type_by_name(client_id, service_type_name)
         self.assertEqual(service_type_name, service_type.name)
 
         tariff = self.get_tariff(client_id, tariff_name)

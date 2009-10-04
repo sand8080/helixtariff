@@ -12,7 +12,7 @@ class ServiceType(Mapped):
 
 
 class ServiceSetDescr(Mapped):
-    __slots__ = ['id', 'name']
+    __slots__ = ['id', 'client_id', 'name']
     table = 'service_set_descr'
 
 
@@ -22,7 +22,7 @@ class ServiceSet(Mapped):
 
 
 class Tariff(Mapped):
-    __slots__ = ['id', 'service_set_descr_id', 'client_id', 'name', 'in_archive']
+    __slots__ = ['id', 'client_id', 'service_set_descr_id', 'name', 'in_archive']
     table = 'tariff'
 
 

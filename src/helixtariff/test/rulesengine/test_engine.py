@@ -2,8 +2,8 @@ import unittest
 import os
 
 #from helixtariff.rulesengine.rule_checker import RuleChecker
-from helixtariff.rulesengine.engine import Engine, EngineError
-from helixtariff.rulesengine.interaction import RequestPrice
+from helixtariff.rulesengine.engine import Engine
+from helixtariff.rulesengine.interaction import RequestPrice, PriceProcessingError
 
 
 class EngineTestCase(unittest.TestCase):
@@ -14,9 +14,7 @@ class EngineTestCase(unittest.TestCase):
 
     def test_request_price(self):
         e = Engine()
-        request = RequestPrice()
-        e.process(request)
-        self.assertRaises(EngineError, e.process, '')
+        self.assertRaises(PriceProcessingError, e.process, RequestPrice())
 
 
 if __name__ == '__main__':

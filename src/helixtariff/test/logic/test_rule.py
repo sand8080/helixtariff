@@ -10,13 +10,16 @@ class RuleTestCase(ServiceTestCase):
     service_types = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
     service_set_descr = 'automatic'
     tariff = 'лунный свет'
-    client_id = 'coyote client 34'
     name = 'happy new year'
+
+    @property
+    def client_id(self):
+        return self.get_root_client().id
 
     def setUp(self):
         super(RuleTestCase, self).setUp()
         self.add_descrs([self.service_set_descr])
-        self.add_types(self.service_types)
+        self.add_types(self.client_id, self.service_types)
         self.add_to_service_set(self.service_set_descr, self.service_types)
         self.add_tariff(self.service_set_descr, self.client_id, self.tariff, False)
 
@@ -32,12 +35,6 @@ if context.get_balance(request.customer_id) > 500: price -= 30
         self.add_rule(self.client_id, self.tariff, self.service_types[1], '')
         self.assertRaises(DataIntegrityError, self.add_rule, self.client_id, self.tariff, self.service_types[1], '')
 
-
-#    def test_add_tariff_failure(self):
-#        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_descr + 'fake', self.client_id, self.name)
-#        self.add_tariff(self.service_set_descr, self.client_id, self.name)
-#        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_descr, self.client_id, self.name)
-#
 #    def test_modify_tariff(self):
 #        self.test_add_tariff()
 #        new_name = 'new' + self.name

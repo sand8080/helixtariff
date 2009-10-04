@@ -10,14 +10,17 @@ from helixtariff.logic.actions import handle_action
 class TariffTestCase(ServiceTestCase):
     service_types = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
     service_set_descr = 'automatic'
-    client_id = 'coyote client 34'
     name = 'happy new year'
     in_archive = False
+
+    @property
+    def client_id(self):
+        return self.get_root_client().id
 
     def setUp(self):
         super(TariffTestCase, self).setUp()
         self.add_descrs([self.service_set_descr])
-        self.add_types(self.service_types)
+        self.add_types(self.client_id, self.service_types)
         self.add_to_service_set(self.service_set_descr, self.service_types)
 
     def test_add_tariff(self):

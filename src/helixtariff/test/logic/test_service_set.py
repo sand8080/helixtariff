@@ -11,7 +11,7 @@ class ServiceSetTestCase(ServiceTestCase):
     def setUp(self):
         super(ServiceSetTestCase, self).setUp()
         self.add_descrs(self.service_set_desrs)
-        self.add_types(self.service_types)
+        self.add_types(self.get_root_client().id, self.service_types)
 
     def test_add_to_service_set(self):
         self.add_to_service_set('automatic', ['register ru', 'prolong ru', 'register hn', 'prolong hn'])
