@@ -1,6 +1,0 @@
-if context.get_balance(request.customer_id) > 3:
-    response. price += 90
-
-if now() > datetime(year='2009', month='09', day='13'):
-    response.price += 10
-

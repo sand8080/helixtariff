@@ -21,21 +21,23 @@ iso_datetime_validator = re.compile(r"""
 
 PING = {}
 
-# --- client ---
-ADD_CLIENT = {
+AUTH_INFO = {
     'login': Text(),
     'password': Text(),
 }
 
-MODIFY_CLIENT = {
-    'login': Text(),
-    Optional('new_login'): Text(),
-    Optional('new_password'): Text(),
-}
+# --- client ---
+ADD_CLIENT = AUTH_INFO
 
-DELETE_CLIENT = {
-    'login': Text(),
-}
+MODIFY_CLIENT = dict(
+    {
+        Optional('new_login'): Text(),
+        Optional('new_password'): Text(),
+    },
+    **AUTH_INFO
+)
+
+DELETE_CLIENT = AUTH_INFO
 
 # --- service type ---
 SERVICE_TYPE = {
@@ -116,33 +118,42 @@ DELETE_RULE = {
     'service_type_name': Text(),
 }
 
-action_to_scheme_map = {
-    'ping': Scheme(PING),
+# Useful for documentation generation
+class ApiCall(object):
+    def __init__(self, name, scheme, description='Not described at yet.'):
+        self.name = name
+        self.scheme = scheme
+        self.description = description
 
-    'add_client': Scheme(ADD_CLIENT),
-    'modify_client': Scheme(MODIFY_CLIENT),
-    'delete_client': Scheme(DELETE_CLIENT),
+api_scheme = [
+    ApiCall('ping', Scheme(PING)),
 
-    'add_service_type': Scheme(ADD_SERVICE_TYPE),
-    'modify_service_type': Scheme(MODIFY_SERVICE_TYPE),
-    'delete_service_type': Scheme(DELETE_SERVICE_TYPE),
+    ApiCall('add_client', Scheme(ADD_CLIENT)),
+    ApiCall('modify_client', Scheme(MODIFY_CLIENT)),
+    ApiCall('delete_client', Scheme(DELETE_CLIENT)),
 
-    'add_service_set_descr': Scheme(ADD_SERVICE_SET_DESCR),
-    'modify_service_set_descr': Scheme(MODIFY_SERVICE_SET_DESCR),
-    'delete_service_set_descr': Scheme(DELETE_SERVICE_SET_DESCR),
+    ApiCall('add_service_type', Scheme(ADD_SERVICE_TYPE)),
+    ApiCall('modify_service_type', Scheme(MODIFY_SERVICE_TYPE)),
+    ApiCall('delete_service_type', Scheme(DELETE_SERVICE_TYPE)),
 
-    'add_to_service_set': Scheme(ADD_TO_SERVICE_SET),
-    'delete_from_service_set': Scheme(DELETE_FROM_SERVICE_SET),
-    'delete_service_set': Scheme(DELETE_SERVICE_SET),
+    ApiCall('add_service_set_descr', Scheme(ADD_SERVICE_SET_DESCR)),
+    ApiCall('modify_service_set_descr', Scheme(MODIFY_SERVICE_SET_DESCR)),
+    ApiCall('delete_service_set_descr', Scheme(DELETE_SERVICE_SET_DESCR)),
 
-    'add_tariff': Scheme(ADD_TARIFF),
-    'modify_tariff': Scheme(MODIFY_TARIFF),
-    'delete_tariff': Scheme(DELETE_TARIFF),
+    ApiCall('add_to_service_set', Scheme(ADD_TO_SERVICE_SET)),
+    ApiCall('delete_from_service_set', Scheme(DELETE_FROM_SERVICE_SET)),
+    ApiCall('delete_service_set', Scheme(DELETE_SERVICE_SET)),
 
-    'add_rule': Scheme(ADD_RULE),
-    'modify_rule': Scheme(MODIFY_RULE),
-    'delete_rule': Scheme(DELETE_RULE),
-}
+    ApiCall('add_tariff', Scheme(ADD_TARIFF)),
+    ApiCall('modify_tariff', Scheme(MODIFY_TARIFF)),
+    ApiCall('delete_tariff', Scheme(DELETE_TARIFF)),
+
+    ApiCall('add_rule', Scheme(ADD_RULE)),
+    ApiCall('modify_rule', Scheme(MODIFY_RULE)),
+    ApiCall('delete_rule', Scheme(DELETE_RULE)),
+]
+
+action_to_scheme_map = dict((c.name, c.scheme) for c in api_scheme)
 
 class ValidationError(RequestProcessingError):
     def __init__(self, msg):

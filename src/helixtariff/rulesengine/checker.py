@@ -13,7 +13,7 @@ class RuleChecker(object):
             'if',
             'response', 'price',
             'context', 'get_balance',
-            'request', 'customer_id',
+            'request', 'customer_id', 'period', 'check_period', 'min_period', 'max_period',
         ])
 
     def check(self, source):

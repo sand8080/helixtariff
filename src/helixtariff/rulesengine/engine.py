@@ -1,5 +1,8 @@
 from helixtariff.error import HelixtariffError
-from helixtariff.rulesengine.interaction import RequestPrice, ResponsePrice
+from helixtariff.rulesengine.interaction import RequestDomainPrice, ResponseDomainPrice
+from helixtariff.conf.db import transaction
+from helixtariff.logic import selector
+from helixtariff.rulesengine.context import moc as context #IGNORE:W0611 @UnusedImport
 
 
 class EngineError(HelixtariffError):
@@ -9,7 +12,7 @@ class EngineError(HelixtariffError):
 class Engine(object):
     def __init__(self):
         self.handlers = {
-            RequestPrice: self.on_price_request,
+            RequestDomainPrice: self.on_request_domain_price,
         }
 
     def process(self, request):
@@ -19,17 +22,17 @@ class Engine(object):
         handler = self.handlers[cls]
         return handler(request)
 
-    def on_price_request(self, request):
-        from helixtariff.rulesengine.context import moc as context
+    def on_request_domain_price(self, request):
         rule = self.load_rule(request)
         price = None
 
         exec rule
 
-        response = ResponsePrice(price)
+        response = ResponseDomainPrice(price)
         response.check_valid()
         return response
 
-
-    def load_rule(self, request):
-        return ''
+    @transaction()
+    def load_rule(self, request, curs=None):
+        obj = selector.get_rule(curs, request.client_id, request.tariff_name, request.service_type_name)
+        return obj.rule

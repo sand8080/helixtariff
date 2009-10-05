@@ -25,7 +25,11 @@ class ServiceTestCase(DbBasedTestCase):
     def add_client(self, login, password):
         handle_action('add_client', {'login': login, 'password': password})
         client = self.get_client_by_login(login)
+        auth_client = self.get_auth_client(login, password)
         self.assertEqual(login, client.login)
+        self.assertEqual(client.id, auth_client.id)
+        self.assertEqual(client.login, auth_client.login)
+        self.assertEqual(client.password, auth_client.password)
 
     def add_root_client(self):
         login = Handler.root_client_stub
@@ -34,6 +38,10 @@ class ServiceTestCase(DbBasedTestCase):
     @transaction()
     def get_client_by_login(self, login, curs=None):
         return selector.get_client_by_login(curs, login)
+
+    @transaction()
+    def get_auth_client(self, login, password, curs=None):
+        return selector.get_auth_client(curs, login, password)
 
     def get_root_client(self):
         return self.get_client_by_login(Handler.root_client_stub)

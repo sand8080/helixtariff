@@ -1,7 +1,7 @@
 from functools import partial
 
 import helixcore.mapping.actions as mapping
-from helixcore.db.sql import In, Eq, Scoped, And, Insert, Delete, Update
+from helixcore.db.sql import In, Eq, Scoped, And, Delete
 from helixcore.server.response import response_ok
 from helixcore.server.exceptions import DataIntegrityError
 
@@ -10,6 +10,7 @@ from helixtariff.domain.objects import Client, ServiceType, ServiceSetDescr, Ser
 from helixtariff.logic import query_builder
 from helixtariff.logic import selector
 from helixtariff.rulesengine.checker import RuleChecker
+from helixtariff.domain import security
 
 
 def mix_client_id(method):
@@ -18,20 +19,26 @@ def mix_client_id(method):
         method(self, data, curs)
     return decroated
 
+def authentificate(method):
+    def decroated(self, data, curs):
+        data['client_id'] = self.get_client_id(curs, data)
+        del data['login']
+        del data['password']
+        method(self, data, curs)
+    return decroated
+
 
 class Handler(object):
+    '''Handles all API actions. Method names are called like actions.'''
+
     # TODO: remove me after auth integrated into protocol
     root_client_stub = 'root_client'
 
-    '''
-    Handles all API actions. Method names are called like actions.
-    '''
     def ping(self, data): #IGNORE:W0613
         return response_ok()
 
-    # TODO: implement getting client_id from data
-    def get_client_id(self, curs, _):
-        return selector.get_client_by_login(curs, self.root_client_stub).id
+    def get_client_id(self, curs, data):
+        return selector.get_auth_client(curs, data['login'], data['password']).id
 
     def get_fields_for_update(self, data, prefix_of_new='new_'):
         '''
@@ -56,18 +63,23 @@ class Handler(object):
     # client
     @transaction()
     def add_client(self, data, curs=None):
+        data['password'] = security.encrypt_password(data['password'])
         mapping.insert(curs, Client(**data))
         return response_ok()
 
     @transaction()
+    @authentificate
     def modify_client(self, data, curs=None):
-        loader = partial(selector.get_client_by_login, curs, data['login'], for_update=True)
+        if 'new_password' in data:
+            data['new_password'] = security.encrypt_password(data['new_password'])
+        loader = partial(selector.get_client, curs, data['client_id'], for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
+    @authentificate
     def delete_client(self, data, curs=None):
-        obj = selector.get_client_by_login(curs, data['login'], for_update=True)
+        obj = selector.get_client(curs, data['client_id'])
         mapping.delete(curs, obj)
         return response_ok()
 

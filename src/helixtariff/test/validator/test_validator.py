@@ -15,9 +15,9 @@ class ValidatorTestCase(RootTestCase):
         self.assertRaises(ValidationError, validate, 'add_client', {})
 
     def test_modify_client(self):
-        validate('modify_client', {'login': 'log', 'new_login': 'new_log'})
-        validate('modify_client', {'login': 'log', 'new_login': 'new_log', 'new_password': 'pw'})
-        validate('modify_client', {'login': 'log'})
+        validate('modify_client', {'login': 'log', 'password': 'pi', 'new_login': 'new_log'})
+        validate('modify_client', {'login': 'log', 'password': 'pi', 'new_login': 'new_log', 'new_password': 'pw'})
+        validate('modify_client', {'login': 'log', 'password': 'pi'})
 
     def test_add_service_type(self):
         validate('add_service_type', {'name': 'register_ru'})
