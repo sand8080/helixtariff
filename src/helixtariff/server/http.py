@@ -1,11 +1,12 @@
-from eventlet import api, httpd, util
+from eventlet import api, util, wsgi
+import cjson
 import logging
 
 from helixcore.server.api import Api as HelixApi
 from helixcore.server.response import response_error, response_app_error
 from helixcore.server.errors import RequestProcessingError
 
-from helixtariff.conf.settings import server_http_addr, server_http_port
+from helixtariff.conf import settings
 from helixtariff.logic.actions import handle_action
 from helixtariff.conf.log import logger
 from helixtariff.validator.validator import validate
@@ -16,9 +17,14 @@ class Handler(object):
     def __init__(self):
         self.helix_api = HelixApi(validate)
 
-    def handle_request(self, req):
-        raw_data = req.read_body()
-        logger.info('HTTP req from %s: %s' % (str(req.socket().getpeername()), raw_data))
+    def __call__(self, environ, start_response):
+        input = environ['eventlet.input']
+        print
+
+        raw_data = input.read()
+        remote_addr = environ['REMOTE_ADDR'] if 'REMOTE_ADDR' in environ else 'undefined'
+        logger.info('Request from %s' % remote_addr)
+        logger.debug('Request from %s data %s' % (remote_addr, raw_data))
 
         response_ok = False
         try:
@@ -31,13 +37,13 @@ class Handler(object):
             response = response_app_error(e.message)
 
         raw_response = self.helix_api.handle_response(response)
+        self.log_response(remote_addr, response, response_ok)
+        start_response('200 OK', [('Content-type', 'text/plain')])
+        return [raw_response]
 
-        self.log_response(req, response_ok, raw_response)
-        req.response(200, body=raw_response)
-
-    def log_response(self, req, response_ok, raw_response):
-        level = response_ok and logging.INFO or logging.ERROR
-        logger.log(level, 'HTTP response to %s: %s' % (str(req.socket().getpeername()), raw_response))
+    def log_response(self, remote_addr, response, response_ok):
+        level = logging.INFO if response_ok else logging.ERROR
+        logger.log(level, 'Response to %s: %s' % (remote_addr, response))
 
     def adapt(self, obj, req):
         'Convert obj to bytes'
@@ -48,5 +54,18 @@ class ServerLog(object):
         logger.info('server: %s' % s)
 
 def run():
-    #blocking
-    httpd.server(api.tcp_listener((server_http_addr, server_http_port)), Handler(), max_size=5000, log=ServerLog())
+    wsgi.server(
+        api.tcp_listener((settings.server_http_addr, settings.server_http_port)),
+        Handler(),
+        max_size=5000,
+        log=ServerLog()
+    )
+
+def run_ssl():
+    raise NotImplementedError()
+    wsgi.server(
+        api.ssl_listener((settings.server_http_addr, settings.server_http_port)),
+        Handler(),
+        max_size=5000,
+        log=ServerLog()
+    )
