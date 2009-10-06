@@ -17,7 +17,12 @@ class ServiceSetDescrTestCase(ServiceTestCase):
         t_old = self.get_service_set_descr_by_name(self.name)
 
         new_name = 'new' + self.name
-        data = {'name': self.name, 'new_name': new_name}
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': self.name,
+            'new_name': new_name
+        }
         handle_action('modify_service_set_descr', data)
 
         t_new = self.get_service_set_descr_by_name(new_name)
@@ -26,7 +31,12 @@ class ServiceSetDescrTestCase(ServiceTestCase):
 
     def test_delete_service_set_descr(self):
         self.test_add_service_set_descr()
-        handle_action('delete_service_set_descr', {'name': self.name})
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': self.name
+        }
+        handle_action('delete_service_set_descr', data)
         self.assertRaises(DataIntegrityError, self.get_service_set_descr_by_name, self.name)
 
 

@@ -7,7 +7,6 @@ from helixtariff.conf.settings import patch_table_name
 from helixtariff.test.test_environment import patches_path
 from helixtariff.logic.actions import handle_action
 from helixtariff.logic import selector
-from helixtariff.logic.handler import Handler
 
 from root_test import RootTestCase
 
@@ -18,6 +17,9 @@ class DbBasedTestCase(RootTestCase):
 
 
 class ServiceTestCase(DbBasedTestCase):
+    test_client_login = 'test_client'
+    test_client_password = 'qazwsx'
+
     def setUp(self):
         super(ServiceTestCase, self).setUp()
         self.add_root_client()
@@ -32,8 +34,7 @@ class ServiceTestCase(DbBasedTestCase):
         self.assertEqual(client.password, auth_client.password)
 
     def add_root_client(self):
-        login = Handler.root_client_stub
-        self.add_client(login, 'qazwsx')
+        self.add_client(self.test_client_login, self.test_client_password)
 
     @transaction()
     def get_client_by_login(self, login, curs=None):
@@ -44,11 +45,14 @@ class ServiceTestCase(DbBasedTestCase):
         return selector.get_auth_client(curs, login, password)
 
     def get_root_client(self):
-        return self.get_client_by_login(Handler.root_client_stub)
+        return self.get_client_by_login(self.test_client_login)
 
     def add_descrs(self, service_set_desrs):
         for d in service_set_desrs:
-            handle_action('add_service_set_descr', {'name': d})
+            handle_action(
+                'add_service_set_descr',
+                {'login': self.test_client_login, 'password': self.test_client_password, 'name': d}
+            )
             descr = self.get_service_set_descr_by_name(d)
             self.assertEqual(d, descr.name)
 
@@ -58,7 +62,10 @@ class ServiceTestCase(DbBasedTestCase):
 
     def add_types(self, service_types):
         for t in service_types:
-            handle_action('add_service_type', {'name': t})
+            handle_action(
+                'add_service_type',
+                {'login': self.test_client_login, 'password': self.test_client_password, 'name': t}
+            )
             obj = self.get_service_type_by_name(self.get_root_client().id, t)
             self.assertTrue(obj.id > 0)
             self.assertEquals(obj.name, t)
@@ -68,7 +75,12 @@ class ServiceTestCase(DbBasedTestCase):
         return selector.get_service_types_by_descr_name(curs, name)
 
     def add_to_service_set(self, name, types):
-        data = {'name': name, 'types': types}
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': name,
+            'types': types
+        }
         handle_action('add_to_service_set', data)
         types = self.get_service_types_by_descr_name(data['name'])
         expected_types_names = data['types']
@@ -86,6 +98,8 @@ class ServiceTestCase(DbBasedTestCase):
 
     def add_tariff(self, servise_set_descr, name, in_archive):
         data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
             'service_set_descr_name': servise_set_descr,
             'name': name,
             'in_archive': in_archive
@@ -105,6 +119,8 @@ class ServiceTestCase(DbBasedTestCase):
 
     def add_rule(self, tariff_name, service_type_name, rule):
         data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
             'tariff_name': tariff_name,
             'service_type_name': service_type_name,
             'rule': rule,

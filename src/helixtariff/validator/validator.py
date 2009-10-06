@@ -40,83 +40,115 @@ MODIFY_CLIENT = dict(
 DELETE_CLIENT = AUTH_INFO
 
 # --- service type ---
-SERVICE_TYPE = {
-    'name': Text(),
-}
+SERVICE_TYPE = dict(
+    {'name': Text(),},
+    **AUTH_INFO
+)
 
 ADD_SERVICE_TYPE = SERVICE_TYPE
 
-MODIFY_SERVICE_TYPE = {
-    'name': Text(),
-    'new_name': Text(),
-}
+MODIFY_SERVICE_TYPE = dict(
+    {
+        'name': Text(),
+        'new_name': Text(),
+    },
+    **AUTH_INFO
+)
 
 DELETE_SERVICE_TYPE = SERVICE_TYPE
 
 # --- service set descr ---
-ADD_SERVICE_SET_DESCR = {
-    'name': Text(),
-}
+ADD_SERVICE_SET_DESCR = dict(
+    {'name': Text()},
+    **AUTH_INFO
+)
 
-MODIFY_SERVICE_SET_DESCR = {
-    'name': Text(),
-    'new_name': Text(),
-}
+MODIFY_SERVICE_SET_DESCR = dict(
+    {
+        'name': Text(),
+        'new_name': Text(),
+    },
+    **AUTH_INFO
+)
 
-DELETE_SERVICE_SET_DESCR = {
-    'name': Text(),
-}
+DELETE_SERVICE_SET_DESCR = dict(
+    {'name': Text()},
+    **AUTH_INFO
+)
 
 # --- service set ---
-ADD_TO_SERVICE_SET = {
-    'name': Text(),
-    'types': [Text()],
-}
+ADD_TO_SERVICE_SET = dict(
+    {
+        'name': Text(),
+        'types': [Text()],
+    },
+    **AUTH_INFO
+)
 
-DELETE_FROM_SERVICE_SET = {
-    'name': Text(),
-    'types': [Text()],
-}
 
-DELETE_SERVICE_SET = {
-    'name': Text(),
-}
+DELETE_FROM_SERVICE_SET = dict(
+    {
+        'name': Text(),
+        'types': [Text()],
+    },
+    **AUTH_INFO
+)
+
+DELETE_SERVICE_SET = dict(
+    {'name': Text()},
+    **AUTH_INFO
+)
 
 # --- tariff ---
-ADD_TARIFF = {
-    'name': Text(),
-    'service_set_descr_name': Text(),
-    'in_archive': bool,
-}
+ADD_TARIFF = dict(
+    {
+        'name': Text(),
+        'service_set_descr_name': Text(),
+        'in_archive': bool,
+    },
+    **AUTH_INFO
+)
 
-MODIFY_TARIFF = {
-    'name': Text(),
-    Optional('new_name'): Text(),
-    Optional('new_in_archive'): bool,
-#    'service_set_descr_name': Text(), TODO. implement after service_set transition checker
-}
+MODIFY_TARIFF = dict(
+    {
+        'name': Text(),
+        Optional('new_name'): Text(),
+        Optional('new_in_archive'): bool,
+    },
+    **AUTH_INFO
+)
 
-DELETE_TARIFF = {
-    'name': Text(),
-}
+DELETE_TARIFF = dict(
+    {'name': Text()},
+    **AUTH_INFO
+)
 
 # --- rule ---
-ADD_RULE = {
-    'tariff_name': Text(),
-    'service_type_name': Text(),
-    'rule': Text(),
-}
+ADD_RULE = dict(
+    {
+        'tariff_name': Text(),
+        'service_type_name': Text(),
+        'rule': Text(),
+    },
+    **AUTH_INFO
+)
 
-MODIFY_RULE = {
-    'tariff_name': Text(),
-    'service_type_name': Text(),
-    'new_rule': Text(),
-}
+MODIFY_RULE = dict(
+    {
+        'tariff_name': Text(),
+        'service_type_name': Text(),
+        'new_rule': Text(),
+    },
+    **AUTH_INFO
+)
 
-DELETE_RULE = {
-    'tariff_name': Text(),
-    'service_type_name': Text(),
-}
+DELETE_RULE = dict(
+    {
+        'tariff_name': Text(),
+        'service_type_name': Text(),
+    },
+    **AUTH_INFO
+)
 
 # Useful for documentation generation
 class ApiCall(object):

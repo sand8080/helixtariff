@@ -13,12 +13,6 @@ from helixtariff.rulesengine.checker import RuleChecker
 from helixtariff.domain import security
 
 
-def mix_client_id(method):
-    def decroated(self, data, curs):
-        data['client_id'] = self.get_client_id(curs, data)
-        method(self, data, curs)
-    return decroated
-
 def authentificate(method):
     def decroated(self, data, curs):
         data['client_id'] = self.get_client_id(curs, data)
@@ -30,9 +24,6 @@ def authentificate(method):
 
 class Handler(object):
     '''Handles all API actions. Method names are called like actions.'''
-
-    # TODO: remove me after auth integrated into protocol
-    root_client_stub = 'root_client'
 
     def ping(self, data): #IGNORE:W0613
         return response_ok()
@@ -85,20 +76,20 @@ class Handler(object):
 
     # server_type
     @transaction()
-    @mix_client_id
+    @authentificate
     def add_service_type(self, data, curs=None):
         mapping.insert(curs, ServiceType(**data))
         return response_ok()
 
     @transaction()
-    @mix_client_id
+    @authentificate
     def modify_service_type(self, data, curs=None):
         loader = partial(selector.get_service_type_by_name, curs, data['client_id'], data['name'], for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
-    @mix_client_id
+    @authentificate
     def delete_service_type(self, data, curs=None):
         t = selector.get_service_type_by_name(curs, data['client_id'], data['name'], for_update=True)
         mapping.delete(curs, t)
@@ -106,20 +97,20 @@ class Handler(object):
 
     # server_set_descr
     @transaction()
-    @mix_client_id
+    @authentificate
     def add_service_set_descr(self, data, curs=None):
         mapping.insert(curs, ServiceSetDescr(**data))
         return response_ok()
 
     @transaction()
-    @mix_client_id
+    @authentificate
     def modify_service_set_descr(self, data, curs=None):
         loader = partial(selector.get_service_set_descr_by_name, curs, data['name'], for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
-    @mix_client_id
+    @authentificate
     def delete_service_set_descr(self, data, curs=None):
         t = selector.get_service_set_descr_by_name(curs, data['name'], for_update=True)
         mapping.delete(curs, t)
@@ -127,6 +118,7 @@ class Handler(object):
 
     # server_set
     @transaction()
+    @authentificate
     def add_to_service_set(self, data, curs=None):
         descr = selector.get_service_set_descr_by_name(curs, data['name'])
         types_names = data['types']
@@ -141,6 +133,7 @@ class Handler(object):
         return response_ok()
 
     @transaction()
+    @authentificate
     def delete_from_service_set(self, data, curs=None):
         query_set_descr_id = query_builder.select_service_set_descr_id(data['name'])
         cond_set_descr_id = Eq('service_set_descr_id', Scoped(query_set_descr_id))
@@ -154,6 +147,7 @@ class Handler(object):
         return response_ok()
 
     @transaction()
+    @authentificate
     def delete_service_set(self, data, curs=None):
         query_set_descr_id = query_builder.select_service_set_descr_id(data['name'])
         cond_set_descr_id = Eq('service_set_descr_id', Scoped(query_set_descr_id))
@@ -163,7 +157,7 @@ class Handler(object):
 
     # tariff
     @transaction()
-    @mix_client_id
+    @authentificate
     def add_tariff(self, data, curs=None):
         descr = selector.get_service_set_descr_by_name(curs, data['service_set_descr_name'])
         del data['service_set_descr_name']
@@ -172,14 +166,14 @@ class Handler(object):
         return response_ok()
 
     @transaction()
-    @mix_client_id
+    @authentificate
     def modify_tariff(self, data, curs=None):
         loader = partial(selector.get_tariff, curs, data['client_id'], data['name'], for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
-    @mix_client_id
+    @authentificate
     def delete_tariff(self, data, curs=None):
         obj = selector.get_tariff(curs, data['client_id'], data['name'])
         mapping.delete(curs, obj)
@@ -187,7 +181,7 @@ class Handler(object):
 
     # rule
     @transaction()
-    @mix_client_id
+    @authentificate
     def add_rule(self, data, curs=None):
         RuleChecker().check(data['rule'])
         tariff = selector.get_tariff(curs, data['client_id'], data['tariff_name'])
@@ -202,7 +196,7 @@ class Handler(object):
         mapping.insert(curs, Rule(**data))
 
     @transaction()
-    @mix_client_id
+    @authentificate
     def modify_rule(self, data, curs=None):
         RuleChecker().check(data['new_rule'])
         loader = partial(selector.get_rule, curs, data['client_id'], data['tariff_name'],
@@ -211,7 +205,7 @@ class Handler(object):
         return response_ok()
 
     @transaction()
-    @mix_client_id
+    @authentificate
     def delete_rule(self, data, curs=None):
         obj = selector.get_rule(curs, data['client_id'], data['tariff_name'], data['service_type_name'])
         mapping.delete(curs, obj)

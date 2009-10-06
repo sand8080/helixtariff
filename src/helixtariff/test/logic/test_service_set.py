@@ -21,7 +21,15 @@ class ServiceSetTestCase(ServiceTestCase):
         types_names = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
         expected_names = types_names[1:]
         self.add_to_service_set(service_set_descr, types_names)
-        handle_action('delete_from_service_set', {'name': service_set_descr, 'types': [types_names[0]]})
+        handle_action(
+            'delete_from_service_set',
+            {
+                'login': self.test_client_login,
+                'password': self.test_client_password,
+                'name': service_set_descr,
+                'types': [types_names[0]]
+            }
+        )
 
         actual_types = self.get_service_types_by_descr_name(service_set_descr)
         self.assertEqual(len(expected_names), len(actual_types))
@@ -32,7 +40,14 @@ class ServiceSetTestCase(ServiceTestCase):
         service_set_descr = 'automatic'
         types_names = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
         self.add_to_service_set(service_set_descr, types_names)
-        handle_action('delete_service_set', {'name': service_set_descr})
+        handle_action(
+            'delete_service_set',
+            {
+                'login': self.test_client_login,
+                'password': self.test_client_password,
+                'name': service_set_descr
+            }
+        )
 
         actual_types = self.get_service_types_by_descr_name(service_set_descr)
         self.assertEqual(0, len(actual_types))

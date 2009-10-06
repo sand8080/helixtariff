@@ -38,7 +38,13 @@ class TariffTestCase(ServiceTestCase):
     def test_modify_tariff(self):
         self.test_add_tariff()
         new_name = 'new' + self.name
-        data = {'name': self.name, 'new_name': new_name, 'new_in_archive': not self.in_archive}
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': self.name,
+            'new_name': new_name,
+            'new_in_archive': not self.in_archive
+        }
         handle_action('modify_tariff', data)
         t = self.get_tariff(self.root_client_id, new_name)
         self.assertEqual(new_name, t.name)
@@ -46,7 +52,11 @@ class TariffTestCase(ServiceTestCase):
 
     def test_modify_tariff_do_nothing(self):
         self.test_add_tariff()
-        data = {'name': self.name}
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': self.name
+        }
         handle_action('modify_tariff', data)
         t = self.get_tariff(self.root_client_id, self.name)
         self.assertEqual(self.name, t.name)
@@ -54,7 +64,12 @@ class TariffTestCase(ServiceTestCase):
 
     def test_delete_tariff(self):
         self.test_add_tariff()
-        handle_action('delete_tariff', {'name': self.name})
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': self.name
+        }
+        handle_action('delete_tariff', data)
         self.assertRaises(EmptyResultSetError, self.get_tariff, self.root_client_id, self.name)
 
 

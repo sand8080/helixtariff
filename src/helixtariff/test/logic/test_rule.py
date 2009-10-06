@@ -41,6 +41,8 @@ if context.get_balance(request.customer_id) > 500: price -= 30
 
         new_raw_rule = old_raw_rule + ' + 9.01'
         data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
             'tariff_name': self.tariff_name,
             'service_type_name': self.service_types_names[0],
             'new_rule': new_raw_rule
@@ -55,7 +57,12 @@ if context.get_balance(request.customer_id) > 500: price -= 30
 
     def test_delete_rule(self):
         self.add_rule(self.tariff_name, self.service_types_names[0], '')
-        data = {'tariff_name': self.tariff_name, 'service_type_name': self.service_types_names[0]}
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff_name': self.tariff_name,
+            'service_type_name': self.service_types_names[0]
+        }
         handle_action('delete_rule', data)
         self.assertRaises(EmptyResultSetError, self.get_rule, self.get_root_client().id,
             self.tariff_name, self.service_types_names[0])

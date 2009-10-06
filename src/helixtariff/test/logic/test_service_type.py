@@ -22,7 +22,12 @@ class ServiceTypeTestCase(ServiceTestCase):
         t_old = self.get_service_type_by_name(self.client.id, old_name)
 
         new_name = 'new' + old_name
-        data = {'name': old_name, 'new_name': new_name}
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': old_name,
+            'new_name': new_name
+        }
         handle_action('modify_service_type', data)
 
         t_new = self.get_service_type_by_name(self.client.id, new_name)
@@ -31,7 +36,14 @@ class ServiceTypeTestCase(ServiceTestCase):
 
     def test_delete_service_type(self):
         self.test_add_service_type()
-        handle_action('delete_service_type', {'name': self.descr_name})
+        handle_action(
+            'delete_service_type',
+            {
+                'login': self.test_client_login,
+                'password': self.test_client_password,
+                'name': self.descr_name,
+            }
+        )
         self.assertRaises(DataIntegrityError, self.get_service_type_by_name, self.client.id, self.descr_name)
 
 

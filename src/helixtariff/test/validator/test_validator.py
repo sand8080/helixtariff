@@ -20,42 +20,60 @@ class ValidatorTestCase(RootTestCase):
         validate('modify_client', {'login': 'log', 'password': 'pi'})
 
     def test_add_service_type(self):
-        validate('add_service_type', {'name': 'register_ru'})
+        validate('add_service_type', {'login': 'l', 'password': 'p', 'name': 'register_ru'})
 
     def test_add_service_type_invalid(self):
-        self.assertRaises(ValidationError,validate, 'add_service_type', {'name': 77})
+        self.assertRaises(ValidationError,validate, 'add_service_type', {'login': 'l', 'password': 'p', 'name': 77})
 
     def test_modify_service_type(self):
-        validate('modify_service_type', {'name': 'register_ru', 'new_name': 'register_RU'})
+        validate('modify_service_type', {'login': 'l', 'password': 'p', 'name': 'register_ru', 'new_name': 'register_RU'})
 
     def test_modify_service_type_invalid(self):
-        self.assertRaises(ValidationError, validate, 'modify_service_type', {'name': 'cheli0s'})
+        self.assertRaises(ValidationError, validate, 'modify_service_type', {'login': 'l', 'password': 'p', 'name': 'cheli0s'})
 
     def test_delete_service_type(self):
-        validate('delete_service_type', {'name': 'register_ru'})
+        validate('delete_service_type', {'login': 'l', 'password': 'p', 'name': 'register_ru'})
 
     def test_add_service_set_descr(self):
-        validate('add_service_set_descr', {'name': 'basic'})
+        validate('add_service_set_descr', {'login': 'l', 'password': 'p', 'name': 'basic'})
 
     def test_modify_service_descr(self):
-        validate('modify_service_set_descr', {'name': 'basic', 'new_name': 'restricted'})
+        validate('modify_service_set_descr', {'login': 'l', 'password': 'p', 'name': 'basic', 'new_name': 'restricted'})
 
     def test_delete_service_descr(self):
-        validate('delete_service_set_descr', {'name': 'basic'})
+        validate('delete_service_set_descr', {'login': 'l', 'password': 'p', 'name': 'basic'})
 
     def test_add_to_service_set(self):
-        validate('add_to_service_set', {'name': 'basic', 'types': ['ssl123', 'sslsuper0']})
+        validate(
+            'add_to_service_set',
+            {
+                'login': 'l',
+                'password': 'p',
+                'name': 'basic',
+                'types': ['ssl123', 'sslsuper0']
+            }
+        )
 
     def test_delete_from_service_set(self):
-        validate('delete_from_service_set', {'name': 'basic', 'types': ['ssl123', 'sslsuper0']})
+        validate(
+            'delete_from_service_set',
+            {
+                'login': 'l',
+                'password': 'p',
+                'name': 'basic',
+                'types': ['ssl123', 'sslsuper0']
+            }
+        )
 
     def test_delete_service_set(self):
-        validate('delete_service_set', {'name': 'basic'})
+        validate('delete_service_set', {'login': 'l', 'password': 'p', 'name': 'basic'})
 
     def test_add_tariff(self):
         validate(
             'add_tariff',
             {
+                'login': 'l',
+                'password': 'p',
                 'name': 'приведи друга',
                 'service_set_descr_name': 'exotic',
                 'in_archive': False,
@@ -63,23 +81,81 @@ class ValidatorTestCase(RootTestCase):
         )
 
     def test_modify_tariff(self):
-        validate('modify_tariff', {'name': 'приведи друга', 'new_name': 'для блондинок'})
-        validate('modify_tariff', {'name': 'приведи друга', 'new_in_archive': True})
-        validate('modify_tariff', {'name': 'приведи друга', 'new_name': 'для блондинок', 'new_in_archive': True})
-        validate('modify_tariff', {'name': 'приведи друга'})
+        validate(
+            'modify_tariff',
+            {
+                'login': 'l',
+                'password': 'p',
+                'name': 'приведи друга',
+                'new_name': 'для блондинок'
+            }
+        )
+        validate(
+            'modify_tariff',
+            {
+                'login': 'l',
+                'password': 'p',
+                'name': 'приведи друга',
+                'new_in_archive': True
+            }
+        )
+        validate(
+            'modify_tariff',
+            {
+                'login': 'l',
+                'password': 'p',
+                'name': 'приведи друга',
+                'new_name': 'для блондинок',
+                'new_in_archive': True
+            }
+        )
+        validate(
+            'modify_tariff',
+            {
+                'login': 'l',
+                'password': 'p',
+                'name': 'приведи друга'
+            }
+        )
 
     def test_delete_tariff(self):
-        validate('delete_tariff', {'name': 'приведи друга'})
+        validate('delete_tariff', {'login': 'l', 'password': 'p', 'name': 'приведи друга'})
 
     def test_add_rule(self):
-        validate('add_rule', {'tariff_name': 'auto', 'service_type_name': 'ru', 'rule': 'price = 10'})
+        validate(
+            'add_rule',
+            {
+                'login': 'l',
+                'password': 'p',
+                'tariff_name': 'auto',
+                'service_type_name': 'ru',
+                'rule': 'price = 10'
+            }
+        )
 
     def test_modify_rule(self):
-        validate('modify_rule', {'tariff_name': 'auto', 'service_type_name': 'ru', 'new_rule': 'price = 20'})
+        validate(
+            'modify_rule',
+            {
+                'login': 'l',
+                'password': 'p',
+                'tariff_name': 'auto',
+                'service_type_name': 'ru',
+                'new_rule': 'price = 20'
+            }
+        )
         self.assertRaises(ValidationError, validate, 'modify_rule', {'tariff_name': 'auto', 'service_type_name': 'ru'})
 
     def test_delete_rule(self):
-        validate('delete_rule', {'tariff_name': 'auto', 'service_type_name': 'ru'})
+        validate(
+            'delete_rule',
+            {
+                'login': 'l',
+                'password': 'p',
+                'tariff_name': 'auto',
+                'service_type_name': 'ru'
+            }
+        )
 
 
 if __name__ == '__main__':
