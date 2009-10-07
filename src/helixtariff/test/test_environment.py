@@ -8,4 +8,5 @@ patches_path = os.path.join(current_dir, '..', '..', 'patches')
 import logging
 settings.log_filename = os.path.join(current_dir, '..', '..', '..', 'log', 'helixtariff.log')
 settings.log_level = logging.DEBUG
+settings.log_level = logging.INFO
 settings.log_console = True

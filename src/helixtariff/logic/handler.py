@@ -18,7 +18,7 @@ def authentificate(method):
         data['client_id'] = self.get_client_id(curs, data)
         del data['login']
         del data['password']
-        method(self, data, curs)
+        return method(self, data, curs)
     return decroated
 
 

@@ -2,7 +2,7 @@ import unittest
 
 from helixtariff.test.validator.test_validator import ValidatorTestCase #IGNORE:W0611 @UnusedImport
 
-from helixtariff.test.server.test_server import ServerTestCase #IGNORE:W0611 @UnusedImport
+from helixtariff.test.wsgi.test_application import ApplicationTestCase #IGNORE:W0611 @UnusedImport
 
 from helixtariff.test.logic.test_client import ClientTestCase #IGNORE:W0611 @UnusedImport
 from helixtariff.test.logic.test_service_type import ServiceTypeTestCase #IGNORE:W0611 @UnusedImport

@@ -4,7 +4,6 @@ from decimal import Decimal
 from helixtariff.test.db_based_test import ServiceTestCase
 
 from helixtariff.rulesengine.engine import Engine
-from helixtariff.rulesengine.checker import RuleError
 from helixtariff.rulesengine.interaction import RequestDomainPrice, PriceProcessingError
 
 

@@ -2,12 +2,6 @@ DSN = 'dbname=_DBC_DBNAME_ host=_DBC_DBSERVER_ user=_DBC_DBUSER_ password=_DBC_D
 
 patch_table_name = 'patches'
 
-server_http_addr = '0.0.0.0'
-server_http_port = 9998
-
-server_https_addr = '0.0.0.0'
-server_https_port = 9999
-
 import logging
 log_filename = '/var/log/helix/helixtariff.log'
 log_level = logging.DEBUG
