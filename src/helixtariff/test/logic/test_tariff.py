@@ -72,6 +72,32 @@ class TariffTestCase(ServiceTestCase):
         handle_action('delete_tariff', data)
         self.assertRaises(EmptyResultSetError, self.get_tariff, self.root_client_id, self.name)
 
+    def test_get_tariff(self):
+        self.test_add_tariff()
+        data = {
+            'login': self.test_client_login,
+            'name': self.name
+        }
+        result = handle_action('get_tariff', data)
+        self.assertTrue('data' in result)
+        tariff_data = result['data']['tariff']
+        self.assertEqual(self.name, tariff_data['name'])
+        self.assertEqual(self.service_set_descr_name, tariff_data['service_set_descr_name'])
+
+
+    def test_get_tariff_detailed(self):
+        self.test_add_tariff()
+        data = {
+            'login': self.test_client_login,
+            'name': self.name
+        }
+        result = handle_action('get_tariff_detailed', data)
+        self.assertTrue('data' in result)
+        tariff_data = result['data']['tariff']
+        self.assertEqual(self.name, tariff_data['name'])
+        self.assertEqual(self.service_set_descr_name, tariff_data['service_set_descr_name'])
+        self.assertEqual(self.service_types_names, tariff_data['types'])
+
 
 if __name__ == '__main__':
     unittest.main()

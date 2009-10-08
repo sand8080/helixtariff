@@ -28,6 +28,9 @@ class ValidatorTestCase(RootTestCase):
     def test_modify_service_type(self):
         validate('modify_service_type', {'login': 'l', 'password': 'p', 'name': 'register_ru', 'new_name': 'register_RU'})
 
+    def test_get_service_types(self):
+        validate('get_service_types', {'login': 'l'})
+
     def test_modify_service_type_invalid(self):
         self.assertRaises(ValidationError, validate, 'modify_service_type', {'login': 'l', 'password': 'p', 'name': 'cheli0s'})
 
@@ -120,6 +123,12 @@ class ValidatorTestCase(RootTestCase):
 
     def test_delete_tariff(self):
         validate('delete_tariff', {'login': 'l', 'password': 'p', 'name': 'приведи друга'})
+
+    def test_get_tariff(self):
+        validate('get_tariff', {'login': 'l', 'name': 'приведи друга'})
+
+    def test_get_tariff_detailed(self):
+        validate('get_tariff_detailed', {'login': 'l', 'name': 'приведи друга'})
 
     def test_add_rule(self):
         validate(

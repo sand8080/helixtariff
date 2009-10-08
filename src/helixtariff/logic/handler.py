@@ -11,6 +11,7 @@ from helixtariff.logic import query_builder
 from helixtariff.logic import selector
 from helixtariff.rulesengine.checker import RuleChecker
 from helixtariff.domain import security
+from helixtariff.logic.selector import get_service_set_descr
 
 
 def authentificate(method):
@@ -95,6 +96,13 @@ class Handler(object):
         mapping.delete(curs, t)
         return response_ok()
 
+    @transaction()
+    def get_service_types(self, data, curs=None):
+        types = selector.get_service_types(curs, data['login'])
+        return response_ok(
+            types=[t.name for t in types]
+        )
+
     # server_set_descr
     @transaction()
     @authentificate
@@ -178,6 +186,26 @@ class Handler(object):
         obj = selector.get_tariff(curs, data['client_id'], data['name'])
         mapping.delete(curs, obj)
         return response_ok()
+
+    def _get_tariff_data(self, data, curs=None):
+        client = selector.get_client_by_login(curs, data['login'])
+        tariff = selector.get_tariff(curs, client.id, data['name'])
+        descr = get_service_set_descr(curs, tariff.service_set_descr_id)
+        return {
+            'name': tariff.name,
+            'service_set_descr_name': descr.name,
+        }
+
+    @transaction()
+    def get_tariff(self, data, curs=None):
+        return response_ok(tariff=self._get_tariff_data(data, curs))
+
+    @transaction()
+    def get_tariff_detailed(self, data, curs=None):
+        tariff_data = self._get_tariff_data(data, curs)
+        types = selector.get_service_types_by_descr_name(curs, tariff_data['service_set_descr_name'])
+        tariff_data['types'] = [t.name for t in types]
+        return response_ok(tariff=tariff_data)
 
     # rule
     @transaction()

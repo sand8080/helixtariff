@@ -39,6 +39,10 @@ def get_service_set_descr_by_name(curs, name, for_update=False):
     return get_obj_by_field(curs, ServiceSetDescr, 'name', name, for_update)
 
 
+def get_service_set_descr(curs, id, for_update=False):
+    return get_obj_by_field(curs, ServiceSetDescr, 'id', id, for_update)
+
+
 def get_client(curs, id, for_update=False):
     return get_obj_by_field(curs, Client, 'id', id, for_update)
 
@@ -60,6 +64,11 @@ def get_service_types_by_descr_name(curs, name, for_update=False):
     sel_type_ids = Select(ServiceSet.table, columns='service_type_id', cond=cond_descr_id)
     cond_type_in = In('id', Scoped(sel_type_ids))
     return actions.get_list(curs, ServiceType, cond_type_in, order_by='id', for_update=for_update)
+
+
+def get_service_types(curs, login, for_update=False):
+    c = get_client_by_login(curs, login)
+    return actions.get_list(curs, ServiceType, cond=Eq('client_id', c.id), for_update=for_update)
 
 
 def get_tariff(curs, client_id, name, for_update=False):

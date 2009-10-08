@@ -37,14 +37,23 @@ class Client(object):
             'password': self.password, 'name': name})
 
     def add_service_set_descr(self, name):
-        return self.request({'action': 'add_service_set_descr', 'login': self.login,
-            'password': self.password, 'name': name})
+        return self.request({'action': 'add_service_set_descr', 'login': self.login, 'password': self.password,
+            'name': name})
 
     def add_to_service_set(self, name, types):
-        return self.request({'action': 'add_to_service_set', 'login': self.login,
-            'password': self.password, 'name': name, 'types': types})
+        return self.request({'action': 'add_to_service_set', 'login': self.login, 'password': self.password,
+            'name': name, 'types': types})
 
     def add_tariff(self, name, service_set_descr_name):
-        return self.request({'action': 'add_tariff', 'login': self.login,
-            'password': self.password, 'name': name, 'service_set_descr_name': service_set_descr_name,
-            'in_archive': False})
+        return self.request({'action': 'add_tariff', 'login': self.login, 'password': self.password,
+            'name': name, 'service_set_descr_name': service_set_descr_name, 'in_archive': False})
+
+    def get_tariff_detailed(self, name):
+        response = cjson.decode(
+            self.request({'action': 'get_tariff_detailed', 'login': self.login, 'name': name})
+        )
+        return response['data']['tariff']
+
+    def add_rule(self, tariff_name, service_type_name, rule):
+        return self.request({'action': 'add_rule', 'login': self.login, 'password': self.password,
+            'tariff_name': tariff_name, 'service_type_name': service_type_name, 'rule': rule})

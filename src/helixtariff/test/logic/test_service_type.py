@@ -46,6 +46,17 @@ class ServiceTypeTestCase(ServiceTestCase):
         )
         self.assertRaises(DataIntegrityError, self.get_service_type_by_name, self.client.id, self.descr_name)
 
+    def test_get_service_types(self):
+        types = ['one', 'two', 'three']
+        self.add_types(types)
+        result = handle_action('get_service_types', {'login': self.test_client_login,})
+        self.assertTrue('data' in result)
+        data = result['data']
+        self.assertEqual(types, data['types'])
+
+    def test_get_service_types_invalid(self):
+        self.assertRaises(DataIntegrityError, handle_action, 'get_service_types', {'login': 'fake'})
+
 
 if __name__ == '__main__':
     unittest.main()

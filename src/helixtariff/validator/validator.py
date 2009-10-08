@@ -57,6 +57,10 @@ MODIFY_SERVICE_TYPE = dict(
 
 DELETE_SERVICE_TYPE = SERVICE_TYPE
 
+GET_SERVICE_TYPES = {
+    'login': Text()
+}
+
 # --- service set descr ---
 ADD_SERVICE_SET_DESCR = dict(
     {'name': Text()},
@@ -123,6 +127,13 @@ DELETE_TARIFF = dict(
     **AUTH_INFO
 )
 
+GET_TARIFF = {
+    'login': Text(),
+    'name': Text(),
+}
+
+GET_TARIFF_DETAILED = GET_TARIFF
+
 # --- rule ---
 ADD_RULE = dict(
     {
@@ -167,6 +178,7 @@ api_scheme = [
     ApiCall('add_service_type', Scheme(ADD_SERVICE_TYPE)),
     ApiCall('modify_service_type', Scheme(MODIFY_SERVICE_TYPE)),
     ApiCall('delete_service_type', Scheme(DELETE_SERVICE_TYPE)),
+    ApiCall('get_service_types', Scheme(GET_SERVICE_TYPES)),
 
     ApiCall('add_service_set_descr', Scheme(ADD_SERVICE_SET_DESCR)),
     ApiCall('modify_service_set_descr', Scheme(MODIFY_SERVICE_SET_DESCR)),
@@ -179,6 +191,8 @@ api_scheme = [
     ApiCall('add_tariff', Scheme(ADD_TARIFF)),
     ApiCall('modify_tariff', Scheme(MODIFY_TARIFF)),
     ApiCall('delete_tariff', Scheme(DELETE_TARIFF)),
+    ApiCall('get_tariff', Scheme(GET_TARIFF)),
+    ApiCall('get_tariff_detailed', Scheme(GET_TARIFF_DETAILED)),
 
     ApiCall('add_rule', Scheme(ADD_RULE)),
     ApiCall('modify_rule', Scheme(MODIFY_RULE)),
