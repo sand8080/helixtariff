@@ -52,8 +52,12 @@ class Client(object):
         response = cjson.decode(
             self.request({'action': 'get_tariff_detailed', 'login': self.login, 'name': name})
         )
-        return response['data']['tariff']
+        return response['tariff']
 
     def add_rule(self, tariff_name, service_type_name, rule):
         return self.request({'action': 'add_rule', 'login': self.login, 'password': self.password,
             'tariff_name': tariff_name, 'service_type_name': service_type_name, 'rule': rule})
+
+    def get_price(self, tariff_name, service_type_name):
+        return self.request({'action': 'get_domain_service_price', 'login': self.login,
+            'tariff_name': tariff_name, 'service_type_name': service_type_name})

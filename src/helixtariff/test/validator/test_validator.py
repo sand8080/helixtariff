@@ -166,6 +166,14 @@ class ValidatorTestCase(RootTestCase):
             }
         )
 
+    def test_get_domain_service_price(self):
+        validate('get_domain_service_price', {'login': 'l', 'tariff_name': 't', 'service_type_name': 's'})
+        validate('get_domain_service_price', {'login': 'l', 'tariff_name': 't', 'service_type_name': 's', 'period': 3})
+        validate('get_domain_service_price', {'login': 'l', 'tariff_name': 't', 'service_type_name': 's', 'period': 3, 'customer_id': 'c'})
+
+    def test_get_domain_service_price_invalid(self):
+        self.assertRaises(ValidationError, validate, 'get_domain_service_price',
+            {'login': 'l', 'tariff_name': 't', 'service_type_name': 's', 'period': 'f'})
 
 if __name__ == '__main__':
     unittest.main()

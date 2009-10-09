@@ -79,8 +79,8 @@ class TariffTestCase(ServiceTestCase):
             'name': self.name
         }
         result = handle_action('get_tariff', data)
-        self.assertTrue('data' in result)
-        tariff_data = result['data']['tariff']
+        self.assertTrue('tariff' in result)
+        tariff_data = result['tariff']
         self.assertEqual(self.name, tariff_data['name'])
         self.assertEqual(self.service_set_descr_name, tariff_data['service_set_descr_name'])
 
@@ -92,8 +92,8 @@ class TariffTestCase(ServiceTestCase):
             'name': self.name
         }
         result = handle_action('get_tariff_detailed', data)
-        self.assertTrue('data' in result)
-        tariff_data = result['data']['tariff']
+        self.assertTrue('tariff' in result)
+        tariff_data = result['tariff']
         self.assertEqual(self.name, tariff_data['name'])
         self.assertEqual(self.service_set_descr_name, tariff_data['service_set_descr_name'])
         self.assertEqual(self.service_types_names, tariff_data['types'])

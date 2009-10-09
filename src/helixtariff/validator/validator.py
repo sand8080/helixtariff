@@ -1,4 +1,4 @@
-from helixcore.validol.validol import Scheme, Text, Optional
+from helixcore.validol.validol import Scheme, Text, Optional, Positive
 from helixcore.server.errors import RequestProcessingError
 import re
 
@@ -161,6 +161,16 @@ DELETE_RULE = dict(
     **AUTH_INFO
 )
 
+# --- price ---
+
+GET_DOMAIN_SERVICE_PRICE = {
+    'login': Text(),
+    'tariff_name': Text(),
+    'service_type_name': Text(),
+    Optional('period'): Positive(int),
+    Optional('customer_id'): Text(),
+}
+
 # Useful for documentation generation
 class ApiCall(object):
     def __init__(self, name, scheme, description='Not described at yet.'):
@@ -197,6 +207,8 @@ api_scheme = [
     ApiCall('add_rule', Scheme(ADD_RULE)),
     ApiCall('modify_rule', Scheme(MODIFY_RULE)),
     ApiCall('delete_rule', Scheme(DELETE_RULE)),
+
+    ApiCall('get_domain_service_price', Scheme(GET_DOMAIN_SERVICE_PRICE)),
 ]
 
 action_to_scheme_map = dict((c.name, c.scheme) for c in api_scheme)

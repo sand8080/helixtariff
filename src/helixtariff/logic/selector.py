@@ -79,13 +79,24 @@ def get_tariff(curs, client_id, name, for_update=False):
 
 
 def get_rule(curs, client_id, tariff_name, service_type_name, for_update=False):
-    cond_client_id = Eq('client_id', client_id)
-    cond_tariff_name = Eq('name', tariff_name)
-    sel_tariff = Select(Tariff.table, columns='id', cond=And(cond_client_id, cond_tariff_name))
+    tariff = get_tariff(curs, client_id, tariff_name)
+    service_type = get_service_type_by_name(curs, client_id, service_type_name)
 
-    cond_service_type_name = Eq('name', service_type_name)
-    sel_service_type = Select(ServiceType.table, columns='id', cond=cond_service_type_name)
+    cond_service_type_id = Eq('service_type_id', service_type.id)
+    cond_tariff_id = Eq('tariff_id', tariff.id)
+    cond_and = And(cond_service_type_id, cond_tariff_id)
 
-    cond_tariff_id = Eq('tariff_id', Scoped(sel_tariff))
-    cond_service_type_id = Eq('service_type_id', Scoped(sel_service_type))
-    return actions.get(curs, Rule, cond=And(cond_tariff_id, cond_service_type_id), for_update=for_update)
+    return actions.get(curs, Rule, cond=cond_and, for_update=for_update)
+
+# complex request
+#def get_rule(curs, client_id, tariff_name, service_type_name, for_update=False):
+#    cond_client_id = Eq('client_id', client_id)
+#    cond_tariff_name = Eq('name', tariff_name)
+#    sel_tariff = Select(Tariff.table, columns='id', cond=And(cond_client_id, cond_tariff_name))
+#
+#    cond_service_type_name = Eq('name', service_type_name)
+#    sel_service_type = Select(ServiceType.table, columns='id', cond=cond_service_type_name)
+#
+#    cond_tariff_id = Eq('tariff_id', Scoped(sel_tariff))
+#    cond_service_type_id = Eq('service_type_id', Scoped(sel_service_type))
+#    return actions.get(curs, Rule, cond=And(cond_tariff_id, cond_service_type_id), for_update=for_update)

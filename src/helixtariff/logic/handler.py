@@ -10,6 +10,8 @@ from helixtariff.domain.objects import Client, ServiceType, ServiceSetDescr, Ser
 from helixtariff.logic import query_builder
 from helixtariff.logic import selector
 from helixtariff.rulesengine.checker import RuleChecker
+from helixtariff.rulesengine.engine import Engine
+from helixtariff.rulesengine.interaction import RequestDomainPrice
 from helixtariff.domain import security
 from helixtariff.logic.selector import get_service_set_descr
 
@@ -238,3 +240,24 @@ class Handler(object):
         obj = selector.get_rule(curs, data['client_id'], data['tariff_name'], data['service_type_name'])
         mapping.delete(curs, obj)
         return response_ok()
+
+    def _get_optional_field_value(self, data, field, default=None):
+        return data[field] if field in data else default,
+
+    # price
+    @transaction()
+    def get_domain_service_price(self, data, curs=None):
+        client = selector.get_client_by_login(curs, data['login'])
+        request = RequestDomainPrice(
+            client.id,
+            data['tariff_name'],
+            data['service_type_name'],
+            period=self._get_optional_field_value(data, 'period'),
+            customer_id=self._get_optional_field_value(data, 'customer_id')
+        )
+        response = Engine().process(request)
+        return response_ok(
+            tariff_name=data['tariff_name'],
+            service_type_name=data['service_type_name'],
+            price=response.price
+        )
