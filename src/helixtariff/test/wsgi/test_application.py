@@ -71,6 +71,12 @@ class ApplicationTestCase(RootTestCase):
         service_types_names = tariffs_detailed[tariff_name]['types']
         return self.cli.get_price(tariff_name, self.select_random(service_types_names))
 
+    @profile
+    def get_wrong_price(self, tariffs_detailed, repeats=1): #IGNORE:W0613
+        tariff_name = self.select_random(tariffs_detailed.keys())
+        service_types_names = tariffs_detailed[tariff_name]['types']
+        return self.cli.get_price(tariff_name, self.select_random(service_types_names) + 'fake')
+
     def loader_task(self):
         types = [random_word() for _ in range(random.randint(3, 10))]
         map(self.cli.add_service_type, types)
@@ -91,7 +97,8 @@ class ApplicationTestCase(RootTestCase):
                 self.cli.add_rule(tariff_name, service_type_name, rule)
 
         self.get_tariff_detailed(tariffs_names, repeats=100)
-        self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=500)
+        self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=100)
+        self.get_wrong_price(self.load_detailed_tariff_data(tariffs_names), repeats=100)
 
     def test_loading(self):
         self.cli.add_client()
@@ -103,7 +110,6 @@ class ApplicationTestCase(RootTestCase):
 
         for waiter in waiters:
             waiter.wait()
-
 
 if __name__ == '__main__':
 #    cProfile.run('unittest.main()')

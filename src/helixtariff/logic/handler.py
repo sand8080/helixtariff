@@ -224,6 +224,7 @@ class Handler(object):
 
         del data['client_id']
         mapping.insert(curs, Rule(**data))
+        return response_ok()
 
     @transaction()
     @authentificate

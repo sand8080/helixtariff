@@ -1,4 +1,4 @@
-from helixcore.validol.validol import Scheme, Text, Optional, Positive
+from helixcore.validol.validol import Scheme, Text, Optional, Positive, AnyOf
 from helixcore.server.errors import RequestProcessingError
 import re
 
@@ -20,6 +20,16 @@ iso_datetime_validator = re.compile(r"""
 )
 
 PING = {}
+
+RESPONSE_STATUS_OK = {'status': 'ok'}
+
+RESPONSE_STATUS_ERROR = {
+    'status': 'error',
+    'category': Text(),
+    'message': Text(),
+}
+
+RESPONSE_STATUS_ONLY = AnyOf(RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
 
 AUTH_INFO = {
     'login': Text(),
@@ -60,6 +70,11 @@ DELETE_SERVICE_TYPE = SERVICE_TYPE
 GET_SERVICE_TYPES = {
     'login': Text()
 }
+
+GET_SERVICE_TYPES_RESPONSE = AnyOf(
+    dict(RESPONSE_STATUS_OK, types=[Text()]),
+    RESPONSE_STATUS_ERROR
+)
 
 # --- service set descr ---
 ADD_SERVICE_SET_DESCR = dict(
@@ -132,7 +147,30 @@ GET_TARIFF = {
     'name': Text(),
 }
 
+GET_TARIFF_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        tariff={
+            'name': Text(),
+            'service_set_descr_name': Text()
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 GET_TARIFF_DETAILED = GET_TARIFF
+
+GET_TARIFF_DETAILED_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        tariff={
+            'name': Text(),
+            'service_set_descr_name': Text(),
+            'types': [Text()]
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
 
 # --- rule ---
 ADD_RULE = dict(
@@ -171,6 +209,21 @@ GET_DOMAIN_SERVICE_PRICE = {
     Optional('customer_id'): Text(),
 }
 
+GET_DOMAIN_SERVICE_PRICE_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'tariff_name': Text(),
+            'service_type_name': Text(),
+            'price': Text(),
+            Optional('period'): Positive(int),
+            Optional('customer_id'): Text(),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+
 # Useful for documentation generation
 class ApiCall(object):
     def __init__(self, name, scheme, description='Not described at yet.'):
@@ -179,56 +232,115 @@ class ApiCall(object):
         self.description = description
 
 api_scheme = [
-    ApiCall('ping', Scheme(PING)),
+    ApiCall('ping_request', Scheme(PING)),
+    ApiCall('ping_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('add_client', Scheme(ADD_CLIENT)),
-    ApiCall('modify_client', Scheme(MODIFY_CLIENT)),
-    ApiCall('delete_client', Scheme(DELETE_CLIENT)),
+    # client
+    ApiCall('add_client_request', Scheme(ADD_CLIENT)),
+    ApiCall('add_client_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('add_service_type', Scheme(ADD_SERVICE_TYPE)),
-    ApiCall('modify_service_type', Scheme(MODIFY_SERVICE_TYPE)),
-    ApiCall('delete_service_type', Scheme(DELETE_SERVICE_TYPE)),
-    ApiCall('get_service_types', Scheme(GET_SERVICE_TYPES)),
+    ApiCall('modify_client_request', Scheme(MODIFY_CLIENT)),
+    ApiCall('modify_client_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('add_service_set_descr', Scheme(ADD_SERVICE_SET_DESCR)),
-    ApiCall('modify_service_set_descr', Scheme(MODIFY_SERVICE_SET_DESCR)),
-    ApiCall('delete_service_set_descr', Scheme(DELETE_SERVICE_SET_DESCR)),
+    ApiCall('delete_client_request', Scheme(DELETE_CLIENT)),
+    ApiCall('delete_client_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('add_to_service_set', Scheme(ADD_TO_SERVICE_SET)),
-    ApiCall('delete_from_service_set', Scheme(DELETE_FROM_SERVICE_SET)),
-    ApiCall('delete_service_set', Scheme(DELETE_SERVICE_SET)),
+    # service type
+    ApiCall('add_service_type_request', Scheme(ADD_SERVICE_TYPE)),
+    ApiCall('add_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('add_tariff', Scheme(ADD_TARIFF)),
-    ApiCall('modify_tariff', Scheme(MODIFY_TARIFF)),
-    ApiCall('delete_tariff', Scheme(DELETE_TARIFF)),
-    ApiCall('get_tariff', Scheme(GET_TARIFF)),
-    ApiCall('get_tariff_detailed', Scheme(GET_TARIFF_DETAILED)),
+    ApiCall('modify_service_type_request', Scheme(MODIFY_SERVICE_TYPE)),
+    ApiCall('modify_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('add_rule', Scheme(ADD_RULE)),
-    ApiCall('modify_rule', Scheme(MODIFY_RULE)),
-    ApiCall('delete_rule', Scheme(DELETE_RULE)),
+    ApiCall('delete_service_type_request', Scheme(DELETE_SERVICE_TYPE)),
+    ApiCall('delete_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('get_domain_service_price', Scheme(GET_DOMAIN_SERVICE_PRICE)),
+    ApiCall('get_service_types_request', Scheme(GET_SERVICE_TYPES)),
+    ApiCall('get_service_types_response', Scheme(GET_SERVICE_TYPES_RESPONSE)),
+
+    # service set description
+    ApiCall('add_service_set_descr_request', Scheme(ADD_SERVICE_SET_DESCR)),
+    ApiCall('add_service_set_descr_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('modify_service_set_descr_request', Scheme(MODIFY_SERVICE_SET_DESCR)),
+    ApiCall('modify_service_set_descr_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('delete_service_set_descr_request', Scheme(DELETE_SERVICE_SET_DESCR)),
+    ApiCall('delete_service_set_descr_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    # service set
+    ApiCall('add_to_service_set_request', Scheme(ADD_TO_SERVICE_SET)),
+    ApiCall('add_to_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('delete_from_service_set_request', Scheme(DELETE_FROM_SERVICE_SET)),
+    ApiCall('delete_from_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('delete_service_set_request', Scheme(DELETE_SERVICE_SET)),
+    ApiCall('delete_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    # tariff
+    ApiCall('add_tariff_request', Scheme(ADD_TARIFF)),
+    ApiCall('add_tariff_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('modify_tariff_request', Scheme(MODIFY_TARIFF)),
+    ApiCall('modify_tariff_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('delete_tariff_request', Scheme(DELETE_TARIFF)),
+    ApiCall('delete_tariff_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('get_tariff_request', Scheme(GET_TARIFF)),
+    ApiCall('get_tariff_response', Scheme(GET_TARIFF_RESPONSE)),
+
+    ApiCall('get_tariff_detailed_request', Scheme(GET_TARIFF_DETAILED)),
+    ApiCall('get_tariff_detailed_response', Scheme(GET_TARIFF_DETAILED_RESPONSE)),
+
+    # rule
+    ApiCall('add_rule_request', Scheme(ADD_RULE)),
+    ApiCall('add_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('modify_rule_request', Scheme(MODIFY_RULE)),
+    ApiCall('modify_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('delete_rule_request', Scheme(DELETE_RULE)),
+    ApiCall('delete_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    # price
+    ApiCall('get_domain_service_price_request', Scheme(GET_DOMAIN_SERVICE_PRICE)),
+    ApiCall('get_domain_service_price_response', Scheme(GET_DOMAIN_SERVICE_PRICE_RESPONSE)),
 ]
 
 action_to_scheme_map = dict((c.name, c.scheme) for c in api_scheme)
+
 
 class ValidationError(RequestProcessingError):
     def __init__(self, msg):
         RequestProcessingError.__init__(self, RequestProcessingError.Categories.validation, msg)
 
-def validate(action_name, data):
-    '''
-    Validates API request data by action name
-    @raise ValidationError: if validation failed for some reason
-    '''
-    scheme = action_to_scheme_map.get(action_name)
+
+def _validate(call_name, data):
+    scheme = action_to_scheme_map.get(call_name)
     if scheme is None:
-        raise ValidationError('Unknown action: %s' % action_name)
+        raise ValidationError('Scheme for %s not found' % call_name)
 
     result = scheme.validate(data)
     if not result:
         raise ValidationError(
             'Validation failed for action %s. Expected scheme: %s. Actual data: %s'
-            % (action_name, scheme, data)
+            % (call_name, scheme, data)
         )
+
+
+def validate_request(action_name, data):
+    '''
+    Validates API request data by action name
+    @raise ValidationError: if validation failed for some reason
+    '''
+    return _validate('%s_request' % action_name, data)
+
+
+def validate_response(action_name, data):
+    '''
+    Validates API response data by action name
+    @raise ValidationError: if validation failed for some reason
+    '''
+    return _validate('%s_response' % action_name, data)

@@ -1,5 +1,6 @@
 from decimal import Decimal, Context, DecimalException
 
+
 class PriceProcessingError(Exception):
     pass
 

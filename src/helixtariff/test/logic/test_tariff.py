@@ -84,7 +84,6 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(self.name, tariff_data['name'])
         self.assertEqual(self.service_set_descr_name, tariff_data['service_set_descr_name'])
 
-
     def test_get_tariff_detailed(self):
         self.test_add_tariff()
         data = {
@@ -97,6 +96,21 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(self.name, tariff_data['name'])
         self.assertEqual(self.service_set_descr_name, tariff_data['service_set_descr_name'])
         self.assertEqual(self.service_types_names, tariff_data['types'])
+
+        empty_set_descr_name = 'empty'
+        tariff_name = 'no services'
+        self.add_descrs([empty_set_descr_name])
+        self.add_tariff(empty_set_descr_name, tariff_name, False)
+        data = {
+            'login': self.test_client_login,
+            'name': tariff_name
+        }
+        result = handle_action('get_tariff_detailed', data)
+        self.assertTrue('tariff' in result)
+        tariff_data = result['tariff']
+        self.assertEqual(tariff_name, tariff_data['name'])
+        self.assertEqual(empty_set_descr_name, tariff_data['service_set_descr_name'])
+        self.assertEqual([], tariff_data['types'])
 
 
 if __name__ == '__main__':
