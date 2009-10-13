@@ -23,11 +23,26 @@ PING = {}
 
 RESPONSE_STATUS_OK = {'status': 'ok'}
 
+
 RESPONSE_STATUS_ERROR = {
     'status': 'error',
     'category': Text(),
     'message': Text(),
 }
+
+DB_SLEEP = {
+    'num': int
+}
+
+DB_SLEEP_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'num': int
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
 
 RESPONSE_STATUS_ONLY = AnyOf(RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
 
@@ -234,6 +249,9 @@ class ApiCall(object):
 api_scheme = [
     ApiCall('ping_request', Scheme(PING)),
     ApiCall('ping_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('db_sleep_request', Scheme(DB_SLEEP)),
+    ApiCall('db_sleep_response', Scheme(DB_SLEEP_RESPONSE)),
 
     # client
     ApiCall('add_client_request', Scheme(ADD_CLIENT)),
