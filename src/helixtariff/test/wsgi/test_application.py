@@ -96,9 +96,9 @@ class ApplicationTestCase(RootTestCase):
                 rule = 'price = %s' % (Decimal(random.randint(2000, 9000)) / 100)
                 self.cli.add_rule(tariff_name, service_type_name, rule)
 
-        self.get_tariff_detailed(tariffs_names, repeats=100)
-        self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=100)
-        self.get_wrong_price(self.load_detailed_tariff_data(tariffs_names), repeats=100)
+        self.get_tariff_detailed(tariffs_names, repeats=40)
+        self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=40)
+        self.get_wrong_price(self.load_detailed_tariff_data(tariffs_names), repeats=40)
 
     def test_loading(self):
         self.cli.add_client()

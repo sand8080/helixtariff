@@ -53,7 +53,7 @@ install: build
 	install src/helixtariff_install $(DESTDIR_SHARE)
 	find $(DESTDIR_SHARE) -name '*pyc' -exec rm {} \;
 	install src/helixtariff_run $(FAKE_ROOT)/usr/bin
-	install -m 0644 config/helixtariff.ini $(FAKE_ROOT)/etc/supervisor/process-available
+	install -m 0644 supervisor-config/helixtariff.ini $(FAKE_ROOT)/etc/supervisor/process-available
 	mv $(DESTDIR)/helixtariff/conf/settings.py $(DESTDIR)/helixtariff/conf/settings.py.tpl
 
 # Build architecture-independent files here.
