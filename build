@@ -1,0 +1,14 @@
+#!/bin/sh
+
+BASEDIR=`dirname $0`
+
+pushd $BASEDIR > /dev/null
+
+./create-changelog --package=python-helixbilling
+dpkg-buildpackage -uc -us -b -rfakeroot
+mkdir -p dist
+mv ../python-helixbilling*.deb dist
+rm -f  ../python-helixbilling*.changes
+
+popd > /dev/null
+
