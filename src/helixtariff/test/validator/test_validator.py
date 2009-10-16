@@ -5,11 +5,11 @@ from helixcore.test.root_test import RootTestCase
 from helixcore.server.exceptions import ValidationError
 from helixcore.server.api import Api
 
-from helixtariff.validator.validator import api_scheme
+from helixtariff.validator.validator import protocol
 
 
 class ValidatorTestCase(RootTestCase):
-    api = Api(api_scheme)
+    api = Api(protocol)
 
     def validate_status_response(self, action_name):
         self.api.validate_response(action_name, {'status': 'ok'})

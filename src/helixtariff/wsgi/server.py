@@ -4,7 +4,7 @@ from helixcore.server.wsgi_application import Application
 from helixtariff.conf import settings
 from helixtariff.conf.log import logger
 from helixtariff.logic.actions import handle_action
-from helixtariff.validator.validator import api_scheme
+from helixtariff.validator.validator import protocol
 
 
 class Server(object):
@@ -16,7 +16,7 @@ class Server(object):
     def run():
         wsgi.server(
             api.tcp_listener((settings.server_host, settings.server_port)),
-            Application(handle_action, api_scheme, logger),
+            Application(handle_action, protocol, logger),
             max_size=5000,
             log=Server.ServerLog()
         )
