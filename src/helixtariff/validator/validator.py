@@ -1,5 +1,6 @@
 from helixcore.validol.validol import Scheme, Text, Optional, Positive, AnyOf
 from helixcore.server.errors import RequestProcessingError
+from helixcore.validol.docsgenerator import DocItem
 import re
 
 iso_datetime_validator = re.compile(r"""
@@ -223,93 +224,85 @@ GET_DOMAIN_SERVICE_PRICE_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-
-# Useful for documentation generation
-class ApiCall(object):
-    def __init__(self, name, scheme, description='Not described at yet.'):
-        self.name = name
-        self.scheme = scheme
-        self.description = description
-
-api_scheme = [
-    ApiCall('ping_request', Scheme(PING)),
-    ApiCall('ping_response', Scheme(RESPONSE_STATUS_ONLY)),
+protocol = [
+    DocItem('ping_request', Scheme(PING)),
+    DocItem('ping_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     # client
-    ApiCall('add_client_request', Scheme(ADD_CLIENT)),
-    ApiCall('add_client_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('add_client_request', Scheme(ADD_CLIENT)),
+    DocItem('add_client_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('modify_client_request', Scheme(MODIFY_CLIENT)),
-    ApiCall('modify_client_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('modify_client_request', Scheme(MODIFY_CLIENT)),
+    DocItem('modify_client_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('delete_client_request', Scheme(DELETE_CLIENT)),
-    ApiCall('delete_client_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('delete_client_request', Scheme(DELETE_CLIENT)),
+    DocItem('delete_client_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     # service type
-    ApiCall('add_service_type_request', Scheme(ADD_SERVICE_TYPE)),
-    ApiCall('add_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('add_service_type_request', Scheme(ADD_SERVICE_TYPE)),
+    DocItem('add_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('modify_service_type_request', Scheme(MODIFY_SERVICE_TYPE)),
-    ApiCall('modify_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('modify_service_type_request', Scheme(MODIFY_SERVICE_TYPE)),
+    DocItem('modify_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('delete_service_type_request', Scheme(DELETE_SERVICE_TYPE)),
-    ApiCall('delete_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('delete_service_type_request', Scheme(DELETE_SERVICE_TYPE)),
+    DocItem('delete_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('get_service_types_request', Scheme(GET_SERVICE_TYPES)),
-    ApiCall('get_service_types_response', Scheme(GET_SERVICE_TYPES_RESPONSE)),
+    DocItem('get_service_types_request', Scheme(GET_SERVICE_TYPES)),
+    DocItem('get_service_types_response', Scheme(GET_SERVICE_TYPES_RESPONSE)),
 
     # service set description
-    ApiCall('add_service_set_descr_request', Scheme(ADD_SERVICE_SET_DESCR)),
-    ApiCall('add_service_set_descr_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('add_service_set_descr_request', Scheme(ADD_SERVICE_SET_DESCR)),
+    DocItem('add_service_set_descr_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('modify_service_set_descr_request', Scheme(MODIFY_SERVICE_SET_DESCR)),
-    ApiCall('modify_service_set_descr_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('modify_service_set_descr_request', Scheme(MODIFY_SERVICE_SET_DESCR)),
+    DocItem('modify_service_set_descr_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('delete_service_set_descr_request', Scheme(DELETE_SERVICE_SET_DESCR)),
-    ApiCall('delete_service_set_descr_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('delete_service_set_descr_request', Scheme(DELETE_SERVICE_SET_DESCR)),
+    DocItem('delete_service_set_descr_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     # service set
-    ApiCall('add_to_service_set_request', Scheme(ADD_TO_SERVICE_SET)),
-    ApiCall('add_to_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('add_to_service_set_request', Scheme(ADD_TO_SERVICE_SET)),
+    DocItem('add_to_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('delete_from_service_set_request', Scheme(DELETE_FROM_SERVICE_SET)),
-    ApiCall('delete_from_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('delete_from_service_set_request', Scheme(DELETE_FROM_SERVICE_SET)),
+    DocItem('delete_from_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('delete_service_set_request', Scheme(DELETE_SERVICE_SET)),
-    ApiCall('delete_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('delete_service_set_request', Scheme(DELETE_SERVICE_SET)),
+    DocItem('delete_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     # tariff
-    ApiCall('add_tariff_request', Scheme(ADD_TARIFF)),
-    ApiCall('add_tariff_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('add_tariff_request', Scheme(ADD_TARIFF)),
+    DocItem('add_tariff_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('modify_tariff_request', Scheme(MODIFY_TARIFF)),
-    ApiCall('modify_tariff_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('modify_tariff_request', Scheme(MODIFY_TARIFF)),
+    DocItem('modify_tariff_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('delete_tariff_request', Scheme(DELETE_TARIFF)),
-    ApiCall('delete_tariff_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('delete_tariff_request', Scheme(DELETE_TARIFF)),
+    DocItem('delete_tariff_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('get_tariff_request', Scheme(GET_TARIFF)),
-    ApiCall('get_tariff_response', Scheme(GET_TARIFF_RESPONSE)),
+    DocItem('get_tariff_request', Scheme(GET_TARIFF)),
+    DocItem('get_tariff_response', Scheme(GET_TARIFF_RESPONSE)),
 
-    ApiCall('get_tariff_detailed_request', Scheme(GET_TARIFF_DETAILED)),
-    ApiCall('get_tariff_detailed_response', Scheme(GET_TARIFF_DETAILED_RESPONSE)),
+    DocItem('get_tariff_detailed_request', Scheme(GET_TARIFF_DETAILED)),
+    DocItem('get_tariff_detailed_response', Scheme(GET_TARIFF_DETAILED_RESPONSE)),
 
     # rule
-    ApiCall('add_rule_request', Scheme(ADD_RULE)),
-    ApiCall('add_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('add_rule_request', Scheme(ADD_RULE)),
+    DocItem('add_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('modify_rule_request', Scheme(MODIFY_RULE)),
-    ApiCall('modify_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('modify_rule_request', Scheme(MODIFY_RULE)),
+    DocItem('modify_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('delete_rule_request', Scheme(DELETE_RULE)),
-    ApiCall('delete_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+    DocItem('delete_rule_request', Scheme(DELETE_RULE)),
+    DocItem('delete_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     # price
-    ApiCall('get_domain_service_price_request', Scheme(GET_DOMAIN_SERVICE_PRICE)),
-    ApiCall('get_domain_service_price_response', Scheme(GET_DOMAIN_SERVICE_PRICE_RESPONSE)),
+    DocItem('get_domain_service_price_request', Scheme(GET_DOMAIN_SERVICE_PRICE)),
+    DocItem('get_domain_service_price_response', Scheme(GET_DOMAIN_SERVICE_PRICE_RESPONSE)),
 ]
 
-action_to_scheme_map = dict((c.name, c.scheme) for c in api_scheme)
+action_to_scheme_map = dict((c.name, c.scheme) for c in protocol)
 
 
 class ValidationError(RequestProcessingError):
