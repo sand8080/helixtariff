@@ -11,3 +11,4 @@ debian/python-helixtariff.postrm.debhelper
 debian/python-helixtariff.debhelper.log
 debian/python-helixtariff.substvars
 debian/python-helixtariff
+src/docs.html
