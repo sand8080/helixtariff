@@ -1,6 +1,6 @@
-from helixcore.validol.validol import Scheme, Text, Optional, Positive, AnyOf
-from helixcore.server.errors import RequestProcessingError
 import re
+from helixcore.validol.validol import Scheme, Text, Optional, Positive, AnyOf
+from helixcore.server.api import ApiCall
 
 iso_datetime_validator = re.compile(r"""
     (\d{2,4})
@@ -239,13 +239,6 @@ GET_DOMAIN_SERVICE_PRICE_RESPONSE = AnyOf(
 )
 
 
-# Useful for documentation generation
-class ApiCall(object):
-    def __init__(self, name, scheme, description='Not described at yet.'):
-        self.name = name
-        self.scheme = scheme
-        self.description = description
-
 api_scheme = [
     ApiCall('ping_request', Scheme(PING)),
     ApiCall('ping_response', Scheme(RESPONSE_STATUS_ONLY)),
@@ -326,39 +319,3 @@ api_scheme = [
     ApiCall('get_domain_service_price_request', Scheme(GET_DOMAIN_SERVICE_PRICE)),
     ApiCall('get_domain_service_price_response', Scheme(GET_DOMAIN_SERVICE_PRICE_RESPONSE)),
 ]
-
-action_to_scheme_map = dict((c.name, c.scheme) for c in api_scheme)
-
-
-class ValidationError(RequestProcessingError):
-    def __init__(self, msg):
-        RequestProcessingError.__init__(self, RequestProcessingError.Categories.validation, msg)
-
-
-def _validate(call_name, data):
-    scheme = action_to_scheme_map.get(call_name)
-    if scheme is None:
-        raise ValidationError('Scheme for %s not found' % call_name)
-
-    result = scheme.validate(data)
-    if not result:
-        raise ValidationError(
-            'Validation failed for action %s. Expected scheme: %s. Actual data: %s'
-            % (call_name, scheme, data)
-        )
-
-
-def validate_request(action_name, data):
-    '''
-    Validates API request data by action name
-    @raise ValidationError: if validation failed for some reason
-    '''
-    return _validate('%s_request' % action_name, data)
-
-
-def validate_response(action_name, data):
-    '''
-    Validates API response data by action name
-    @raise ValidationError: if validation failed for some reason
-    '''
-    return _validate('%s_response' % action_name, data)

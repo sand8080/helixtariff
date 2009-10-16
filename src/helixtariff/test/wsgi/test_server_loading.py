@@ -111,6 +111,7 @@ class ApplicationTestCase(RootTestCase):
         for waiter in waiters:
             waiter.wait()
 
+
 if __name__ == '__main__':
 #    cProfile.run('unittest.main()')
     unittest.main()
