@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+#set -x
+
+if [ -f /usr/share/debconf/confmodule ]; then
+
+    . /usr/share/debconf/confmodule
+    db_version 2.0
+
+    if [ -f /usr/share/dbconfig-common/dpkg/config.pgsql ]; then
+        . /usr/share/dbconfig-common/dpkg/config.pgsql
+
+        dbc_dbname='helixtariff'
+        dbc_dbuser='helixtariff'
+        dbc_authmethod_user="password"
+
+        dbc_go python-helixtariff $@
+    fi
+fi

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+BASEDIR=`dirname $0`
+
+pushd $BASEDIR > /dev/null
+
+./create-changelog --package=python-helixtariff
+dpkg-buildpackage -uc -us -b -rfakeroot
+mkdir -p dist
+mv ../python-helixtariff*.deb dist
+rm -f  ../python-helixtariff*.changes
+
+popd > /dev/null
+
