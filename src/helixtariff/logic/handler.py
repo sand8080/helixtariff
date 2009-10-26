@@ -31,6 +31,12 @@ class Handler(object):
     def ping(self, data): #IGNORE:W0613
         return response_ok()
 
+    @transaction()
+    def db_sleep(self, data, curs=None):
+        num = data['num']
+        curs.execute('SELECT pg_sleep(%s)', [num])
+        return response_ok(num=num)
+
     def get_client_id(self, curs, data):
         return selector.get_auth_client(curs, data['login'], data['password']).id
 

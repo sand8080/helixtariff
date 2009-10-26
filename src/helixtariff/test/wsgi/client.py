@@ -28,6 +28,9 @@ class Client(object):
     def ping(self):
         return self.request({'action': 'ping'})
 
+    def db_sleep(self, num):
+        return self.request({'action': 'db_sleep', 'num': num})
+
     def add_client(self):
         return self.request({'action': 'add_client', 'login': self.login,
             'password': self.password})

@@ -1,6 +1,6 @@
 import re
-from helixcore.validol.validol import Scheme, Text, Optional, Positive, AnyOf
 from helixcore.server.api import ApiCall
+from helixcore.validol.validol import Scheme, Text, Optional, Positive, AnyOf
 
 iso_datetime_validator = re.compile(r"""
     (\d{2,4})
@@ -23,11 +23,26 @@ PING = {}
 
 RESPONSE_STATUS_OK = {'status': 'ok'}
 
+
 RESPONSE_STATUS_ERROR = {
     'status': 'error',
     'category': Text(),
     'message': Text(),
 }
+
+DB_SLEEP = {
+    'num': int
+}
+
+DB_SLEEP_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'num': int
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
 
 RESPONSE_STATUS_ONLY = AnyOf(RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
 
@@ -223,10 +238,12 @@ GET_DOMAIN_SERVICE_PRICE_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-
-api_scheme = [
+protocol = [
     ApiCall('ping_request', Scheme(PING)),
     ApiCall('ping_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('db_sleep_request', Scheme(DB_SLEEP)),
+    ApiCall('db_sleep_response', Scheme(DB_SLEEP_RESPONSE)),
 
     # client
     ApiCall('add_client_request', Scheme(ADD_CLIENT)),
