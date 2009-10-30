@@ -8,7 +8,7 @@ from eventlet import api, util, coros
 import cjson
 import random
 
-from helixtariff.test.root_test import RootTestCase
+from helixtariff.test.db_based_test import DbBasedTestCase
 from helixtariff.conf import settings
 from helixtariff.test.wsgi.client import Client, random_word
 from helixtariff.wsgi.server import Server
@@ -33,7 +33,7 @@ def profile(func):
     return decorated
 
 
-class ApplicationTestCase(RootTestCase):
+class ApplicationTestCase(DbBasedTestCase):
     def setUp(self):
         super(ApplicationTestCase, self).setUp()
         self.cli = Client(settings.server_host, settings.server_port, '%s' % datetime.now(), 'qazwsx')
