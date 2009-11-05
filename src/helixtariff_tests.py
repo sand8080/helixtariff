@@ -2,7 +2,7 @@ import unittest
 
 from helixtariff.test.validator.test_validator import ValidatorTestCase #IGNORE:W0611 @UnusedImport
 
-from helixtariff.test.wsgi.test_server_loading import ApplicationTestCase #IGNORE:W0611 @UnusedImport
+from helixtariff.test.wsgi.test_application_loading import ApplicationTestCase #IGNORE:W0611 @UnusedImport
 
 from helixtariff.test.logic.test_ping import PingTestCase #IGNORE:W0611 @UnusedImport
 from helixtariff.test.logic.test_client import ClientTestCase #IGNORE:W0611 @UnusedImport

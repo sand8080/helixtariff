@@ -1,29 +1,10 @@
-import urllib2
-import random
+from helixcore.test.util import ClientApplication
 import cjson
 
-def random_syllable(
-    consonant='r|t|p|l|k|ch|kr|ts|bz|dr|zh|g|f|d|s|z|x|b|n|m'.split('|'),
-    vowels='eyuioja'
-):
-    return ''.join(map(random.choice, (consonant, vowels)))
 
-
-def random_word(min_syllable=2, max_syllable=6):
-    return ''.join(random_syllable() for x in range(random.randint(min_syllable, max_syllable))) #@UnusedVariable
-
-
-class Client(object):
+class Client(ClientApplication):
     def __init__(self, host, port, login, password):
-        self.host = host
-        self.port = port
-        self.login = login
-        self.password = password
-
-    def request(self, data):
-        req = urllib2.Request(url='http://%s:%d' % (self.host, self.port), data=cjson.encode(data))
-        f = urllib2.urlopen(req)
-        return f.read()
+        super(Client, self).__init__(host, port, login, password)
 
     def ping(self):
         return self.request({'action': 'ping'})
