@@ -1,7 +1,7 @@
 from helixcore.mapping import actions
 from helixcore.db.sql import Eq, Scoped, Select, In, And
 from helixcore.db.wrapper import EmptyResultSetError
-from helixcore.server.exceptions import DataIntegrityError
+from helixcore.server.exceptions import DataIntegrityError, AuthError
 
 from helixtariff.domain.objects import ServiceType, ServiceSetDescr, ServiceSet, \
     Tariff, Rule, Client
@@ -56,7 +56,7 @@ def get_auth_client(curs, login, password, for_update=False):
         return get_obj_by_fields(curs, Client,
             {'login': login, 'password': security.encrypt_password(password)}, for_update)
     except DataIntegrityError:
-        raise security.AuthError('Access denied.')
+        raise AuthError('Access denied.')
 
 
 def get_service_types_by_descr_name(curs, name, for_update=False):

@@ -1,10 +1,9 @@
 import unittest
 
-from helixcore.server.exceptions import DataIntegrityError
+from helixcore.server.exceptions import DataIntegrityError, AuthError
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
-from helixtariff.domain.security import AuthError
 
 
 class ClientTestCase(ServiceTestCase):
