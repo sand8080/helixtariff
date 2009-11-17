@@ -27,7 +27,7 @@ class TariffTestCase(ServiceTestCase):
         self.add_tariff(self.service_set_descr_name, self.name, self.in_archive)
 
     def test_add_tariff_failure(self):
-        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_descr_name + 'fake',
+        self.assertRaises(EmptyResultSetError, self.add_tariff, self.service_set_descr_name + 'fake',
             self.name, self.in_archive
         )
         self.add_tariff(self.service_set_descr_name, self.name, self.in_archive)

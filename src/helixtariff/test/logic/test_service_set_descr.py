@@ -1,6 +1,6 @@
 import unittest
 
-from helixcore.server.exceptions import DataIntegrityError
+from helixcore.db.wrapper import EmptyResultSetError
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
@@ -37,7 +37,7 @@ class ServiceSetDescrTestCase(ServiceTestCase):
             'name': self.name
         }
         handle_action('delete_service_set_descr', data)
-        self.assertRaises(DataIntegrityError, self.get_service_set_descr_by_name, self.name)
+        self.assertRaises(EmptyResultSetError, self.get_service_set_descr_by_name, self.name)
 
 
 if __name__ == '__main__':

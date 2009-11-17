@@ -1,6 +1,6 @@
 import unittest
 
-from helixcore.server.exceptions import DataIntegrityError
+from helixcore.db.wrapper import EmptyResultSetError
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
@@ -44,7 +44,7 @@ class ServiceTypeTestCase(ServiceTestCase):
                 'name': self.descr_name,
             }
         )
-        self.assertRaises(DataIntegrityError, self.get_service_type_by_name, self.client.id, self.descr_name)
+        self.assertRaises(EmptyResultSetError, self.get_service_type_by_name, self.client.id, self.descr_name)
 
     def test_get_service_types(self):
         types = ['one', 'two', 'three']
@@ -54,7 +54,7 @@ class ServiceTypeTestCase(ServiceTestCase):
         self.assertEqual(types, result['types'])
 
     def test_get_service_types_invalid(self):
-        self.assertRaises(DataIntegrityError, handle_action, 'get_service_types', {'login': 'fake'})
+        self.assertRaises(EmptyResultSetError, handle_action, 'get_service_types', {'login': 'fake'})
 
 
 if __name__ == '__main__':
