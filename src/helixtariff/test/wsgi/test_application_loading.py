@@ -1,9 +1,10 @@
-#import cProfile
+from eventlet import api, util, coros
+util.wrap_socket_with_coroutine_socket()
+from helixcore.test.test_environment import get_connection
 
 from decimal import Decimal
 import unittest
 import datetime
-from eventlet import api, util, coros
 import cjson
 import random
 
@@ -14,7 +15,6 @@ from helixtariff.conf import settings
 from helixtariff.test.wsgi.client import Client
 from helixtariff.wsgi.server import Server
 
-util.wrap_socket_with_coroutine_socket()
 
 api.spawn(Server.run)
 
@@ -79,22 +79,18 @@ class ApplicationTestCase(DbBasedTestCase):
                 rule = 'price = %s' % (Decimal(random.randint(2000, 9000)) / 100)
                 self.cli.add_rule(tariff_name, service_type_name, rule)
 
-        self.get_tariff_detailed(tariffs_names, repeats=40)
-        self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=40)
-        self.get_wrong_price(self.load_detailed_tariff_data(tariffs_names), repeats=40)
+        self.get_tariff_detailed(tariffs_names, repeats=50)
+        self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=50)
+        self.get_wrong_price(self.load_detailed_tariff_data(tariffs_names), repeats=50)
 
     def test_loading(self):
         self.cli.add_client()
         pool = coros.CoroutinePool(max_size=10)
 
-        waiters = []
         for _ in xrange(1):
-            waiters.append(pool.execute_async(self.loader_task))
+            pool.execute_async(self.loader_task)
 
-        for waiter in waiters:
-            waiter.wait()
-
+        pool.wait_all()
 
 if __name__ == '__main__':
-#    cProfile.run('unittest.main()')
     unittest.main()

@@ -1,6 +1,11 @@
 from helixtariff.conf import settings
-settings.DSN = 'dbname=test_helixtariff host=localhost user=helixtest password=qazwsx'
-#settings.DSN = 'dbname=helixtest host=localhost user=helixtest password=qazwsx'
+
+settings.DSN = {
+    'user': 'helixtest',
+    'database': 'helixtest',
+    'host': 'localhost',
+    'password': 'qazwsx'
+}
 
 import os
 current_dir = os.path.realpath(os.path.dirname(__file__))
