@@ -10,7 +10,7 @@ from helixtariff.validator.validator import protocol
 class Server(object):
     class ServerLog(object):
         def write(self, s, l=0): #IGNORE:W0613
-            logger.info('server: %s' % s)
+            logger.log(l, 'server: %s' % s)
 
     @staticmethod
     def run():

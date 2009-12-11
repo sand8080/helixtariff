@@ -1,6 +1,5 @@
 from eventlet import api, util, coros
 util.wrap_socket_with_coroutine_socket()
-from helixcore.test.test_environment import get_connection
 
 from decimal import Decimal
 import unittest
