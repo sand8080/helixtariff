@@ -23,9 +23,8 @@ configure-stamp:
 
 build: build-stamp
 
-build-stamp: configure-stamp 
+build-stamp: configure-stamp
 	dh_testdir
-	
 	# Add here commands to compile the package.
 	#$(MAKE)
 	#docbook-to-man debian/helixtariff.sgml > helixtariff.1
@@ -53,8 +52,9 @@ install: build
 	install src/helixtariff_install $(DESTDIR_SHARE)
 	find $(DESTDIR_SHARE) -name '*pyc' -exec rm {} \;
 	install src/helixtariff_run $(FAKE_ROOT)/usr/bin
-	install -m 0644 supervisor-config/helixtariff.ini $(FAKE_ROOT)/etc/supervisor/process-available
+	install -m 0644 supervisor-config/python-helixtariff.ini $(FAKE_ROOT)/etc/supervisor/process-available
 	mv $(DESTDIR)/helixtariff/conf/settings.py $(DESTDIR)/helixtariff/conf/settings.py.tpl
+	cp -r nginx/* $(FAKE_ROOT)/etc/nginx/sites-available
 
 # Build architecture-independent files here.
 binary-indep: build install

@@ -1,0 +1,56 @@
+python-helixtariff (1.0.50) unstable; urgency=low
+
+  * [Alexander Kislitsky] DSN format changed.
+  * [Alexander Kislitsky] EmptyResultSetError handled.
+  * [Alexander Kislitsky] Slight code style fix.
+  * [Alexander Kislitsky] Auth exception moved to core.
+  * [Alexander Kislitsky] Sleep db requests removed from api.
+  * [Alexander Kislitsky] Blocking test moved to core.
+  * [Alexander Kislitsky] Common test logic moved to helixcore.
+  * [Alexander Kislitsky] Loading test renamed.
+  * [Alexander Kislitsky] Separated db for helixtariff tests.
+  * [Alexander Kislitsky] Merge commit 'origin/master'
+  * [Alexander Kislitsky] White space removed.
+  * [smee] test database name changed
+  * [smee] docs title changed
+  * [smee] api_scheme -> protocol renamed
+  * [smee] generated docs added to ignore
+  * [smee] conflict resolved
+  * [smee] docs generation
+  * [Alexander Kislitsky] Merge commit 'demo/master'
+  * [Alexander Kislitsky] Api pipeline pulled up to helixcore.
+  * [Alexander Kislitsky] Merge commit 'demo/master'
+  * [Alexander Kislitsky] Debianization fixes.
+  * [Alexander Kislitsky] Debianization.
+  * [Alexander Kislitsky] Psycopg blocking tested.
+  * [Alexander Kislitsky] Api output validation implemented.
+  * [Alexander Kislitsky] Basic get methods implemented. Loading tests passed.
+  * [Alexander Kislitsky] Implementing get functions, loading tests.
+  * [Alexander Kislitsky] Implementing loading tests.
+  * [Alexander Kislitsky] Wsgi server used in server.http.
+  * [Alexander Kislitsky] Auth fields integrated into protocol and handler.
+  * [Alexander Kislitsky] Client auth implemented.
+  * [Alexander Kislitsky] Modify and delete rule actions impementd.
+  * [Alexander Kislitsky] Client id integation.
+  * [Alexander Kislitsky] Client_id handled in service type operations.
+  * [Alexander Kislitsky] Clients implemented. Test covered.
+  * [Alexander Kislitsky] Rule add operation implemented. Test covered.
+  * [Alexander Kislitsky] Implementing rules pipeline.
+  * [Alexander Kislitsky] Rules experiments.
+  * [Alexander Kislitsky] Tariff tests into helixtariff_tests added.
+  * [Alexander Kislitsky] Tariff modify, delete actions implemented, tests covered.
+  * [Alexander Kislitsky] Add tariff implemented. Modify tariff implementing.
+  * [Alexander Kislitsky] Service set deletion implemented.
+  * [Alexander Kislitsky] Deletion from service_set implemented, test covered.
+  * [Alexander Kislitsky] Intermediate implementation of service_set test case.
+  * [Alexander Kislitsky] Intermediate service set manipulations commit.
+  * [Alexander Kislitsky] Add to service set action implemented.
+  * [Alexander Kislitsky] Pylint warning in patches arounded.
+  * [Alexander Kislitsky] Tests coverage improved.
+  * [Alexander Kislitsky] Intermediate state in tareff development.
+  * [Alexander Kislitsky] Initial commit.
+  * [Alexander Kislitsky] Drafts.
+
+ -- Webdrive Developers <developers@webdrive.ru>  Thu, 10 Dec 2009 16:46:48 +0300
+
+

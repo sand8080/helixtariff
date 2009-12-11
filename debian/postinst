@@ -31,10 +31,21 @@ case "$1" in
             update-python-modules  python-helixtariff
         fi
 
-        chown -R helixtariff /var/log/python-helixtariff
+        chown -R helixtariff:helixtariff /var/log/python-helixtariff
+        chmod 750 /var/log/python-helixtariff
 
         echo "Installing helixtariff patches"
         sudo -u helixtariff /usr/share/python-helixtariff/helixtariff_install update
+
+        echo "Installing nginx config"
+        chmod 400 /etc/nginx/sites-available/python-helixtariff-ssl/*.key
+        ln -f -s /etc/nginx/sites-available/python-helixtariff /etc/nginx/sites-enabled
+        /etc/init.d/nginx reload
+
+        echo "Installing helixtariff configuration into supervisor"
+        ln -f -s /etc/supervisor/process-available/python-helixtariff.ini /etc/supervisor/process-enabled
+        echo "Reloading supervisor"
+        supervisorctl reload
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
