@@ -4,11 +4,11 @@ BASEDIR=`dirname $0`
 
 pushd $BASEDIR > /dev/null
 
-./create-changelog --package=python-helixtariff
+/opt/helixutils/create-git-changelog --package=helixtariff --dir=$BASEDIR
 dpkg-buildpackage -uc -us -b -rfakeroot
 mkdir -p dist
-mv ../python-helixtariff*.deb dist
-rm -f  ../python-helixtariff*.changes
+mv ../helixtariff*.deb dist
+rm -f  ../helixtariff*.changes
 
 popd > /dev/null
 
