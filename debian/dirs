@@ -3,6 +3,6 @@ etc/supervisor/process-enabled
 etc/nginx/sites-available
 etc/nginx/sites-enabled
 usr/bin
-usr/share/python-helixtariff
-usr/share/python-support/python-helixtariff
-var/log/python-helixtariff
+usr/share/helixtariff
+usr/share/python-support/helixtariff
+var/log/helixtariff

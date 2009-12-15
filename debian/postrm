@@ -5,28 +5,27 @@ set -e
 
 if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
 
-    rm -f /etc/nginx/sites-enabled/python-helixtariff
-    rm -f /etc/supervisor/process-enabled/python-helixtariff.ini
+    rm -f /etc/nginx/sites-enabled/helixtariff
+    rm -f /etc/supervisor/process-enabled/helixtariff.ini
 
     if [ "$1" = "purge" ]; then
-        rm -f  /etc/nginx/sites-available/python-helixtariff
-        rm -rf /etc/nginx/sites-available/python-hilixtariff-ssl/
-        rm -f /etc/supervisor/process-available/python-helixtariff.ini
-    fi
+        rm -f  /etc/nginx/sites-available/helixtariff
+        rm -rf /etc/nginx/sites-available/hilixtariff-ssl/
+        rm -f /etc/supervisor/process-available/helixtariff.ini
 
+        if [ -f /usr/share/debconf/confmodule ]; then
+            . /usr/share/debconf/confmodule
+            if [ -f /usr/share/dbconfig-common/dpkg/postrm.pgsql  ]; then
+                . /usr/share/dbconfig-common/dpkg/postrm.pgsql
+                dbc_go helixtariff $@
+            fi
 
-    if [ -f /usr/share/debconf/confmodule ]; then
-        . /usr/share/debconf/confmodule
-        db_version 2.0
-
-        if [ -f /usr/share/dbconfig-common/dpkg/postrm.pgsql  ]; then
-            . /usr/share/dbconfig-common/dpkg/postrm.pgsql
-            dbc_go python-helixtariff $@
+            db_purge || true
         fi
     fi
 fi
 
-CFG="/usr/share/python-support/python-helixtariff/helixtariff/conf/settings.py"
+CFG="/usr/share/python-support/helixtariff/helixtariff/conf/settings.py"
 if [ -f $CFG ]; then
     rm -f $CFG
     if which ucf >/dev/null 2>&1; then

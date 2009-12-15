@@ -10,9 +10,9 @@
 #export DH_VERBOSE=1
 
 
-export FAKE_ROOT=$(CURDIR)/debian/python-helixtariff
-export DESTDIR=$(FAKE_ROOT)/usr/share/python-support/python-helixtariff
-export DESTDIR_SHARE=$(FAKE_ROOT)/usr/share/python-helixtariff
+export FAKE_ROOT=$(CURDIR)/debian/helixtariff
+export DESTDIR=$(FAKE_ROOT)/usr/share/python-support/helixtariff
+export DESTDIR_SHARE=$(FAKE_ROOT)/usr/share/helixtariff
 
 configure: configure-stamp
 configure-stamp:
@@ -20,11 +20,11 @@ configure-stamp:
 	# Add here commands to configure the package.
 	touch configure-stamp
 
-
 build: build-stamp
 
 build-stamp: configure-stamp
 	dh_testdir
+	
 	# Add here commands to compile the package.
 	#$(MAKE)
 	#docbook-to-man debian/helixtariff.sgml > helixtariff.1
@@ -52,8 +52,9 @@ install: build
 	install src/helixtariff_install $(DESTDIR_SHARE)
 	find $(DESTDIR_SHARE) -name '*pyc' -exec rm {} \;
 	install src/helixtariff_run $(FAKE_ROOT)/usr/bin
-	install -m 0644 supervisor-config/python-helixtariff.ini $(FAKE_ROOT)/etc/supervisor/process-available
-	mv $(DESTDIR)/helixtariff/conf/settings.py $(DESTDIR)/helixtariff/conf/settings.py.tpl
+	install -m 0644 supervisor-config/helixtariff.ini $(FAKE_ROOT)/etc/supervisor/process-available
+	mv $(DESTDIR)/helixtariff/conf/settings.py $(DESTDIR_SHARE)/settings.py.tpl
+	install -d -m 0755 $(FAKE_ROOT)/etc/nginx/sites-available
 	cp -r nginx/* $(FAKE_ROOT)/etc/nginx/sites-available
 
 # Build architecture-independent files here.

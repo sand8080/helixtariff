@@ -1,17 +1,9 @@
 #!/bin/sh
 
 set -e
-#set -x
 
-if [ -f /usr/share/debconf/confmodule ]; then
-
-    . /usr/share/debconf/confmodule
-    db_version 2.0
-
-    if [ -f /usr/share/dbconfig-common/dpkg/prerm.pgsql  ]; then
-        . /usr/share/dbconfig-common/dpkg/prerm.pgsql
-        dbc_go python-helixtariff $@
-    fi
-fi
+. /usr/share/debconf/confmodule
+. /usr/share/dbconfig-common/dpkg/prerm.pgsql
+dbc_go helixbilling $@
 
 #DEBHELPER#
