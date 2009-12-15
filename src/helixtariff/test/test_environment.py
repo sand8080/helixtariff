@@ -7,6 +7,9 @@ settings.DSN = {
     'password': 'qazwsx'
 }
 
+settings.server_host = 'localhost'
+settings.server_port = 10999
+
 import os
 current_dir = os.path.realpath(os.path.dirname(__file__))
 patches_path = os.path.join(current_dir, '..', '..', 'patches')
