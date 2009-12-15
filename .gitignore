@@ -7,8 +7,10 @@ build-stamp
 configure-stamp
 dist
 debian/files
-debian/python-helixtariff.postrm.debhelper
-debian/python-helixtariff.debhelper.log
-debian/python-helixtariff.substvars
-debian/python-helixtariff
+debian/helixtariff.postrm.debhelper
+debian/helixtariff.debhelper.log
+debian/helixtariff.substvars
+debian/helixtariff
+debian/LAST_VERSION
+debian/changelog
 src/docs.html
