@@ -4,7 +4,7 @@ BASEDIR=`dirname $0`
 
 pushd $BASEDIR > /dev/null
 
-/opt/helixutils/create-git-changelog --package=helixtariff --dir=$BASEDIR
+/opt/helixutils/create-git-changelog --package=helixtariff --dir=.
 dpkg-buildpackage -uc -us -b -rfakeroot
 mkdir -p dist
 mv ../helixtariff*.deb dist
