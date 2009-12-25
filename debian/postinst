@@ -13,7 +13,8 @@ case "$1" in
             db_get helixbilling/hostname
             # hostname value now in RET
             . /opt/helixutils/substitute.sh
-            subst /etc/nginx/sites-available/helixtariff __HOSTNAME__ $RET
+            echo "Setting $RET as server_name into nginx config"
+            subst /etc/nginx/sites-available/helixbilling "server_name.*" "server_name  $RET;"
 
             if [ -f /usr/share/dbconfig-common/dpkg/postinst.pgsql  ]; then
 

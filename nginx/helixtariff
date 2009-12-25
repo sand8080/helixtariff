@@ -1,6 +1,6 @@
 server {
     listen       1053;
-    server_name  __HOSTNAME__;
+    server_name  localhost;
 
     access_log  /var/log/nginx/helixtariff.access.log;
     error_log  /var/log/nginx/helixtariff.error.log;
