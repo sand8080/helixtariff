@@ -3,8 +3,8 @@ import cjson
 
 
 class Client(ClientApplication):
-    def __init__(self, host, port, login, password):
-        super(Client, self).__init__(host, port, login, password)
+    def __init__(self, host, port, login, password, protocol):
+        super(Client, self).__init__(host, port, login, password, protocol=protocol)
 
     def ping(self):
         return self.request({'action': 'ping'})
@@ -42,3 +42,6 @@ class Client(ClientApplication):
     def get_price(self, tariff_name, service_type_name):
         return self.request({'action': 'get_domain_service_price', 'login': self.login,
             'tariff_name': tariff_name, 'service_type_name': service_type_name})
+
+    def get_service_types(self):
+        return self.request({'action': 'get_service_types', 'login': self.login})

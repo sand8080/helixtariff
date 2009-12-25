@@ -7,7 +7,7 @@ from helixtariff.domain.objects import ServiceType, ServiceSetDescr, ServiceSet,
     Tariff, Rule, Client
 from helixtariff.logic import query_builder
 from helixtariff.domain import security
-
+from helixtariff.error import ClientNotFound
 
 def get_service_type_by_name(curs, client_id, name, for_update=False):
     fields = {'client_id': client_id, 'name': name}
@@ -23,11 +23,17 @@ def get_service_set_descr(curs, id, for_update=False): #IGNORE:W0622
 
 
 def get_client(curs, id, for_update=False): #IGNORE:W0622
-    return mapping.get_obj_by_field(curs, Client, 'id', id, for_update)
+    try:
+        return mapping.get_obj_by_field(curs, Client, 'id', id, for_update)
+    except EmptyResultSetError:
+        raise ClientNotFound(id)
 
 
 def get_client_by_login(curs, login, for_update=False):
-    return mapping.get_obj_by_field(curs, Client, 'login', login, for_update)
+    try:
+        return mapping.get_obj_by_field(curs, Client, 'login', login, for_update)
+    except EmptyResultSetError:
+        raise ClientNotFound(login)
 
 
 def get_auth_client(curs, login, password, for_update=False):
@@ -48,6 +54,7 @@ def get_service_types_by_descr_name(curs, name, for_update=False):
 def get_service_types(curs, login, for_update=False):
     c = get_client_by_login(curs, login)
     return mapping.get_list(curs, ServiceType, cond=Eq('client_id', c.id), for_update=for_update)
+
 
 
 def get_tariff(curs, client_id, name, for_update=False):

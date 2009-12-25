@@ -46,6 +46,11 @@ class ServiceTypeTestCase(ServiceTestCase):
         )
         self.assertRaises(EmptyResultSetError, self.get_service_type_by_name, self.client.id, self.descr_name)
 
+    def test_get_empty_service_types(self):
+        result = handle_action('get_service_types', {'login': self.test_client_login,})
+        self.assertTrue('types' in result)
+        self.assertEqual([], result['types'])
+
     def test_get_service_types(self):
         types = ['one', 'two', 'three']
         self.add_types(types)
