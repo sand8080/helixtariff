@@ -44,4 +44,4 @@ class Client(ClientApplication):
             'tariff_name': tariff_name, 'service_type_name': service_type_name})
 
     def get_service_types(self):
-        return self.request({'action': 'get_service_types', 'login': self.login})
+        return self.request({'action': 'get_service_types', 'login': self.login, 'password': self.password})

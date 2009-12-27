@@ -5,8 +5,8 @@ def apply(curs): #IGNORE:W0622
         CREATE TABLE tariff (
             id serial,
             PRIMARY KEY(id),
-            service_set_descr_id integer NOT NULL,
-            FOREIGN KEY (service_set_descr_id) REFERENCES service_set_descr(id),
+            service_set_id integer NOT NULL,
+            FOREIGN KEY (service_set_id) REFERENCES service_set(id),
             client_id integer NOT NULL,
             name varchar NOT NULL,
             in_archive boolean DEFAULT FALSE,

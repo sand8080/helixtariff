@@ -47,14 +47,14 @@ class ServiceTestCase(DbBasedTestCase):
     def get_root_client(self):
         return self.get_client_by_login(self.test_client_login)
 
-    def add_descrs(self, service_set_desrs):
-        for d in service_set_desrs:
+    def add_service_sets(self, service_sets):
+        for s in service_sets:
             handle_action(
-                'add_service_set_descr',
-                {'login': self.test_client_login, 'password': self.test_client_password, 'name': d}
+                'add_service_set',
+                {'login': self.test_client_login, 'password': self.test_client_password, 'name': s}
             )
-            descr = self.get_service_set_descr_by_name(d)
-            self.assertEqual(d, descr.name)
+            service_set = self.get_service_set_by_name(s)
+            self.assertEqual(s, service_set.name)
 
     @transaction()
     def get_service_type_by_name(self, client_id, name, curs=None):
@@ -72,7 +72,7 @@ class ServiceTestCase(DbBasedTestCase):
 
     @transaction()
     def get_service_types_by_descr_name(self, name, curs=None):
-        return selector.get_service_types_by_descr_name(curs, name)
+        return selector.get_service_types_by_service_set_name(curs, name)
 
     def add_to_service_set(self, name, types):
         data = {
@@ -89,27 +89,27 @@ class ServiceTestCase(DbBasedTestCase):
             self.assertEqual(expected_types_names[idx], t.name)
 
     @transaction()
-    def get_service_set_descr_by_name(self, name, curs=None):
-        return selector.get_service_set_descr_by_name(curs, name)
+    def get_service_set_by_name(self, name, curs=None):
+        return selector.get_service_set_by_name(curs, name)
 
     @transaction()
     def get_tariff(self, client_id, name, curs=None):
         return selector.get_tariff(curs, client_id, name)
 
-    def add_tariff(self, servise_set_descr, name, in_archive):
+    def add_tariff(self, servise_set_name, name, in_archive):
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'service_set_descr_name': servise_set_descr,
+            'service_set': servise_set_name,
             'name': name,
             'in_archive': in_archive
         }
         handle_action('add_tariff', data)
         client_id = self.get_root_client().id
         t = self.get_tariff(client_id, name)
-        descr = self.get_service_set_descr_by_name(servise_set_descr)
-        self.assertEqual(servise_set_descr, descr.name)
-        self.assertEqual(descr.id, t.service_set_descr_id)
+        service_set = self.get_service_set_by_name(servise_set_name)
+        self.assertEqual(servise_set_name, service_set.name)
+        self.assertEqual(service_set.id, t.service_set_id)
         self.assertEqual(client_id, t.client_id)
         self.assertEqual(name, t.name)
 
@@ -121,8 +121,8 @@ class ServiceTestCase(DbBasedTestCase):
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'tariff_name': tariff_name,
-            'service_type_name': service_type_name,
+            'tariff': tariff_name,
+            'service_type': service_type_name,
             'rule': rule,
         }
         handle_action('add_rule', data)

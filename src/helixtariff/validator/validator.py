@@ -167,8 +167,8 @@ GET_TARIFF_DETAILED_RESPONSE = AnyOf(
 # --- rule ---
 ADD_RULE = dict(
     {
-        'tariff_name': Text(),
-        'service_type_name': Text(),
+        'tariff': Text(),
+        'service_type': Text(),
         'rule': Text(),
     },
     **AUTH_INFO
@@ -176,8 +176,8 @@ ADD_RULE = dict(
 
 MODIFY_RULE = dict(
     {
-        'tariff_name': Text(),
-        'service_type_name': Text(),
+        'tariff': Text(),
+        'service_type': Text(),
         'new_rule': Text(),
     },
     **AUTH_INFO
@@ -185,8 +185,8 @@ MODIFY_RULE = dict(
 
 DELETE_RULE = dict(
     {
-        'tariff_name': Text(),
-        'service_type_name': Text(),
+        'tariff': Text(),
+        'service_type': Text(),
     },
     **AUTH_INFO
 )

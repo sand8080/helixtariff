@@ -11,15 +11,15 @@ from helixtariff.logic.actions import handle_action
 
 class RuleTestCase(ServiceTestCase):
     service_types_names = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
-    service_set_descr_name = 'automatic'
+    service_set_name = 'automatic'
     tariff_name = 'лунный свет'
 
     def setUp(self):
         super(RuleTestCase, self).setUp()
-        self.add_descrs([self.service_set_descr_name])
+        self.add_service_sets([self.service_set_name])
         self.add_types(self.service_types_names)
-        self.add_to_service_set(self.service_set_descr_name, self.service_types_names)
-        self.add_tariff(self.service_set_descr_name, self.tariff_name, False)
+        self.add_to_service_set(self.service_set_name, self.service_types_names)
+        self.add_tariff(self.service_set_name, self.tariff_name, False)
 
     def test_add_rule(self):
         rule = '''
@@ -43,8 +43,8 @@ if context.get_balance(request.customer_id) > 500: price -= 30
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'tariff_name': self.tariff_name,
-            'service_type_name': self.service_types_names[0],
+            'tariff': self.tariff_name,
+            'service_type': self.service_types_names[0],
             'new_rule': new_raw_rule
         }
 
@@ -60,8 +60,8 @@ if context.get_balance(request.customer_id) > 500: price -= 30
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'tariff_name': self.tariff_name,
-            'service_type_name': self.service_types_names[0]
+            'tariff': self.tariff_name,
+            'service_type': self.service_types_names[0]
         }
         handle_action('delete_rule', data)
         self.assertRaises(EmptyResultSetError, self.get_rule, self.get_root_client().id,

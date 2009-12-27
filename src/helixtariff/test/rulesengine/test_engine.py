@@ -8,16 +8,16 @@ from helixtariff.rulesengine.interaction import RequestDomainPrice, PriceProcess
 
 
 class EngineTestCase(ServiceTestCase):
-    service_set_descr_name = 'automatic'
+    service_set_name = 'automatic'
     service_types_names = ['registration ru', 'prolongation ru', 'registration com', 'prolongation com']
     tariff_name = 'basic tariff'
 
     def setUp(self):
         super(EngineTestCase, self).setUp()
-        self.add_descrs([self.service_set_descr_name])
+        self.add_service_sets([self.service_set_name])
         self.add_types(self.service_types_names)
-        self.add_to_service_set(self.service_set_descr_name, self.service_types_names)
-        self.add_tariff(self.service_set_descr_name, self.tariff_name, False)
+        self.add_to_service_set(self.service_set_name, self.service_types_names)
+        self.add_tariff(self.service_set_name, self.tariff_name, False)
 
     def test_request_price_not_modified(self):
         self.add_rule(self.tariff_name, self.service_types_names[0], '')

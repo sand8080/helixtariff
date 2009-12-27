@@ -1,6 +1,7 @@
 import unittest
 
 from helixcore.db.wrapper import EmptyResultSetError
+from helixcore.server.exceptions import AuthError
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
@@ -47,19 +48,22 @@ class ServiceTypeTestCase(ServiceTestCase):
         self.assertRaises(EmptyResultSetError, self.get_service_type_by_name, self.client.id, self.descr_name)
 
     def test_get_empty_service_types(self):
-        result = handle_action('get_service_types', {'login': self.test_client_login,})
+        result = handle_action('get_service_types', {'login': self.test_client_login,
+            'password': self.test_client_password})
         self.assertTrue('types' in result)
         self.assertEqual([], result['types'])
 
     def test_get_service_types(self):
         types = ['one', 'two', 'three']
         self.add_types(types)
-        result = handle_action('get_service_types', {'login': self.test_client_login,})
+        result = handle_action('get_service_types', {'login': self.test_client_login,
+            'password': self.test_client_password})
         self.assertTrue('types' in result)
         self.assertEqual(types, result['types'])
 
     def test_get_service_types_invalid(self):
-        self.assertRaises(EmptyResultSetError, handle_action, 'get_service_types', {'login': 'fake'})
+        self.assertRaises(AuthError, handle_action, 'get_service_types', {'login': 'fake',
+            'password': self.test_client_password})
 
 
 if __name__ == '__main__':

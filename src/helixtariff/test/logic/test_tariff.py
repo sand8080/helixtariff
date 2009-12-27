@@ -9,7 +9,7 @@ from helixtariff.logic.actions import handle_action
 
 class TariffTestCase(ServiceTestCase):
     service_types_names = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
-    service_set_descr_name = 'automatic'
+    service_set_name = 'automatic'
     name = 'happy new year'
     in_archive = False
 
@@ -19,19 +19,19 @@ class TariffTestCase(ServiceTestCase):
 
     def setUp(self):
         super(TariffTestCase, self).setUp()
-        self.add_descrs([self.service_set_descr_name])
+        self.add_service_sets([self.service_set_name])
         self.add_types(self.service_types_names)
-        self.add_to_service_set(self.service_set_descr_name, self.service_types_names)
+        self.add_to_service_set(self.service_set_name, self.service_types_names)
 
     def test_add_tariff(self):
-        self.add_tariff(self.service_set_descr_name, self.name, self.in_archive)
+        self.add_tariff(self.service_set_name, self.name, self.in_archive)
 
     def test_add_tariff_failure(self):
-        self.assertRaises(EmptyResultSetError, self.add_tariff, self.service_set_descr_name + 'fake',
+        self.assertRaises(EmptyResultSetError, self.add_tariff, self.service_set_name + 'fake',
             self.name, self.in_archive
         )
-        self.add_tariff(self.service_set_descr_name, self.name, self.in_archive)
-        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_descr_name,
+        self.add_tariff(self.service_set_name, self.name, self.in_archive)
+        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_name,
             self.name, self.in_archive
         )
 
@@ -82,7 +82,7 @@ class TariffTestCase(ServiceTestCase):
         self.assertTrue('tariff' in result)
         tariff_data = result['tariff']
         self.assertEqual(self.name, tariff_data['name'])
-        self.assertEqual(self.service_set_descr_name, tariff_data['service_set_descr_name'])
+        self.assertEqual(self.service_set_name, tariff_data['service_set'])
 
     def test_get_tariff_detailed(self):
         self.test_add_tariff()
@@ -94,12 +94,12 @@ class TariffTestCase(ServiceTestCase):
         self.assertTrue('tariff' in result)
         tariff_data = result['tariff']
         self.assertEqual(self.name, tariff_data['name'])
-        self.assertEqual(self.service_set_descr_name, tariff_data['service_set_descr_name'])
+        self.assertEqual(self.service_set_name, tariff_data['service_set'])
         self.assertEqual(self.service_types_names, tariff_data['types'])
 
         empty_set_descr_name = 'empty'
         tariff_name = 'no services'
-        self.add_descrs([empty_set_descr_name])
+        self.add_service_sets([empty_set_descr_name])
         self.add_tariff(empty_set_descr_name, tariff_name, False)
         data = {
             'login': self.test_client_login,
@@ -109,7 +109,7 @@ class TariffTestCase(ServiceTestCase):
         self.assertTrue('tariff' in result)
         tariff_data = result['tariff']
         self.assertEqual(tariff_name, tariff_data['name'])
-        self.assertEqual(empty_set_descr_name, tariff_data['service_set_descr_name'])
+        self.assertEqual(empty_set_descr_name, tariff_data['service_set'])
         self.assertEqual([], tariff_data['types'])
 
 

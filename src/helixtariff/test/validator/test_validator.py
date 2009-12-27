@@ -175,8 +175,8 @@ class ValidatorTestCase(RootTestCase):
             {
                 'login': 'l',
                 'password': 'p',
-                'tariff_name': 'auto',
-                'service_type_name': 'ru',
+                'tariff': 'auto',
+                'service_type': 'ru',
                 'rule': 'price = 10'
             }
         )
@@ -188,13 +188,14 @@ class ValidatorTestCase(RootTestCase):
             {
                 'login': 'l',
                 'password': 'p',
-                'tariff_name': 'auto',
-                'service_type_name': 'ru',
+                'tariff': 'auto',
+                'service_type': 'ru',
                 'new_rule': 'price = 20'
             }
         )
         self.validate_status_response('modify_rule')
-        self.assertRaises(ValidationError, self.api.validate_request, 'modify_rule', {'tariff_name': 'auto', 'service_type_name': 'ru'})
+        self.assertRaises(ValidationError, self.api.validate_request,
+            'modify_rule', {'tariff': 'auto', 'service_type': 'ru'})
 
     def test_delete_rule(self):
         self.api.validate_request(
@@ -202,8 +203,8 @@ class ValidatorTestCase(RootTestCase):
             {
                 'login': 'l',
                 'password': 'p',
-                'tariff_name': 'auto',
-                'service_type_name': 'ru'
+                'tariff': 'auto',
+                'service_type': 'ru'
             }
         )
         self.validate_status_response('delete_rule')

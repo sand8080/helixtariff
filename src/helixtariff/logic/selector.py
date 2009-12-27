@@ -3,23 +3,24 @@ from helixcore.db.sql import Eq, Scoped, Select, In, And
 from helixcore.server.exceptions import AuthError
 from helixcore.db.wrapper import EmptyResultSetError
 
-from helixtariff.domain.objects import ServiceType, ServiceSetName, ServiceSet, \
-    Tariff, Rule, Client
+from helixtariff.domain.objects import ServiceType, \
+    ServiceSet, ServiceSetRow, Tariff, Rule, Client
 from helixtariff.logic import query_builder
 from helixtariff.domain import security
 from helixtariff.error import ClientNotFound
+
 
 def get_service_type_by_name(curs, client_id, name, for_update=False):
     fields = {'client_id': client_id, 'name': name}
     return mapping.get_obj_by_fields(curs, ServiceType, fields, for_update)
 
 
-def get_service_set_name_by_name(curs, name, for_update=False):
-    return mapping.get_obj_by_field(curs, ServiceSetName, 'name', name, for_update)
+def get_service_set_by_name(curs, name, for_update=False):
+    return mapping.get_obj_by_field(curs, ServiceSet, 'name', name, for_update)
 
 
-def get_service_set_name(curs, id, for_update=False): #IGNORE:W0622
-    return mapping.get_obj_by_field(curs, ServiceSetName, 'id', id, for_update)
+def get_service_set(curs, id, for_update=False): #IGNORE:W0622
+    return mapping.get_obj_by_field(curs, ServiceSet, 'id', id, for_update)
 
 
 def get_client(curs, id, for_update=False): #IGNORE:W0622
@@ -44,17 +45,15 @@ def get_auth_client(curs, login, password, for_update=False):
         raise AuthError('Access denied.')
 
 
-def get_service_types_by_descr_name(curs, name, for_update=False):
-    cond_descr_id = Eq('service_set_descr_id', Scoped(query_builder.select_service_set_descr_id(name)))
-    sel_type_ids = Select(ServiceSet.table, columns='service_type_id', cond=cond_descr_id)
+def get_service_types_by_service_set_name(curs, name, for_update=False):
+    cond_descr_id = Eq('service_set_id', Scoped(query_builder.select_service_set_id(name)))
+    sel_type_ids = Select(ServiceSetRow.table, columns='service_type_id', cond=cond_descr_id)
     cond_type_in = In('id', Scoped(sel_type_ids))
     return mapping.get_list(curs, ServiceType, cond_type_in, order_by='id', for_update=for_update)
 
 
-def get_service_types(curs, login, for_update=False):
-    c = get_client_by_login(curs, login)
-    return mapping.get_list(curs, ServiceType, cond=Eq('client_id', c.id), for_update=for_update)
-
+def get_service_types(curs, client_id, for_update=False):
+    return mapping.get_list(curs, ServiceType, cond=Eq('client_id', client_id), for_update=for_update)
 
 
 def get_tariff(curs, client_id, name, for_update=False):
