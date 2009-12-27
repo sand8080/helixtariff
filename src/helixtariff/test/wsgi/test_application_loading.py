@@ -63,16 +63,16 @@ class ApplicationTestCase(DbBasedTestCase):
         types = [random_word() for _ in range(random.randint(3, 10))]
         map(self.cli.add_service_type, types)
 
-        descrs = [random_word() for _ in range(3)]
-        map(self.cli.add_service_set_descr, descrs)
+        service_sets = [random_word() for _ in range(3)]
+        map(self.cli.add_service_set, service_sets)
 
-        self.cli.add_to_service_set(descrs[0], types)
-        self.cli.add_to_service_set(descrs[1], types[:2])
-        self.cli.add_to_service_set(descrs[2], types[1:])
+        self.cli.add_to_service_set(service_sets[0], types)
+        self.cli.add_to_service_set(service_sets[1], types[:2])
+        self.cli.add_to_service_set(service_sets[2], types[1:])
 
-        tariffs_names = [random_word() for _ in range(len(descrs))]
+        tariffs_names = [random_word() for _ in range(len(service_sets))]
         for i, tariff_name in enumerate(tariffs_names):
-            self.cli.add_tariff(tariff_name, descrs[i])
+            self.cli.add_tariff(tariff_name, service_sets[i])
             tariff_detailed_data = self.cli.get_tariff_detailed(tariff_name)
             for service_type_name in tariff_detailed_data['types']:
                 rule = 'price = %s' % (Decimal(random.randint(2000, 9000)) / 100)

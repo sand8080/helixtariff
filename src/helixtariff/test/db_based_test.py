@@ -116,6 +116,23 @@ class ServiceTestCase(DbBasedTestCase):
         self.assertEqual(name, t.name)
         self.assertEqual(parent_id, t.parent_id)
 
+    def modify_tariff(self, name, new_parent_tariff=None):
+        client_id = self.get_root_client().id
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': name,
+            'new_parent_tariff': new_parent_tariff
+        }
+        handle_action('modify_tariff', data)
+        t = self.get_tariff(client_id, name)
+        if new_parent_tariff is None:
+            parent_tariff_id = None
+        else:
+            parent_tariff_id = self.get_tariff(client_id, new_parent_tariff).id
+        self.assertEqual(name, t.name)
+        self.assertEqual(parent_tariff_id, t.parent_id)
+
     @transaction()
     def get_rule(self, client_id, tariff_name, service_type_name, curs=None):
         return selector.get_rule(curs, client_id, tariff_name, service_type_name)

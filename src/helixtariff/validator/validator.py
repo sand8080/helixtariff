@@ -201,8 +201,8 @@ DELETE_RULE = dict(
 
 GET_DOMAIN_SERVICE_PRICE = {
     'login': Text(),
-    'tariff_name': Text(),
-    'service_type_name': Text(),
+    'tariff': Text(),
+    'service_type': Text(),
     Optional('period'): Positive(int),
     Optional('customer_id'): Text(),
 }
@@ -211,8 +211,9 @@ GET_DOMAIN_SERVICE_PRICE_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **{
-            'tariff_name': Text(),
-            'service_type_name': Text(),
+            'tariff': Text(),
+            'tariffs_chain': [Text()],
+            'service_type': Text(),
             'price': Text(),
             Optional('period'): Positive(int),
             Optional('customer_id'): Text(),
