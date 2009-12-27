@@ -1,6 +1,6 @@
 from helixcore.db.sql import Select, In, Eq
 
-from helixtariff.domain.objects import ServiceType, ServiceSetDescr
+from helixtariff.domain.objects import ServiceType, ServiceSetName
 
 def select_service_types_ids(names):
     return Select(ServiceType.table, columns='id', cond=In('name', names))

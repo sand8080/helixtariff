@@ -2,7 +2,7 @@ from helixtariff.conf import settings
 
 settings.DSN = {
     'user': 'helixtest',
-    'database': 'helixtest',
+    'database': 'test_helixtariff',
     'host': 'localhost',
     'password': 'qazwsx'
 }

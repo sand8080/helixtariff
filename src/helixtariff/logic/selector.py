@@ -3,7 +3,7 @@ from helixcore.db.sql import Eq, Scoped, Select, In, And
 from helixcore.server.exceptions import AuthError
 from helixcore.db.wrapper import EmptyResultSetError
 
-from helixtariff.domain.objects import ServiceType, ServiceSetDescr, ServiceSet, \
+from helixtariff.domain.objects import ServiceType, ServiceSetName, ServiceSet, \
     Tariff, Rule, Client
 from helixtariff.logic import query_builder
 from helixtariff.domain import security
@@ -14,12 +14,12 @@ def get_service_type_by_name(curs, client_id, name, for_update=False):
     return mapping.get_obj_by_fields(curs, ServiceType, fields, for_update)
 
 
-def get_service_set_descr_by_name(curs, name, for_update=False):
-    return mapping.get_obj_by_field(curs, ServiceSetDescr, 'name', name, for_update)
+def get_service_set_name_by_name(curs, name, for_update=False):
+    return mapping.get_obj_by_field(curs, ServiceSetName, 'name', name, for_update)
 
 
-def get_service_set_descr(curs, id, for_update=False): #IGNORE:W0622
-    return mapping.get_obj_by_field(curs, ServiceSetDescr, 'id', id, for_update)
+def get_service_set_name(curs, id, for_update=False): #IGNORE:W0622
+    return mapping.get_obj_by_field(curs, ServiceSetName, 'id', id, for_update)
 
 
 def get_client(curs, id, for_update=False): #IGNORE:W0622

@@ -6,14 +6,14 @@ from helixcore.server.response import response_ok
 from helixcore.server.exceptions import DataIntegrityError
 
 from helixtariff.conf.db import transaction
-from helixtariff.domain.objects import Client, ServiceType, ServiceSetDescr, ServiceSet, Tariff, Rule
+from helixtariff.domain.objects import Client, ServiceType, ServiceSetName, ServiceSet, Tariff, Rule
 from helixtariff.logic import query_builder
 from helixtariff.logic import selector
 from helixtariff.rulesengine.checker import RuleChecker
 from helixtariff.rulesengine.engine import Engine
 from helixtariff.rulesengine.interaction import RequestDomainPrice
 from helixtariff.domain import security
-from helixtariff.logic.selector import get_service_set_descr
+from helixtariff.logic.selector import get_service_set_name
 
 
 def authentificate(method):
@@ -108,21 +108,21 @@ class Handler(object):
     # server_set_descr
     @transaction()
     @authentificate
-    def add_service_set_descr(self, data, curs=None):
-        mapping.insert(curs, ServiceSetDescr(**data))
+    def add_service_set_name(self, data, curs=None):
+        mapping.insert(curs, ServiceSetName(**data))
         return response_ok()
 
     @transaction()
     @authentificate
-    def modify_service_set_descr(self, data, curs=None):
-        loader = partial(selector.get_service_set_descr_by_name, curs, data['name'], for_update=True)
+    def modify_service_set_name(self, data, curs=None):
+        loader = partial(selector.get_service_set_name_by_name, curs, data['name'], for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
     @authentificate
-    def delete_service_set_descr(self, data, curs=None):
-        t = selector.get_service_set_descr_by_name(curs, data['name'], for_update=True)
+    def delete_service_set_name(self, data, curs=None):
+        t = selector.get_service_set_name_by_name(curs, data['name'], for_update=True)
         mapping.delete(curs, t)
         return response_ok()
 
@@ -130,7 +130,7 @@ class Handler(object):
     @transaction()
     @authentificate
     def add_to_service_set(self, data, curs=None):
-        descr = selector.get_service_set_descr_by_name(curs, data['name'])
+        descr = selector.get_service_set_name_by_name(curs, data['name'])
         types_names = data['types']
         types = mapping.get_list(curs, ServiceType, In('name', types_names))
         if len(types_names) != len(types):
@@ -138,15 +138,15 @@ class Handler(object):
             actual = set([t.name for t in types])
             raise DataIntegrityError('Requested types not found: %s' % ', '.join(expected.difference(actual)))
         for t in types:
-            s = ServiceSet(**{'service_type_id': t.id, 'service_set_descr_id': descr.id})
+            s = ServiceSet(**{'service_type_id': t.id, 'service_set_name_id': descr.id})
             mapping.insert(curs, s)
         return response_ok()
 
     @transaction()
     @authentificate
     def delete_from_service_set(self, data, curs=None):
-        query_set_descr_id = query_builder.select_service_set_descr_id(data['name'])
-        cond_set_descr_id = Eq('service_set_descr_id', Scoped(query_set_descr_id))
+        query_set_descr_id = query_builder.select_service_set_name_id(data['name'])
+        cond_set_descr_id = Eq('service_set_name_id', Scoped(query_set_descr_id))
 
         query_types_ids = query_builder.select_service_types_ids(data['types'])
         cond_types_ids = In('service_type_id', Scoped(query_types_ids))
@@ -159,8 +159,8 @@ class Handler(object):
     @transaction()
     @authentificate
     def delete_service_set(self, data, curs=None):
-        query_set_descr_id = query_builder.select_service_set_descr_id(data['name'])
-        cond_set_descr_id = Eq('service_set_descr_id', Scoped(query_set_descr_id))
+        query_set_descr_id = query_builder.select_service_set_name_id(data['name'])
+        cond_set_descr_id = Eq('service_set_name_id', Scoped(query_set_descr_id))
         query = Delete(ServiceSet.table, cond=cond_set_descr_id)
         curs.execute(*query.glue())
         return response_ok()
@@ -169,9 +169,9 @@ class Handler(object):
     @transaction()
     @authentificate
     def add_tariff(self, data, curs=None):
-        descr = selector.get_service_set_descr_by_name(curs, data['service_set_descr_name'])
-        del data['service_set_descr_name']
-        data['service_set_descr_id'] = descr.id
+        descr = selector.get_service_set_name_by_name(curs, data['service_set_name_name'])
+        del data['service_set_name_name']
+        data['service_set_name_id'] = descr.id
         mapping.insert(curs, Tariff(**data))
         return response_ok()
 
@@ -192,10 +192,10 @@ class Handler(object):
     def _get_tariff_data(self, data, curs=None):
         client = selector.get_client_by_login(curs, data['login'])
         tariff = selector.get_tariff(curs, client.id, data['name'])
-        descr = get_service_set_descr(curs, tariff.service_set_descr_id)
+        descr = get_service_set_name(curs, tariff.service_set_name_id)
         return {
             'name': tariff.name,
-            'service_set_descr_name': descr.name,
+            'service_set_name_name': descr.name,
         }
 
     @transaction()
@@ -205,7 +205,7 @@ class Handler(object):
     @transaction()
     def get_tariff_detailed(self, data, curs=None):
         tariff_data = self._get_tariff_data(data, curs)
-        types = selector.get_service_types_by_descr_name(curs, tariff_data['service_set_descr_name'])
+        types = selector.get_service_types_by_descr_name(curs, tariff_data['service_set_name_name'])
         tariff_data['types'] = [t.name for t in types]
         return response_ok(tariff=tariff_data)
 
