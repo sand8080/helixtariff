@@ -19,6 +19,8 @@ iso_datetime_validator = re.compile(r"""
     """
 )
 
+NullableText = AnyOf(Text(), None)
+
 PING = {}
 
 RESPONSE_STATUS_OK = {'status': 'ok'}
@@ -114,6 +116,7 @@ DELETE_FROM_SERVICE_SET = dict(
 ADD_TARIFF = dict(
     {
         'name': Text(),
+        'parent_tariff': NullableText,
         'service_set': Text(),
         'in_archive': bool,
     },
@@ -124,6 +127,7 @@ MODIFY_TARIFF = dict(
     {
         'name': Text(),
         Optional('new_name'): Text(),
+        Optional('new_parent_tariff'): NullableText,
         Optional('new_in_archive'): bool,
     },
     **AUTH_INFO
@@ -144,7 +148,8 @@ GET_TARIFF_RESPONSE = AnyOf(
         RESPONSE_STATUS_OK,
         tariff={
             'name': Text(),
-            'service_set': Text()
+            'service_set': Text(),
+            'parent_tariff': NullableText,
         }
     ),
     RESPONSE_STATUS_ERROR
@@ -158,6 +163,7 @@ GET_TARIFF_DETAILED_RESPONSE = AnyOf(
         tariff={
             'name': Text(),
             'service_set': Text(),
+            'parent_tariff': NullableText,
             'types': [Text()]
         }
     ),

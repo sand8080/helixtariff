@@ -63,6 +63,10 @@ def get_tariff(curs, client_id, name, for_update=False):
     return mapping.get(curs, Tariff, cond=cond, for_update=for_update)
 
 
+def get_tariff_by_id(curs, t_id, for_update=False):
+    return mapping.get(curs, Tariff, cond=Eq('id', t_id), for_update=for_update)
+
+
 def get_rule(curs, client_id, tariff_name, service_type_name, for_update=False):
     cond_client_id = Eq('client_id', client_id)
     cond_tariff_name = Eq('name', tariff_name)

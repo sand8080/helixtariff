@@ -22,7 +22,7 @@ class ServiceSetRow(Mapped):
 
 
 class Tariff(Mapped):
-    __slots__ = ['id', 'client_id', 'service_set_id', 'name', 'in_archive']
+    __slots__ = ['id', 'parent_id', 'client_id', 'service_set_id', 'name', 'in_archive']
     table = 'tariff'
 
 

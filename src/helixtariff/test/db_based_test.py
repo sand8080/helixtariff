@@ -96,22 +96,25 @@ class ServiceTestCase(DbBasedTestCase):
     def get_tariff(self, client_id, name, curs=None):
         return selector.get_tariff(curs, client_id, name)
 
-    def add_tariff(self, servise_set_name, name, in_archive):
+    def add_tariff(self, servise_set_name, name, in_archive, parent_tariff_name):
+        client_id = self.get_root_client().id
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
             'service_set': servise_set_name,
             'name': name,
-            'in_archive': in_archive
+            'in_archive': in_archive,
+            'parent_tariff': parent_tariff_name
         }
         handle_action('add_tariff', data)
-        client_id = self.get_root_client().id
         t = self.get_tariff(client_id, name)
+        parent_id = None if parent_tariff_name is None else self.get_tariff(client_id, parent_tariff_name).id
         service_set = self.get_service_set_by_name(servise_set_name)
         self.assertEqual(servise_set_name, service_set.name)
         self.assertEqual(service_set.id, t.service_set_id)
         self.assertEqual(client_id, t.client_id)
         self.assertEqual(name, t.name)
+        self.assertEqual(parent_id, t.parent_id)
 
     @transaction()
     def get_rule(self, client_id, tariff_name, service_type_name, curs=None):

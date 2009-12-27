@@ -160,15 +160,31 @@ class Handler(object):
     @transaction()
     @authentificate
     def add_tariff(self, data, curs=None):
-        descr = selector.get_service_set_by_name(curs, data['service_set'])
+        service_set = selector.get_service_set_by_name(curs, data['service_set'])
         del data['service_set']
-        data['service_set_id'] = descr.id
+        data['service_set_id'] = service_set.id
+        parent_tariff = data['parent_tariff']
+        if parent_tariff is None:
+            parent_id = None
+        else:
+            parent_id = selector.get_tariff(curs, data['client_id'], parent_tariff).id
+        del data['parent_tariff']
+        data['parent_id'] = parent_id
         mapping.insert(curs, Tariff(**data))
         return response_ok()
 
     @transaction()
     @authentificate
     def modify_tariff(self, data, curs=None):
+        if 'new_parent_tariff' in data:
+            parent_tariff = data['new_parent_tariff']
+            if parent_tariff is None:
+                parent_id = None
+            else:
+                parent_id = selector.get_tariff(curs, data['client_id'], parent_tariff).id
+            del data['new_parent_tariff']
+            data['new_parent_id'] = parent_id
+
         loader = partial(selector.get_tariff, curs, data['client_id'], data['name'], for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
@@ -184,9 +200,14 @@ class Handler(object):
         client = selector.get_client_by_login(curs, data['login'])
         tariff = selector.get_tariff(curs, client.id, data['name'])
         service_set = selector.get_service_set(curs, tariff.service_set_id)
+        if tariff.parent_id is None:
+            pt_name = None
+        else:
+            pt_name = selector.get_tariff_by_id(curs, tariff.parent_id).name
         return {
             'name': tariff.name,
             'service_set': service_set.name,
+            'parent_tariff': pt_name,
         }
 
     @transaction()

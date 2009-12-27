@@ -107,6 +107,18 @@ class ValidatorTestCase(RootTestCase):
                 'login': 'l',
                 'password': 'p',
                 'name': 'приведи друга',
+                'parent_tariff': None,
+                'service_set': 'exotic',
+                'in_archive': False,
+            }
+        )
+        self.api.validate_request(
+            'add_tariff',
+            {
+                'login': 'l',
+                'password': 'p',
+                'name': 'приведи друга',
+                'parent_tariff': 'basic exotic',
                 'service_set': 'exotic',
                 'in_archive': False,
             }
@@ -147,6 +159,28 @@ class ValidatorTestCase(RootTestCase):
             {
                 'login': 'l',
                 'password': 'p',
+                'name': 'приведи друга',
+                'new_name': 'для блондинок',
+                'new_in_archive': True,
+                'new_parent_tariff': None
+            }
+        )
+        self.api.validate_request(
+            'modify_tariff',
+            {
+                'login': 'l',
+                'password': 'p',
+                'name': 'приведи друга',
+                'new_name': 'для блондинок',
+                'new_in_archive': True,
+                'new_parent_tariff': 'первый целевой'
+            }
+        )
+        self.api.validate_request(
+            'modify_tariff',
+            {
+                'login': 'l',
+                'password': 'p',
                 'name': 'приведи друга'
             }
         )
@@ -158,15 +192,18 @@ class ValidatorTestCase(RootTestCase):
 
     def test_get_tariff(self):
         self.api.validate_request('get_tariff', {'login': 'l', 'name': 'приведи друга'})
-        self.api.validate_response('get_tariff', {'status': 'ok', 'tariff': {'name': 'n', 'service_set': 's'}})
+        self.api.validate_response('get_tariff', {'status': 'ok', 'tariff':
+            {'name': 'n', 'service_set': 's', 'parent_tariff': None}})
+        self.api.validate_response('get_tariff', {'status': 'ok', 'tariff':
+            {'name': 'n', 'service_set': 's', 'parent_tariff': 'p'}})
         self.api.validate_response('get_tariff', {'status': 'error', 'category': 'test', 'message': 'happens'})
 
     def test_get_tariff_detailed(self):
         self.api.validate_request('get_tariff_detailed', {'login': 'l', 'name': 'приведи друга'})
         self.api.validate_response('get_tariff_detailed', {'status': 'ok',
-            'tariff': {'name': 'n', 'service_set': 's', 'types': ['one', 'two']}})
+            'tariff': {'name': 'n', 'service_set': 's', 'parent_tariff': None, 'types': ['one', 'two']}})
         self.api.validate_response('get_tariff_detailed', {'status': 'ok',
-            'tariff': {'name': 'n', 'service_set': 's', 'types': []}})
+            'tariff': {'name': 'n', 'service_set': 's', 'parent_tariff': 'p', 'types': []}})
         self.api.validate_response('get_tariff_detailed', {'status': 'error', 'category': 'test', 'message': 'happens'})
 
     def test_add_rule(self):
