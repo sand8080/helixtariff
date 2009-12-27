@@ -271,7 +271,7 @@ class Handler(object):
             try:
                 selector.get_rule(curs, client_id, tariff_name, service_type_name)
                 return None
-            except EmptyResultSetError, _:
+            except EmptyResultSetError, _: #IGNORE:W0704
                 pass
 
             if tariff_name in tariffs_set:
