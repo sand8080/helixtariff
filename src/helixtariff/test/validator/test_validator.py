@@ -191,7 +191,8 @@ class ValidatorTestCase(RootTestCase):
         self.validate_status_response('delete_tariff')
 
     def test_get_tariff(self):
-        self.api.validate_request('get_tariff', {'login': 'l', 'name': 'приведи друга'})
+        self.api.validate_request('get_tariff',
+            {'login': 'l', 'password': 'p', 'name': 'приведи друга'})
         self.api.validate_response('get_tariff', {'status': 'ok', 'tariff':
             {'name': 'n', 'service_set': 's', 'parent_tariff': None}})
         self.api.validate_response('get_tariff', {'status': 'ok', 'tariff':
@@ -199,7 +200,8 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_response('get_tariff', {'status': 'error', 'category': 'test', 'message': 'happens'})
 
     def test_get_tariff_detailed(self):
-        self.api.validate_request('get_tariff_detailed', {'login': 'l', 'name': 'приведи друга'})
+        self.api.validate_request('get_tariff_detailed',
+            {'login': 'l', 'password': 'p', 'name': 'приведи друга'})
         self.api.validate_response('get_tariff_detailed', {'status': 'ok',
             'tariff': {'name': 'n', 'service_set': 's', 'parent_tariff': None, 'types': ['one', 'two']}})
         self.api.validate_response('get_tariff_detailed', {'status': 'ok',
@@ -248,11 +250,11 @@ class ValidatorTestCase(RootTestCase):
 
     def test_get_domain_service_price(self):
         self.api.validate_request('get_domain_service_price',
-            {'login': 'l', 'tariff': 't', 'service_type': 's'})
+            {'login': 'l', 'password': 'p', 'tariff': 't', 'service_type': 's'})
         self.api.validate_request('get_domain_service_price',
-            {'login': 'l', 'tariff': 't', 'service_type': 's', 'period': 3})
+            {'login': 'l', 'password': 'p', 'tariff': 't', 'service_type': 's', 'period': 3})
         self.api.validate_request('get_domain_service_price',
-            {'login': 'l', 'tariff': 't', 'service_type': 's', 'period': 3, 'customer_id': 'c'})
+            {'login': 'l', 'password': 'p', 'tariff': 't', 'service_type': 's', 'period': 3, 'customer_id': 'c'})
 
         self.api.validate_response('get_domain_service_price',
             {'status': 'error', 'category': 'test', 'message': 'happens'})

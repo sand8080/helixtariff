@@ -138,10 +138,10 @@ DELETE_TARIFF = dict(
     **AUTH_INFO
 )
 
-GET_TARIFF = {
-    'login': Text(),
-    'name': Text(),
-}
+GET_TARIFF = dict(
+    {'name': Text()},
+    **AUTH_INFO
+)
 
 GET_TARIFF_RESPONSE = AnyOf(
     dict(
@@ -198,14 +198,15 @@ DELETE_RULE = dict(
 )
 
 # --- price ---
-
-GET_DOMAIN_SERVICE_PRICE = {
-    'login': Text(),
-    'tariff': Text(),
-    'service_type': Text(),
-    Optional('period'): Positive(int),
-    Optional('customer_id'): Text(),
-}
+GET_DOMAIN_SERVICE_PRICE = dict(
+    {
+        'tariff': Text(),
+        'service_type': Text(),
+        Optional('period'): Positive(int),
+        Optional('customer_id'): Text(),
+    },
+    **AUTH_INFO
+)
 
 GET_DOMAIN_SERVICE_PRICE_RESPONSE = AnyOf(
     dict(
