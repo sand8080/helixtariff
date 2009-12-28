@@ -15,8 +15,9 @@ def get_service_type_by_name(curs, client_id, name, for_update=False):
     return mapping.get_obj_by_fields(curs, ServiceType, fields, for_update)
 
 
-def get_service_set_by_name(curs, name, for_update=False):
-    return mapping.get_obj_by_field(curs, ServiceSet, 'name', name, for_update)
+def get_service_set_by_name(curs, client_id, name, for_update=False):
+    return mapping.get_obj_by_fields(curs, ServiceSet,
+        {'client_id': client_id, 'name': name}, for_update)
 
 
 def get_service_set(curs, id, for_update=False): #IGNORE:W0622
@@ -45,7 +46,7 @@ def get_auth_client(curs, login, password, for_update=False):
         raise AuthError('Access denied.')
 
 
-def get_service_types_by_service_set_name(curs, name, for_update=False):
+def get_service_types_by_service_set(curs, name, for_update=False):
     cond_descr_id = Eq('service_set_id', Scoped(query_builder.select_service_set_id(name)))
     sel_type_ids = Select(ServiceSetRow.table, columns='service_type_id', cond=cond_descr_id)
     cond_type_in = In('id', Scoped(sel_type_ids))

@@ -118,21 +118,22 @@ class Handler(object):
     @transaction()
     @authentificate
     def rename_service_set(self, data, curs=None):
-        loader = partial(selector.get_service_set_by_name, curs, data['name'], for_update=True)
+        loader = partial(selector.get_service_set_by_name, curs, data['client_id'],
+            data['name'], for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
     @authentificate
     def delete_service_set(self, data, curs=None):
-        t = selector.get_service_set_by_name(curs, data['name'], for_update=True)
+        t = selector.get_service_set_by_name(curs, data['client_id'], data['name'], for_update=True)
         mapping.delete(curs, t)
         return response_ok()
 
     @transaction()
     @authentificate
     def add_to_service_set(self, data, curs=None):
-        service_set = selector.get_service_set_by_name(curs, data['name'])
+        service_set = selector.get_service_set_by_name(curs, data['client_id'], data['name'])
         types_names = data['types']
         types = mapping.get_list(curs, ServiceType, In('name', types_names))
         if len(types_names) != len(types):
@@ -158,11 +159,18 @@ class Handler(object):
         curs.execute(*query.glue())
         return response_ok()
 
+    @transaction()
+    @authentificate
+    def view_service_set(self, data, curs=None):
+        service_set = selector.get_service_set_by_name(curs, data['client_id'], data['name'])
+        types = selector.get_service_types_by_service_set(curs, service_set.name)
+        return response_ok(name=service_set.name, types=[t.name for t in types])
+
     # tariff
     @transaction()
     @authentificate
     def add_tariff(self, data, curs=None):
-        service_set = selector.get_service_set_by_name(curs, data['service_set'])
+        service_set = selector.get_service_set_by_name(curs, data['client_id'], data['service_set'])
         del data['service_set']
         data['service_set_id'] = service_set.id
         parent_tariff = data['parent_tariff']
@@ -219,7 +227,7 @@ class Handler(object):
     @transaction()
     def get_tariff_detailed(self, data, curs=None):
         tariff_data = self._get_tariff_data(data, curs)
-        types = selector.get_service_types_by_service_set_name(curs, tariff_data['service_set'])
+        types = selector.get_service_types_by_service_set(curs, tariff_data['service_set'])
         tariff_data['types'] = [t.name for t in types]
         return response_ok(tariff=tariff_data)
 

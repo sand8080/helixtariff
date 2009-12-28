@@ -48,12 +48,13 @@ class ServiceTestCase(DbBasedTestCase):
         return self.get_client_by_login(self.test_client_login)
 
     def add_service_sets(self, service_sets):
+        client = self.get_client_by_login(self.test_client_login)
         for s in service_sets:
             handle_action(
                 'add_service_set',
                 {'login': self.test_client_login, 'password': self.test_client_password, 'name': s}
             )
-            service_set = self.get_service_set_by_name(s)
+            service_set = self.get_service_set_by_name(client.id, s)
             self.assertEqual(s, service_set.name)
 
     @transaction()
@@ -71,8 +72,8 @@ class ServiceTestCase(DbBasedTestCase):
             self.assertEquals(obj.name, t)
 
     @transaction()
-    def get_service_types_by_descr_name(self, name, curs=None):
-        return selector.get_service_types_by_service_set_name(curs, name)
+    def get_service_types_by_service_set_name(self, name, curs=None):
+        return selector.get_service_types_by_service_set(curs, name)
 
     def add_to_service_set(self, name, types):
         data = {
@@ -82,15 +83,15 @@ class ServiceTestCase(DbBasedTestCase):
             'types': types
         }
         handle_action('add_to_service_set', data)
-        types = self.get_service_types_by_descr_name(data['name'])
+        types = self.get_service_types_by_service_set_name(data['name'])
         expected_types_names = data['types']
         self.assertEqual(len(expected_types_names), len(types))
         for idx, t in enumerate(types):
             self.assertEqual(expected_types_names[idx], t.name)
 
     @transaction()
-    def get_service_set_by_name(self, name, curs=None):
-        return selector.get_service_set_by_name(curs, name)
+    def get_service_set_by_name(self, client_id, name, curs=None):
+        return selector.get_service_set_by_name(curs, client_id, name)
 
     @transaction()
     def get_tariff(self, client_id, name, curs=None):
@@ -109,7 +110,7 @@ class ServiceTestCase(DbBasedTestCase):
         handle_action('add_tariff', data)
         t = self.get_tariff(client_id, name)
         parent_id = None if parent_tariff_name is None else self.get_tariff(client_id, parent_tariff_name).id
-        service_set = self.get_service_set_by_name(servise_set_name)
+        service_set = self.get_service_set_by_name(client_id, servise_set_name)
         self.assertEqual(servise_set_name, service_set.name)
         self.assertEqual(service_set.id, t.service_set_id)
         self.assertEqual(client_id, t.client_id)

@@ -223,6 +223,36 @@ GET_DOMAIN_SERVICE_PRICE_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
+# --- view service set ---
+SERVICE_SET_INFO = dict({
+    'name': Text(),
+    'types': [Text()],
+})
+
+VIEW_SERVICE_SET = dict(
+    {'name': Text()},
+    **AUTH_INFO
+)
+
+VIEW_SERVICE_SET_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **SERVICE_SET_INFO
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+VIEW_SERVICE_SETS = AUTH_INFO
+
+VIEW_SERVICE_SETS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{'service_sets': [SERVICE_SET_INFO]}
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+
 protocol = [
     ApiCall('ping_request', Scheme(PING)),
     ApiCall('ping_response', Scheme(RESPONSE_STATUS_ONLY)),
@@ -295,4 +325,8 @@ protocol = [
     # price
     ApiCall('get_domain_service_price_request', Scheme(GET_DOMAIN_SERVICE_PRICE)),
     ApiCall('get_domain_service_price_response', Scheme(GET_DOMAIN_SERVICE_PRICE_RESPONSE)),
+
+    # view service set
+    ApiCall('view_service_set_request', Scheme(VIEW_SERVICE_SET)),
+    ApiCall('view_service_set_response', Scheme(VIEW_SERVICE_SET_RESPONSE)),
 ]

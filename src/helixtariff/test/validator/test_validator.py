@@ -269,6 +269,17 @@ class ValidatorTestCase(RootTestCase):
         self.assertRaises(ValidationError, self.api.validate_request, 'get_domain_service_price',
             {'login': 'l', 'tariff_name': 't', 'service_type_name': 's', 'period': 'f'})
 
+    def test_view_service_set(self):
+        self.api.validate_request('view_service_set',
+            {'login': 'l', 'password': 'p', 'name': 't'})
+        self.api.validate_response('view_service_set',
+            {'status': 'error', 'category': 'test', 'message': 'happens'})
+        self.api.validate_response('view_service_set', {'status': 'ok', 'name': 'n', 'types': []})
+        self.api.validate_response('view_service_set', {'status': 'ok', 'name': 'n',
+            'types': ['n']})
+        self.api.validate_response('view_service_set', {'status': 'ok', 'name': 'n',
+            'types': ['n', 'm']})
+
 
 if __name__ == '__main__':
     unittest.main()
