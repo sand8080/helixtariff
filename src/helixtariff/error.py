@@ -9,8 +9,17 @@ class TariffCycleError(HelixtariffError):
     pass
 
 
-class NoRuleFound(HelixtariffError):
+class ObjectNotFound(HelixtariffError):
     pass
+
+
+class RuleNotFound(HelixtariffError):
+    pass
+
+
+class ServiceTypeNotFound(ObjectNotFound):
+    def __init__(self, name):
+        super(ServiceTypeNotFound, self).__init__('''Service type '%s' not found''' % name)
 
 
 class ClientNotFound(EmptyResultSetError, HelixtariffError):

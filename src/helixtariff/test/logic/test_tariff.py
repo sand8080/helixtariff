@@ -136,6 +136,7 @@ class TariffTestCase(ServiceTestCase):
 
         data = {
             'login': self.test_client_login,
+            'password': self.test_client_password,
             'name': parent_name
         }
         result = handle_action('get_tariff', data)
@@ -147,6 +148,7 @@ class TariffTestCase(ServiceTestCase):
 
         data = {
             'login': self.test_client_login,
+            'password': self.test_client_password,
             'name': child_name
         }
         result = handle_action('get_tariff', data)
@@ -164,6 +166,7 @@ class TariffTestCase(ServiceTestCase):
 
         data = {
             'login': self.test_client_login,
+            'password': self.test_client_password,
             'name': parent_name
         }
         result = handle_action('get_tariff_detailed', data)
@@ -176,6 +179,7 @@ class TariffTestCase(ServiceTestCase):
 
         data = {
             'login': self.test_client_login,
+            'password': self.test_client_password,
             'name': child_name
         }
         result = handle_action('get_tariff_detailed', data)
@@ -192,6 +196,7 @@ class TariffTestCase(ServiceTestCase):
         self.add_tariff(empty_set_descr_name, tariff_name, False, parent_name)
         data = {
             'login': self.test_client_login,
+            'password': self.test_client_password,
             'name': tariff_name
         }
         result = handle_action('get_tariff_detailed', data)

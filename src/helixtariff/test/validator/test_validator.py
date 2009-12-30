@@ -280,6 +280,25 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_response('view_service_set', {'status': 'ok', 'name': 'n',
             'types': ['n', 'm']})
 
+    def test_view_service_sets(self):
+        self.api.validate_request('view_service_sets',
+            {'login': 'l', 'password': 'p'})
+        self.api.validate_response('view_service_sets',
+            {'status': 'error', 'category': 'test', 'message': 'happens'})
+        self.api.validate_response('view_service_sets', {'status': 'ok', 'service_sets': []})
+        self.api.validate_response('view_service_sets', {'status': 'ok',
+            'service_sets': [
+                {'name': 'n', 'types': ['n']},
+            ]
+        })
+        self.api.validate_response('view_service_sets', {'status': 'ok',
+            'service_sets': [
+                {'name': 'n', 'types': ['n']},
+                {'name': 'm', 'types': ['n', 'm']},
+                {'name': 'l', 'types': []},
+            ]
+        })
+
 
 if __name__ == '__main__':
     unittest.main()

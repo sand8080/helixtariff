@@ -296,6 +296,12 @@ protocol = [
     ApiCall('delete_from_service_set_request', Scheme(DELETE_FROM_SERVICE_SET)),
     ApiCall('delete_from_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
 
+    ApiCall('view_service_set_request', Scheme(VIEW_SERVICE_SET)),
+    ApiCall('view_service_set_response', Scheme(VIEW_SERVICE_SET_RESPONSE)),
+
+    ApiCall('view_service_sets_request', Scheme(VIEW_SERVICE_SETS)),
+    ApiCall('view_service_sets_response', Scheme(VIEW_SERVICE_SETS_RESPONSE)),
+
     # tariff
     ApiCall('add_tariff_request', Scheme(ADD_TARIFF)),
     ApiCall('add_tariff_response', Scheme(RESPONSE_STATUS_ONLY)),
@@ -325,8 +331,4 @@ protocol = [
     # price
     ApiCall('get_domain_service_price_request', Scheme(GET_DOMAIN_SERVICE_PRICE)),
     ApiCall('get_domain_service_price_response', Scheme(GET_DOMAIN_SERVICE_PRICE_RESPONSE)),
-
-    # view service set
-    ApiCall('view_service_set_request', Scheme(VIEW_SERVICE_SET)),
-    ApiCall('view_service_set_response', Scheme(VIEW_SERVICE_SET_RESPONSE)),
 ]

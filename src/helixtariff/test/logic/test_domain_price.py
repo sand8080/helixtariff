@@ -4,7 +4,7 @@ from helixcore.db.wrapper import EmptyResultSetError
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
-from helixtariff.error import TariffCycleError, NoRuleFound
+from helixtariff.error import TariffCycleError, RuleNotFound
 
 
 class DomainPriceTestCase(ServiceTestCase):
@@ -48,7 +48,7 @@ class DomainPriceTestCase(ServiceTestCase):
             'tariff': tariff_2,
             'service_type': self.service_type_name,
         }
-        self.assertRaises(NoRuleFound, handle_action, 'get_domain_service_price', data)
+        self.assertRaises(RuleNotFound, handle_action, 'get_domain_service_price', data)
 
     def test_get_price(self):
         data = {
@@ -74,7 +74,7 @@ class DomainPriceTestCase(ServiceTestCase):
             'tariff': self.tariff_name,
             'service_type': self.service_type_name + 'fake',
         }
-        self.assertRaises(NoRuleFound, handle_action, 'get_domain_service_price', data)
+        self.assertRaises(RuleNotFound, handle_action, 'get_domain_service_price', data)
 
 
 if __name__ == '__main__':

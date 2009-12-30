@@ -72,22 +72,43 @@ class ServiceTestCase(DbBasedTestCase):
             self.assertEquals(obj.name, t)
 
     @transaction()
-    def get_service_types_by_service_set_name(self, name, curs=None):
-        return selector.get_service_types_by_service_set(curs, name)
+    def get_service_types_by_service_set_name(self, client_id, name, curs=None):
+        return selector.get_service_types_by_service_set(curs, client_id, name)
 
     def add_to_service_set(self, name, types):
+        client = self.get_client_by_login(self.test_client_login)
         data = {
-            'login': self.test_client_login,
+            'login': client.login,
             'password': self.test_client_password,
             'name': name,
             'types': types
         }
+        types = self.get_service_types_by_service_set_name(client.id, data['name'])
+        expected = set([t.name for t in types])
+        expected.update(data['types'])
+
         handle_action('add_to_service_set', data)
-        types = self.get_service_types_by_service_set_name(data['name'])
-        expected_types_names = data['types']
-        self.assertEqual(len(expected_types_names), len(types))
-        for idx, t in enumerate(types):
-            self.assertEqual(expected_types_names[idx], t.name)
+
+        types = self.get_service_types_by_service_set_name(client.id, data['name'])
+        actual = set([t.name for t in types])
+        self.assertEqual(expected, actual)
+
+    def delete_from_service_set(self, name, types):
+        client = self.get_client_by_login(self.test_client_login)
+        data = {
+            'login': client.login,
+            'password': self.test_client_password,
+            'name': name,
+            'types': types
+        }
+        types = self.get_service_types_by_service_set_name(client.id, data['name'])
+        expected = set([t.name for t in types]).difference(data['types'])
+
+        handle_action('delete_from_service_set', data)
+
+        types = self.get_service_types_by_service_set_name(client.id, data['name'])
+        actual = set([t.name for t in types])
+        self.assertEqual(expected, actual)
 
     @transaction()
     def get_service_set_by_name(self, client_id, name, curs=None):

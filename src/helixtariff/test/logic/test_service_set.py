@@ -1,3 +1,4 @@
+from helixtariff.error import ServiceTypeNotFound
 import unittest
 
 from helixcore.db.wrapper import EmptyResultSetError
@@ -62,27 +63,22 @@ class ServiceSetTestCase(ServiceTestCase):
         )
 
     def test_add_to_service_set(self):
-        self.add_to_service_set('automatic', ['register ru', 'prolong ru', 'register hn', 'prolong hn'])
+        self.add_to_service_set('automatic', self.service_types_names)
+        self.add_to_service_set('automatic', [self.service_types_names[0]])
+        self.add_to_service_set('automatic', [self.service_types_names[0], self.service_types_names[0]])
+        self.assertRaises(ServiceTypeNotFound, self.add_to_service_set,
+            'automatic', ['register fake', 'register fake'])
+        self.assertRaises(ServiceTypeNotFound, self.add_to_service_set,
+            'automatic', ['register yo'])
 
     def test_delete_from_service_set(self):
-        service_set_name = 'automatic'
-        types_names = ['register ru', 'prolong ru', 'register hn', 'prolong hn']
-        expected_names = types_names[1:]
-        self.add_to_service_set(service_set_name, types_names)
-        handle_action(
-            'delete_from_service_set',
-            {
-                'login': self.test_client_login,
-                'password': self.test_client_password,
-                'name': service_set_name,
-                'types': [types_names[0]]
-            }
-        )
-
-        actual_types = self.get_service_types_by_service_set_name(service_set_name)
-        self.assertEqual(len(expected_names), len(actual_types))
-        for idx, t in enumerate(actual_types):
-            self.assertEqual(expected_names[idx], t.name)
+        service_set_name = self.service_sets[0]
+        self.add_to_service_set(service_set_name, self.service_types_names)
+        self.delete_from_service_set(service_set_name, [])
+        self.delete_from_service_set(service_set_name, ['fake'])
+        self.delete_from_service_set(service_set_name, ['fake', 'fake'])
+        self.delete_from_service_set(service_set_name, self.service_types_names[1:])
+        self.delete_from_service_set(service_set_name, self.service_types_names)
 
     def test_view_service_set(self):
         service_set_name = self.service_sets[0]
@@ -92,6 +88,26 @@ class ServiceSetTestCase(ServiceTestCase):
         self.assertEqual('ok', result['status'])
         self.assertEqual(service_set_name, result['name'])
         self.assertEquals(sorted(self.service_types_names), sorted(result['types']))
+
+    def test_view_service_sets(self):
+        sets_struct = {
+            self.service_sets[0]: sorted(self.service_types_names),
+            self.service_sets[1]: [],
+            self.service_sets[2]: sorted(self.service_types_names[2:]),
+        }
+        for s, t in sets_struct.items():
+            self.add_to_service_set(s, t)
+
+        result = handle_action('view_service_sets', {'login': self.test_client_login,
+            'password': self.test_client_password,})
+        self.assertEqual('ok', result['status'])
+        service_sets_info = result['service_sets']
+        self.assertEqual(len(self.service_sets), len(service_sets_info))
+        for i in service_sets_info:
+            if i['name'] in sets_struct:
+                self.assertEqual(sets_struct[i['name']], i['types'])
+            else:
+                self.assertEqual([], i['types'])
 
 
 if __name__ == '__main__':

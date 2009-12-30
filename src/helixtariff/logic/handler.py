@@ -1,7 +1,7 @@
 from functools import partial
 
 import helixcore.mapping.actions as mapping
-from helixcore.db.sql import In, Eq, Scoped, And, Delete
+from helixcore.db.sql import In, Eq, Scoped, And, Delete, Select
 from helixcore.server.response import response_ok
 from helixcore.server.exceptions import DataIntegrityError
 
@@ -15,7 +15,8 @@ from helixtariff.rulesengine.engine import Engine
 from helixtariff.rulesengine.interaction import RequestDomainPrice
 from helixtariff.domain import security
 from helixcore.db.wrapper import EmptyResultSetError
-from helixtariff.error import TariffCycleError, NoRuleFound
+from helixtariff.error import TariffCycleError, RuleNotFound,\
+    ServiceTypeNotFound
 
 
 def authentificate(method):
@@ -130,41 +131,71 @@ class Handler(object):
         mapping.delete(curs, t)
         return response_ok()
 
+    def _get_service_set_info(self, curs, client_id, service_set_name):
+        service_set = selector.get_service_set_by_name(curs, client_id, service_set_name)
+        types = selector.get_service_types_by_service_set(curs, client_id, service_set.name)
+        return service_set, types
+
+    def _process_service_set_row(self, curs, service_set, types_names, func):
+        for n in types_names:
+            try:
+                t = selector.get_service_type_by_name(curs, service_set.client_id, n)
+                s = ServiceSetRow(**{'service_type_id': t.id, 'service_set_id': service_set.id})
+                func(curs, s)
+            except EmptyResultSetError, _:
+                raise ServiceTypeNotFound(n)
+
+
     @transaction()
     @authentificate
     def add_to_service_set(self, data, curs=None):
-        service_set = selector.get_service_set_by_name(curs, data['client_id'], data['name'])
-        types_names = data['types']
-        types = mapping.get_list(curs, ServiceType, In('name', types_names))
-        if len(types_names) != len(types):
-            expected = set(types_names)
-            actual = set([t.name for t in types])
-            raise DataIntegrityError('Requested types not found: %s' % ', '.join(expected.difference(actual)))
-        for t in types:
-            s = ServiceSetRow(**{'service_type_id': t.id, 'service_set_id': service_set.id})
-            mapping.insert(curs, s)
+        client_id, name = data['client_id'], data['name']
+        service_set, types = self._get_service_set_info(curs, client_id, name)
+        types_in_set = [t.name for t in types]
+        types_to_add = set(filter(lambda x: x not in types_in_set, data['types']))
+        for n in types_to_add:
+            try:
+                t = selector.get_service_type_by_name(curs, service_set.client_id, n)
+                r = ServiceSetRow(**{'service_type_id': t.id, 'service_set_id': service_set.id})
+                mapping.insert(curs, r)
+            except EmptyResultSetError, _:
+                raise ServiceTypeNotFound(n)
         return response_ok()
 
     @transaction()
     @authentificate
     def delete_from_service_set(self, data, curs=None):
-        query_service_set_id = query_builder.select_service_set_id(data['name'])
-        cond_service_set_id = Eq('service_set_id', Scoped(query_service_set_id))
+        client_id, name = data['client_id'], data['name']
+        service_set, types = self._get_service_set_info(curs, client_id, name)
+        types_in_set = [t.name for t in types]
+        types_to_del = set(filter(lambda x: x in types_in_set, data['types']))
+        for n in types_to_del:
+            try:
+                t = selector.get_service_type_by_name(curs, service_set.client_id, n)
+                r = mapping.get_obj_by_fields(curs, ServiceSetRow,
+                    {'service_type_id': t.id, 'service_set_id': service_set.id}, False)
+                mapping.delete(curs, r)
+            except EmptyResultSetError, _:
+                raise ServiceTypeNotFound(n)
 
-        query_types_ids = query_builder.select_service_types_ids(data['types'])
-        cond_types_ids = In('service_type_id', Scoped(query_types_ids))
-
-        cond_and = And(cond_service_set_id, cond_types_ids)
-        query = Delete(ServiceSetRow.table, cond=cond_and)
-        curs.execute(*query.glue())
         return response_ok()
 
     @transaction()
     @authentificate
     def view_service_set(self, data, curs=None):
-        service_set = selector.get_service_set_by_name(curs, data['client_id'], data['name'])
-        types = selector.get_service_types_by_service_set(curs, service_set.name)
-        return response_ok(name=service_set.name, types=[t.name for t in types])
+        service_set, types = self._get_service_set_info(curs, data['client_id'], data['name'])
+        return response_ok(name=service_set.name, types=sorted([t.name for t in types]))
+
+    @transaction()
+    @authentificate
+    def view_service_sets(self, data, curs=None):
+        client_id = data['client_id']
+        service_sets = mapping.get_list(curs, ServiceSet, cond=Eq('client_id', client_id), order_by='id')
+        service_sets_info = []
+        for s in service_sets:
+            _, types = self._get_service_set_info(curs, client_id, s.name)
+            service_sets_info.append({'name': s.name, 'types': sorted([t.name for t in types])})
+        return response_ok(service_sets=service_sets_info)
 
     # tariff
     @transaction()
@@ -206,14 +237,13 @@ class Handler(object):
         mapping.delete(curs, obj)
         return response_ok()
 
-    def _get_tariff_data(self, data, curs=None):
-        client = selector.get_client_by_login(curs, data['login'])
-        tariff = selector.get_tariff(curs, client.id, data['name'])
+    def _get_tariff_data(self, curs, client_id, name):
+        tariff = selector.get_tariff(curs, client_id, name)
         service_set = selector.get_service_set(curs, tariff.service_set_id)
         if tariff.parent_id is None:
             pt_name = None
         else:
-            pt_name = selector.get_tariff_by_id(curs, client.id, tariff.parent_id).name
+            pt_name = selector.get_tariff_by_id(curs, client_id, tariff.parent_id).name
         return {
             'name': tariff.name,
             'service_set': service_set.name,
@@ -221,13 +251,16 @@ class Handler(object):
         }
 
     @transaction()
+    @authentificate
     def get_tariff(self, data, curs=None):
-        return response_ok(tariff=self._get_tariff_data(data, curs))
+        return response_ok(tariff=self._get_tariff_data(curs, data['client_id'], data['name']))
 
     @transaction()
+    @authentificate
     def get_tariff_detailed(self, data, curs=None):
-        tariff_data = self._get_tariff_data(data, curs)
-        types = selector.get_service_types_by_service_set(curs, tariff_data['service_set'])
+        client_id = data['client_id']
+        tariff_data = self._get_tariff_data(curs, client_id, data['name'])
+        types = selector.get_service_types_by_service_set(curs, client_id, tariff_data['service_set'])
         tariff_data['types'] = [t.name for t in types]
         return response_ok(tariff=tariff_data)
 
@@ -288,7 +321,7 @@ class Handler(object):
 
             tariff = selector.get_tariff(curs, client_id, tariff_name)
             if tariff.parent_id is None:
-                raise NoRuleFound('No rule for service type %s in tariffs chain %s' % (service_type_name, tariffs_chain))
+                raise RuleNotFound('No rule for service type %s in tariffs chain %s' % (service_type_name, tariffs_chain))
             return selector.get_tariff_by_id(curs, client_id, tariff.parent_id)
 
         tariffs_chain = []
