@@ -245,6 +245,41 @@ class TariffTestCase(ServiceTestCase):
             tariffs[1]
         )
 
+    def test_view_detailed_tariffs(self):
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+        }
+        result = handle_action('view_detailed_tariffs', data)
+        self.assertTrue('tariffs' in result)
+        self.assertEqual([], result['tariffs'])
+
+        parent_name = 'parent'
+        self.add_tariff(self.service_set_name, parent_name, self.in_archive, None)
+        child_name = 'child'
+        self.add_tariff(self.service_set_name, child_name, self.in_archive, parent_name)
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+        }
+        result = handle_action('view_detailed_tariffs', data)
+
+        types = self.get_service_types_by_service_set_name(self.root_client_id, self.service_set_name)
+        types_names = sorted([t.name for t in types])
+        self.assertTrue('tariffs' in result)
+        tariffs = result['tariffs']
+        self.assertEqual(2, len(tariffs))
+        self.assertEqual(
+            {'parent_tariff': None, 'name': parent_name, 'service_set': self.service_set_name,
+                'in_archive': self.in_archive, 'types': types_names},
+            tariffs[0]
+        )
+        self.assertEqual(
+            {'parent_tariff': parent_name, 'name': child_name, 'service_set': self.service_set_name,
+                'in_archive': self.in_archive, 'types': types_names},
+            tariffs[1]
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

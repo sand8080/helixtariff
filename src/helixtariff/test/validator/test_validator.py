@@ -317,6 +317,24 @@ class ValidatorTestCase(RootTestCase):
             ]
         })
 
+    def test_view_detailed_tariffs(self):
+        self.api.validate_request('view_detailed_tariffs',
+            {'login': 'l', 'password': 'p'})
+        self.api.validate_response('view_detailed_tariffs',
+            {'status': 'error', 'category': 'test', 'message': 'happens'})
+        self.api.validate_response('view_detailed_tariffs', {'status': 'ok', 'tariffs': []})
+        self.api.validate_response('view_detailed_tariffs', {'status': 'ok',
+            'tariffs': [
+                {'name': 'n', 'service_set': 's', 'parent_tariff': None, 'in_archive': True, 'types': []},
+            ]
+        })
+        self.api.validate_response('view_detailed_tariffs', {'status': 'ok',
+            'tariffs': [
+                {'name': 'n', 'service_set': 's', 'parent_tariff': None, 'in_archive': False, 'types': ['a', 'b']},
+                {'name': 'n', 'service_set': 's', 'parent_tariff': 't', 'in_archive': True, 'types': []},
+            ]
+        })
+
 
 if __name__ == '__main__':
     unittest.main()

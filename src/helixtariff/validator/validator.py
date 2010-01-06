@@ -166,11 +166,6 @@ DELETE_TARIFF = dict(
     **AUTH_INFO
 )
 
-GET_TARIFF = dict(
-    {'name': Text()},
-    **AUTH_INFO
-)
-
 TARIFF_INFO = {
     'name': Text(),
     'service_set': Text(),
@@ -178,6 +173,10 @@ TARIFF_INFO = {
     'in_archive': bool,
 }
 
+GET_TARIFF = dict(
+    {'name': Text()},
+    **AUTH_INFO
+)
 
 GET_TARIFF_RESPONSE = AnyOf(
     dict(
@@ -197,18 +196,30 @@ VIEW_TARIFFS_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
+DETAILED_TARIFF_INFO = dict(
+    {'types': [Text()]},
+    **TARIFF_INFO
+)
+
 GET_TARIFF_DETAILED = GET_TARIFF
 
 GET_TARIFF_DETAILED_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
-        tariff=dict(
-            {'types': [Text()]},
-            **TARIFF_INFO
-        )
+        tariff=DETAILED_TARIFF_INFO
     ),
     RESPONSE_STATUS_ERROR
 )
+
+VIEW_DETAILED_TARIFFS = VIEW_TARIFFS
+VIEW_DETAILED_TARIFFS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{'tariffs': [DETAILED_TARIFF_INFO]}
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 
 # --- rule ---
 ADD_RULE = dict(
@@ -331,6 +342,9 @@ protocol = [
 
     ApiCall('view_tariffs_request', Scheme(VIEW_TARIFFS)),
     ApiCall('view_tariffs_response', Scheme(VIEW_TARIFFS_RESPONSE)),
+
+    ApiCall('view_detailed_tariffs_request', Scheme(VIEW_DETAILED_TARIFFS)),
+    ApiCall('view_detailed_tariffs_response', Scheme(VIEW_DETAILED_TARIFFS_RESPONSE)),
 
     # rule
     ApiCall('add_rule_request', Scheme(ADD_RULE)),

@@ -107,4 +107,3 @@ def get_service_set_rows(curs, service_sets_ids):
     q = Select(ServiceSetRow.table, cond=In('service_set_id', service_sets_ids))
     curs.execute(*q.glue())
     return fetchall_dicts(curs)
-

@@ -184,26 +184,32 @@ class Handler(object):
         service_set, types = self._get_service_set_info(curs, data['client_id'], data['name'])
         return response_ok(name=service_set.name, types=sorted([t.name for t in types]))
 
-    @transaction()
-    @authentificate
-    def view_service_sets(self, data, curs=None):
-        client_id = data['client_id']
+    def _get_service_sets_types(self, curs, client_id):
+        '''
+        @return: dictionary {service_set_name: [types_names]}
+        '''
         t_names = selector.get_types_names_indexed_by_id(curs, client_id)
         ss_names = selector.get_service_sets_names_indexed_by_id(curs, client_id)
         ss_rows = selector.get_service_set_rows(curs, ss_names.keys())
-
         service_sets_info = {}
         for n in ss_names.values():
             service_sets_info[n] = list()
-
         for ss_row in ss_rows:
             ss_name = ss_names[ss_row['service_set_id']]
             t_name = t_names[ss_row['service_type_id']]
             service_sets_info[ss_name].append(t_name)
+        for l in service_sets_info.values():
+            l.sort()
+        return service_sets_info
 
+    @transaction()
+    @authentificate
+    def view_service_sets(self, data, curs=None):
+        client_id = data['client_id']
+        service_sets_types = self._get_service_sets_types(curs, client_id)
         result = []
-        for k in sorted(service_sets_info.keys()):
-            result.append({'name': k, 'types': sorted(service_sets_info[k])})
+        for k in sorted(service_sets_types.keys()):
+            result.append({'name': k, 'types': sorted(service_sets_types[k])})
         return response_ok(service_sets=result)
 
     # tariff
@@ -286,6 +292,17 @@ class Handler(object):
         client_id = data['client_id']
         tariffs = mapping.get_list(curs, Tariff, cond=Eq('client_id', client_id))
         return response_ok(tariffs=self._get_tariffs_data(curs, client_id, tariffs))
+
+    @transaction()
+    @authentificate
+    def view_detailed_tariffs(self, data, curs=None):
+        client_id = data['client_id']
+        tariffs = mapping.get_list(curs, Tariff, cond=Eq('client_id', client_id))
+        service_sets_types = self._get_service_sets_types(curs, client_id)
+        tariffs_data = self._get_tariffs_data(curs, client_id, tariffs)
+        for d in tariffs_data:
+            d['types'] = service_sets_types[d['service_set']]
+        return response_ok(tariffs=tariffs_data)
 
     # rule
     @transaction()

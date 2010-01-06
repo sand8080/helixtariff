@@ -36,6 +36,12 @@ class Client(ClientApplication):
         )
         return response['tariff']
 
+    def view_tariffs(self):
+        return self.request({'action': 'view_tariffs', 'login': self.login, 'password': self.password})
+
+    def view_detailed_tariffs(self):
+        return self.request({'action': 'view_detailed_tariffs', 'login': self.login, 'password': self.password})
+
     def add_rule(self, tariff_name, service_type_name, rule):
         return self.request({'action': 'add_rule', 'login': self.login, 'password': self.password,
             'tariff': tariff_name, 'service_type': service_type_name, 'rule': rule})
