@@ -112,6 +112,34 @@ DELETE_FROM_SERVICE_SET = dict(
     **AUTH_INFO
 )
 
+SERVICE_SET_INFO = dict({
+    'name': Text(),
+    'types': [Text()],
+})
+
+VIEW_SERVICE_SET = dict(
+    {'name': Text()},
+    **AUTH_INFO
+)
+
+VIEW_SERVICE_SET_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **SERVICE_SET_INFO
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+VIEW_SERVICE_SETS = AUTH_INFO
+
+VIEW_SERVICE_SETS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{'service_sets': [SERVICE_SET_INFO]}
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 # --- tariff ---
 ADD_TARIFF = dict(
     {
@@ -143,14 +171,28 @@ GET_TARIFF = dict(
     **AUTH_INFO
 )
 
+TARIFF_INFO = {
+    'name': Text(),
+    'service_set': Text(),
+    'parent_tariff': NullableText,
+    'in_archive': bool,
+}
+
+
 GET_TARIFF_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
-        tariff={
-            'name': Text(),
-            'service_set': Text(),
-            'parent_tariff': NullableText,
-        }
+        tariff=TARIFF_INFO
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+VIEW_TARIFFS = AUTH_INFO
+
+VIEW_TARIFFS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{'tariffs': [TARIFF_INFO]}
     ),
     RESPONSE_STATUS_ERROR
 )
@@ -160,12 +202,10 @@ GET_TARIFF_DETAILED = GET_TARIFF
 GET_TARIFF_DETAILED_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
-        tariff={
-            'name': Text(),
-            'service_set': Text(),
-            'parent_tariff': NullableText,
-            'types': [Text()]
-        }
+        tariff=dict(
+            {'types': [Text()]},
+            **TARIFF_INFO
+        )
     ),
     RESPONSE_STATUS_ERROR
 )
@@ -219,35 +259,6 @@ GET_DOMAIN_SERVICE_PRICE_RESPONSE = AnyOf(
             Optional('period'): Positive(int),
             Optional('customer_id'): Text(),
         }
-    ),
-    RESPONSE_STATUS_ERROR
-)
-
-# --- view service set ---
-SERVICE_SET_INFO = dict({
-    'name': Text(),
-    'types': [Text()],
-})
-
-VIEW_SERVICE_SET = dict(
-    {'name': Text()},
-    **AUTH_INFO
-)
-
-VIEW_SERVICE_SET_RESPONSE = AnyOf(
-    dict(
-        RESPONSE_STATUS_OK,
-        **SERVICE_SET_INFO
-    ),
-    RESPONSE_STATUS_ERROR
-)
-
-VIEW_SERVICE_SETS = AUTH_INFO
-
-VIEW_SERVICE_SETS_RESPONSE = AnyOf(
-    dict(
-        RESPONSE_STATUS_OK,
-        **{'service_sets': [SERVICE_SET_INFO]}
     ),
     RESPONSE_STATUS_ERROR
 )
@@ -317,6 +328,9 @@ protocol = [
 
     ApiCall('get_tariff_detailed_request', Scheme(GET_TARIFF_DETAILED)),
     ApiCall('get_tariff_detailed_response', Scheme(GET_TARIFF_DETAILED_RESPONSE)),
+
+    ApiCall('view_tariffs_request', Scheme(VIEW_TARIFFS)),
+    ApiCall('view_tariffs_response', Scheme(VIEW_TARIFFS_RESPONSE)),
 
     # rule
     ApiCall('add_rule_request', Scheme(ADD_RULE)),

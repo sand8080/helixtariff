@@ -1,9 +1,9 @@
 from functools import partial
 
 import helixcore.mapping.actions as mapping
-from helixcore.db.sql import Eq, Select, In
+from helixcore.db.sql import Eq
 from helixcore.server.response import response_ok
-from helixcore.db.wrapper import EmptyResultSetError, fetchall_dicts
+from helixcore.db.wrapper import EmptyResultSetError
 
 from helixtariff.conf.db import transaction
 from helixtariff.domain.objects import Client, ServiceType, \
@@ -184,42 +184,21 @@ class Handler(object):
         service_set, types = self._get_service_set_info(curs, data['client_id'], data['name'])
         return response_ok(name=service_set.name, types=sorted([t.name for t in types]))
 
-    def _get_mapped_values(self, curs, q, k_name, v_name):
-        curs.execute(*q.glue())
-        raw = fetchall_dicts(curs)
-        result = {}
-        for d in raw:
-            result[d[k_name]] = d[v_name]
-        return result
-
-    def _get_types_names_mapped_by_id(self, curs, client_id):
-        q = Select(ServiceType.table, columns=['id', 'name'], cond=Eq('client_id', client_id), order_by='id')
-        return self._get_mapped_values(curs, q, 'id', 'name')
-
-    def _get_service_sets_names_mapped_by_id(self, curs, client_id):
-        q = Select(ServiceSet.table, columns=['id', 'name'], cond=Eq('client_id', client_id), order_by='id')
-        return self._get_mapped_values(curs, q, 'id', 'name')
-
-    def _get_service_set_rows(self, curs, service_sets_ids):
-        q = Select(ServiceSetRow.table, cond=In('service_set_id', service_sets_ids))
-        curs.execute(*q.glue())
-        return fetchall_dicts(curs)
-
     @transaction()
     @authentificate
     def view_service_sets(self, data, curs=None):
         client_id = data['client_id']
-        t_names_map = self._get_types_names_mapped_by_id(curs, client_id)
-        ss_names_map = self._get_service_sets_names_mapped_by_id(curs, client_id)
-        ss_rows = self._get_service_set_rows(curs, ss_names_map.keys())
+        t_names = selector.get_types_names_indexed_by_id(curs, client_id)
+        ss_names = selector.get_service_sets_names_indexed_by_id(curs, client_id)
+        ss_rows = selector.get_service_set_rows(curs, ss_names.keys())
 
         service_sets_info = {}
-        for n in ss_names_map.values():
+        for n in ss_names.values():
             service_sets_info[n] = list()
 
         for ss_row in ss_rows:
-            ss_name = ss_names_map[ss_row['service_set_id']]
-            t_name = t_names_map[ss_row['service_type_id']]
+            ss_name = ss_names[ss_row['service_set_id']]
+            t_name = t_names[ss_row['service_type_id']]
             service_sets_info[ss_name].append(t_name)
 
         result = []
@@ -267,32 +246,46 @@ class Handler(object):
         mapping.delete(curs, obj)
         return response_ok()
 
-    def _get_tariff_data(self, curs, client_id, name):
-        tariff = selector.get_tariff(curs, client_id, name)
-        service_set = selector.get_service_set(curs, tariff.service_set_id)
-        if tariff.parent_id is None:
-            pt_name = None
-        else:
-            pt_name = selector.get_tariff_by_id(curs, client_id, tariff.parent_id).name
-        return {
-            'name': tariff.name,
-            'service_set': service_set.name,
-            'parent_tariff': pt_name,
-        }
+    def _get_tariffs_data(self, curs, client_id, tariffs):
+        t_names = selector.get_tariffs_names_indexed_by_id(curs, client_id)
+        ss_names = selector.get_service_sets_names_indexed_by_id(curs, client_id)
+        result = []
+        for t in tariffs:
+            result.append(
+                {
+                    'name': t.name,
+                    'service_set': ss_names.get(t.service_set_id),
+                    'parent_tariff': t_names.get(t.parent_id),
+                    'in_archive': t.in_archive,
+                }
+            )
+        return result
 
     @transaction()
     @authentificate
     def get_tariff(self, data, curs=None):
-        return response_ok(tariff=self._get_tariff_data(curs, data['client_id'], data['name']))
+        client_id = data['client_id']
+        tariff = selector.get_tariff(curs, client_id, data['name'])
+        tariffs_data = self._get_tariffs_data(curs, client_id, [tariff])
+        return response_ok(tariff=tariffs_data[0])
 
     @transaction()
     @authentificate
     def get_tariff_detailed(self, data, curs=None):
         client_id = data['client_id']
-        tariff_data = self._get_tariff_data(curs, client_id, data['name'])
+        tariff = selector.get_tariff(curs, client_id, data['name'])
+        tariffs_data = self._get_tariffs_data(curs, client_id, [tariff])
+        tariff_data = tariffs_data[0]
         types = selector.get_service_types_by_service_set(curs, client_id, tariff_data['service_set'])
-        tariff_data['types'] = [t.name for t in types]
+        tariff_data['types'] = sorted([t.name for t in types])
         return response_ok(tariff=tariff_data)
+
+    @transaction()
+    @authentificate
+    def view_tariffs(self, data, curs=None):
+        client_id = data['client_id']
+        tariffs = mapping.get_list(curs, Tariff, cond=Eq('client_id', client_id))
+        return response_ok(tariffs=self._get_tariffs_data(curs, client_id, tariffs))
 
     # rule
     @transaction()

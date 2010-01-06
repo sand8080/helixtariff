@@ -137,6 +137,7 @@ class ServiceTestCase(DbBasedTestCase):
         self.assertEqual(client_id, t.client_id)
         self.assertEqual(name, t.name)
         self.assertEqual(parent_id, t.parent_id)
+        self.assertEqual(in_archive, t.in_archive)
 
     def modify_tariff(self, name, new_parent_tariff=None):
         client_id = self.get_root_client().id

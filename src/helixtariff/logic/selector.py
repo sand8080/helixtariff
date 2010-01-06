@@ -1,7 +1,7 @@
 import helixcore.mapping.actions as mapping
 from helixcore.db.sql import Eq, Scoped, Select, In, And
 from helixcore.server.exceptions import AuthError
-from helixcore.db.wrapper import EmptyResultSetError
+from helixcore.db.wrapper import EmptyResultSetError, fetchall_dicts
 
 from helixtariff.domain.objects import ServiceType, \
     ServiceSet, ServiceSetRow, Tariff, Rule, Client
@@ -82,3 +82,29 @@ def get_rule(curs, client_id, tariff_name, service_type_name, for_update=False):
     cond_tariff_id = Eq('tariff_id', Scoped(sel_tariff))
     cond_service_type_id = Eq('service_type_id', Scoped(sel_service_type))
     return mapping.get(curs, Rule, cond=And(cond_tariff_id, cond_service_type_id), for_update=for_update)
+
+def _get_indexed_values(curs, q, k_name, v_name):
+    curs.execute(*q.glue())
+    raw = fetchall_dicts(curs)
+    result = {}
+    for d in raw:
+        result[d[k_name]] = d[v_name]
+    return result
+
+def get_types_names_indexed_by_id(curs, client_id):
+    q = Select(ServiceType.table, columns=['id', 'name'], cond=Eq('client_id', client_id))
+    return _get_indexed_values(curs, q, 'id', 'name')
+
+def get_service_sets_names_indexed_by_id(curs, client_id):
+    q = Select(ServiceSet.table, columns=['id', 'name'], cond=Eq('client_id', client_id))
+    return _get_indexed_values(curs, q, 'id', 'name')
+
+def get_tariffs_names_indexed_by_id(curs, client_id):
+    q = Select(Tariff.table, columns=['id', 'name'], cond=Eq('client_id', client_id))
+    return _get_indexed_values(curs, q, 'id', 'name')
+
+def get_service_set_rows(curs, service_sets_ids):
+    q = Select(ServiceSetRow.table, cond=In('service_set_id', service_sets_ids))
+    curs.execute(*q.glue())
+    return fetchall_dicts(curs)
+

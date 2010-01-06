@@ -193,20 +193,20 @@ class ValidatorTestCase(RootTestCase):
     def test_get_tariff(self):
         self.api.validate_request('get_tariff',
             {'login': 'l', 'password': 'p', 'name': 'приведи друга'})
+        self.api.validate_response('get_tariff', {'status': 'error', 'category': 't', 'message': 'h'})
         self.api.validate_response('get_tariff', {'status': 'ok', 'tariff':
-            {'name': 'n', 'service_set': 's', 'parent_tariff': None}})
+            {'name': 'n', 'service_set': 's', 'parent_tariff': None, 'in_archive': False}})
         self.api.validate_response('get_tariff', {'status': 'ok', 'tariff':
-            {'name': 'n', 'service_set': 's', 'parent_tariff': 'p'}})
-        self.api.validate_response('get_tariff', {'status': 'error', 'category': 'test', 'message': 'happens'})
+            {'name': 'n', 'service_set': 's', 'parent_tariff': 'p', 'in_archive': True}})
 
     def test_get_tariff_detailed(self):
         self.api.validate_request('get_tariff_detailed',
             {'login': 'l', 'password': 'p', 'name': 'приведи друга'})
-        self.api.validate_response('get_tariff_detailed', {'status': 'ok',
-            'tariff': {'name': 'n', 'service_set': 's', 'parent_tariff': None, 'types': ['one', 'two']}})
-        self.api.validate_response('get_tariff_detailed', {'status': 'ok',
-            'tariff': {'name': 'n', 'service_set': 's', 'parent_tariff': 'p', 'types': []}})
-        self.api.validate_response('get_tariff_detailed', {'status': 'error', 'category': 'test', 'message': 'happens'})
+        self.api.validate_response('get_tariff_detailed', {'status': 'error', 'category': 't', 'message': 'm'})
+        self.api.validate_response('get_tariff_detailed', {'status': 'ok', 'tariff':
+            {'name': 'n', 'service_set': 's', 'parent_tariff': None, 'types': ['one', 'two'], 'in_archive': False}})
+        self.api.validate_response('get_tariff_detailed', {'status': 'ok', 'tariff':
+            {'name': 'n', 'parent_tariff': 'p', 'service_set': 's', 'types': [], 'in_archive': True}})
 
     def test_add_rule(self):
         self.api.validate_request(
@@ -296,6 +296,24 @@ class ValidatorTestCase(RootTestCase):
                 {'name': 'n', 'types': ['n']},
                 {'name': 'm', 'types': ['n', 'm']},
                 {'name': 'l', 'types': []},
+            ]
+        })
+
+    def test_view_tariffs(self):
+        self.api.validate_request('view_tariffs',
+            {'login': 'l', 'password': 'p'})
+        self.api.validate_response('view_tariffs',
+            {'status': 'error', 'category': 'test', 'message': 'happens'})
+        self.api.validate_response('view_tariffs', {'status': 'ok', 'tariffs': []})
+        self.api.validate_response('view_tariffs', {'status': 'ok',
+            'tariffs': [
+                {'name': 'n', 'service_set': 's', 'parent_tariff': None, 'in_archive': True},
+            ]
+        })
+        self.api.validate_response('view_tariffs', {'status': 'ok',
+            'tariffs': [
+                {'name': 'n', 'service_set': 's', 'parent_tariff': None, 'in_archive': False},
+                {'name': 'n', 'service_set': 's', 'parent_tariff': 't', 'in_archive': True},
             ]
         })
 
