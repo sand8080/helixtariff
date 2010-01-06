@@ -15,7 +15,6 @@ from helixtariff.rulesengine.interaction import RequestDomainPrice
 from helixtariff.domain import security
 from helixtariff.error import TariffCycleError, RuleNotFound,\
     ServiceTypeNotFound
-from helixcore.test.util import profile
 
 
 def authentificate(method):
@@ -215,11 +214,12 @@ class Handler(object):
         ss_rows = self._get_service_set_rows(curs, ss_names_map.keys())
 
         service_sets_info = {}
+        for n in ss_names_map.values():
+            service_sets_info[n] = list()
+
         for ss_row in ss_rows:
             ss_name = ss_names_map[ss_row['service_set_id']]
             t_name = t_names_map[ss_row['service_type_id']]
-            if ss_name not in service_sets_info:
-                service_sets_info[ss_name] = list()
             service_sets_info[ss_name].append(t_name)
 
         result = []
