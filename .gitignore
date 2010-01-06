@@ -14,3 +14,4 @@ debian/helixtariff
 debian/LAST_VERSION
 debian/changelog
 src/docs.html
+src/helixcore
