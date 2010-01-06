@@ -59,3 +59,7 @@ class Client(ClientApplication):
 
     def view_service_sets(self):
         return self.request({'action': 'view_service_sets', 'login': self.login, 'password': self.password})
+
+    def view_rules(self, tariff_name):
+        return self.request({'action': 'view_rules', 'login': self.login, 'password': self.password,
+            'tariff': tariff_name})

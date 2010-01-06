@@ -335,6 +335,24 @@ class ValidatorTestCase(RootTestCase):
             ]
         })
 
+    def test_rules(self):
+        self.api.validate_request('view_rules',
+            {'login': 'l', 'password': 'p', 'tariff': 't'})
+        self.api.validate_response('view_rules',
+            {'status': 'error', 'category': 't', 'message': 'm'})
+        self.api.validate_response('view_rules', {'status': 'ok', 'rules': []})
+        self.api.validate_response('view_rules', {'status': 'ok',
+            'rules': [
+                {'tariff': 't', 'service_type': 't', 'rule': 'r'},
+            ]
+        })
+        self.api.validate_response('view_rules', {'status': 'ok',
+            'rules': [
+                {'tariff': 't', 'service_type': 't', 'rule': 'r'},
+                {'tariff': 't', 'service_type': 't', 'rule': 'r'},
+            ]
+        })
+
 
 if __name__ == '__main__':
     unittest.main()

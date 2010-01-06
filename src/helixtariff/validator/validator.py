@@ -222,12 +222,14 @@ VIEW_DETAILED_TARIFFS_RESPONSE = AnyOf(
 
 
 # --- rule ---
+RULE_INFO =     {
+    'tariff': Text(),
+    'service_type': Text(),
+    'rule': Text(),
+}
+
 ADD_RULE = dict(
-    {
-        'tariff': Text(),
-        'service_type': Text(),
-        'rule': Text(),
-    },
+    RULE_INFO,
     **AUTH_INFO
 )
 
@@ -247,6 +249,22 @@ DELETE_RULE = dict(
     },
     **AUTH_INFO
 )
+
+VIEW_RULES = dict(
+    {
+        'tariff': Text(),
+    },
+    **AUTH_INFO
+)
+
+VIEW_RESPONSE_RULES = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{'rules': [RULE_INFO]}
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 
 # --- price ---
 GET_DOMAIN_SERVICE_PRICE = dict(
@@ -355,6 +373,9 @@ protocol = [
 
     ApiCall('delete_rule_request', Scheme(DELETE_RULE)),
     ApiCall('delete_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('view_rules_request', Scheme(VIEW_RULES)),
+    ApiCall('view_rules_response', Scheme(VIEW_RESPONSE_RULES)),
 
     # price
     ApiCall('get_domain_service_price_request', Scheme(GET_DOMAIN_SERVICE_PRICE)),

@@ -65,6 +65,10 @@ class ApplicationTestCase(DbBasedTestCase):
     def view_service_sets(self, repeats=1): #IGNORE:W0613
         return self.cli.view_service_sets()
 
+    @profile
+    def view_rules(self, tariff_name, repeats=1): #IGNORE:W0613
+        return self.cli.view_rules(tariff_name)
+
     def loader_task(self):
         types_num = 100
         types = [random_word() for _ in xrange(types_num)]
@@ -85,8 +89,8 @@ class ApplicationTestCase(DbBasedTestCase):
         print
         print 'Service sets added'
 
-        self.view_service_set(service_sets_names[0], repeats=50)
-        self.view_service_sets(repeats=5)
+#        self.view_service_set(service_sets_names[0], repeats=50)
+#        self.view_service_sets(repeats=5)
 
         tariffs_names = [random_word() for _ in range(service_sets_num)]
         print 'Adding tariffs'
@@ -107,6 +111,7 @@ class ApplicationTestCase(DbBasedTestCase):
         self.get_tariff_detailed(tariffs_names, repeats=50)
         self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=50)
         self.get_wrong_price(self.load_detailed_tariff_data(tariffs_names), repeats=50)
+        self.view_rules(tariffs_names[0], repeats=50)
 
     def test_loading(self):
         self.cli.add_client()

@@ -83,6 +83,10 @@ def get_rule(curs, client_id, tariff_name, service_type_name, for_update=False):
     cond_service_type_id = Eq('service_type_id', Scoped(sel_service_type))
     return mapping.get(curs, Rule, cond=And(cond_tariff_id, cond_service_type_id), for_update=for_update)
 
+def get_rules(curs, client_id, tariff_name, for_update=False):
+    tariff = get_tariff(curs, client_id, tariff_name)
+    return mapping.get_list(curs, Rule, cond=Eq('tariff_id', tariff.id), for_update=for_update)
+
 def _get_indexed_values(curs, q, k_name, v_name):
     curs.execute(*q.glue())
     raw = fetchall_dicts(curs)
@@ -91,7 +95,7 @@ def _get_indexed_values(curs, q, k_name, v_name):
         result[d[k_name]] = d[v_name]
     return result
 
-def get_types_names_indexed_by_id(curs, client_id):
+def get_service_types_names_indexed_by_id(curs, client_id):
     q = Select(ServiceType.table, columns=['id', 'name'], cond=Eq('client_id', client_id))
     return _get_indexed_values(curs, q, 'id', 'name')
 

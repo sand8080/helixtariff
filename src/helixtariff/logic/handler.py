@@ -188,7 +188,7 @@ class Handler(object):
         '''
         @return: dictionary {service_set_name: [types_names]}
         '''
-        t_names = selector.get_types_names_indexed_by_id(curs, client_id)
+        t_names = selector.get_service_types_names_indexed_by_id(curs, client_id)
         ss_names = selector.get_service_sets_names_indexed_by_id(curs, client_id)
         ss_rows = selector.get_service_set_rows(curs, ss_names.keys())
         service_sets_info = {}
@@ -336,6 +336,21 @@ class Handler(object):
         obj = selector.get_rule(curs, data['client_id'], data['tariff'], data['service_type'])
         mapping.delete(curs, obj)
         return response_ok()
+
+    @transaction()
+    @authentificate
+    def view_rules(self, data, curs=None):
+        client_id = data['client_id']
+        tariff = selector.get_tariff(curs, client_id, data['tariff'])
+        st_names = selector.get_service_types_names_indexed_by_id(curs, client_id)
+        rules = []
+        for r in selector.get_rules(curs, client_id, tariff.name):
+            rules.append({
+                'tariff': tariff.name,
+                'service_type': st_names[r.service_type_id],
+                'rule': r.rule
+            })
+        return response_ok(rules=rules)
 
     def _get_optional_field_value(self, data, field, default=None):
         return data[field] if field in data else default,

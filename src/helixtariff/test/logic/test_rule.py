@@ -67,6 +67,37 @@ if context.get_balance(request.customer_id) > 500: price -= 30
         self.assertRaises(EmptyResultSetError, self.get_rule, self.get_root_client().id,
             self.tariff_name, self.service_types_names[0])
 
+    def test_view_rules(self):
+        client = self.get_client_by_login(self.test_client_login)
+        data = {
+            'login': client.login,
+            'password': self.test_client_password,
+            'tariff': self.tariff_name,
+        }
+        result = handle_action('view_rules', data)
+        self.assertEqual('ok', result['status'])
+        self.assertEqual([], result['rules'])
+
+        expected_rules = []
+        for i, n in enumerate(self.service_types_names):
+            r = 'price = %03d.%02d' % (i, i)
+            expected_rules.append({
+                'tariff': self.tariff_name,
+                'service_type': n,
+                'rule': r,
+            })
+            self.add_rule(self.tariff_name, n, r)
+
+        data = {
+            'login': client.login,
+            'password': self.test_client_password,
+            'tariff': self.tariff_name,
+        }
+        result = handle_action('view_rules', data)
+
+        self.assertEqual('ok', result['status'])
+        self.assertEqual(expected_rules, result['rules'])
+
 
 if __name__ == '__main__':
     unittest.main()
