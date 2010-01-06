@@ -18,8 +18,17 @@ def apply(curs): #IGNORE:W0622
             service_set_row (service_type_id, service_set_id)
     '''
     )
+    print 'Creating index on service_set_row (service_set_id)'
+    curs.execute(
+    '''
+        CREATE INDEX service_set_row_service_set_id_idx ON
+            service_set_row (service_set_id)
+    '''
+    )
 
 def revert(curs):
+    print 'Dropping index on service_set_row (service_set_id)'
+    curs.execute('DROP INDEX service_set_row_service_set_id_idx')
     print 'Dropping unique index on service_set_row (service_type_id, service_set_id)'
     curs.execute('DROP INDEX service_set_row_service_type_id_service_set_id_idx')
     print 'Dropping table service_set_row'

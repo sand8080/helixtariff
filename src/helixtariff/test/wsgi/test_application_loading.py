@@ -1,7 +1,7 @@
 from eventlet import api, util, coros
+from decimal import Decimal
 util.wrap_socket_with_coroutine_socket()
 
-from decimal import Decimal
 import unittest
 import datetime
 import cjson
@@ -35,7 +35,6 @@ class ApplicationTestCase(DbBasedTestCase):
         self.assertEqual('error', result['status'])
         self.assertEqual('validation', result['category'])
 
-
     def load_detailed_tariff_data(self, tariffs_names):
         tariffs = {}
         for n in tariffs_names:
@@ -59,24 +58,44 @@ class ApplicationTestCase(DbBasedTestCase):
         service_types_names = tariffs_detailed[tariff_name]['types']
         return self.cli.get_price(tariff_name, select_random(service_types_names) + 'fake')
 
+    @profile
+    def view_service_set(self, name, repeats=1): #IGNORE:W0613
+        return self.cli.view_service_set(name)
+
+    @profile
+    def view_service_sets(self, repeats=1): #IGNORE:W0613
+        return self.cli.view_service_sets()
+
     def loader_task(self):
-        types = [random_word() for _ in range(random.randint(3, 10))]
+        types_num = 100
+        types = [random_word() for _ in xrange(types_num)]
+        print 'Adding types'
         map(self.cli.add_service_type, types)
+        print 'Types added'
 
-        service_sets = [random_word() for _ in range(3)]
-        map(self.cli.add_service_set, service_sets)
+        service_sets_num = 20
+        service_sets_names = []
+        print 'Adding service sets'
+        for _ in xrange(service_sets_num):
+            service_set_name = random_word()
+            service_sets_names.append(service_set_name)
+            self.cli.add_service_set(service_set_name)
+            types_to_add = types[random.randint(0, types_num / 2):random.randint(types_num / 2 + 1, types_num)]
+            self.cli.add_to_service_set(service_set_name, types_to_add)
+        print 'Service sets added'
 
-        self.cli.add_to_service_set(service_sets[0], types)
-        self.cli.add_to_service_set(service_sets[1], types[:2])
-        self.cli.add_to_service_set(service_sets[2], types[1:])
+        self.view_service_set(service_sets_names[0], repeats=50)
+        self.view_service_sets(repeats=5)
 
-        tariffs_names = [random_word() for _ in range(len(service_sets))]
+        tariffs_names = [random_word() for _ in range(service_sets_num)]
+        print 'Adding tariffs'
         for i, tariff_name in enumerate(tariffs_names):
-            self.cli.add_tariff(tariff_name, service_sets[i])
+            self.cli.add_tariff(tariff_name, service_sets_names[i])
             tariff_detailed_data = self.cli.get_tariff_detailed(tariff_name)
             for service_type_name in tariff_detailed_data['types']:
                 rule = 'price = %s' % (Decimal(random.randint(2000, 9000)) / 100)
                 self.cli.add_rule(tariff_name, service_type_name, rule)
+        print 'Tariffs added'
 
         self.get_tariff_detailed(tariffs_names, repeats=50)
         self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=50)

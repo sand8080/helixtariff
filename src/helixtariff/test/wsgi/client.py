@@ -46,3 +46,10 @@ class Client(ClientApplication):
 
     def get_service_types(self):
         return self.request({'action': 'get_service_types', 'login': self.login, 'password': self.password})
+
+    def view_service_set(self, name):
+        return self.request({'action': 'view_service_set', 'login': self.login, 'password': self.password,
+            'name': name})
+
+    def view_service_sets(self):
+        return self.request({'action': 'view_service_sets', 'login': self.login, 'password': self.password})

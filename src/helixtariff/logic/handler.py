@@ -1,22 +1,21 @@
 from functools import partial
 
 import helixcore.mapping.actions as mapping
-from helixcore.db.sql import In, Eq, Scoped, And, Delete, Select
+from helixcore.db.sql import Eq, Select, In
 from helixcore.server.response import response_ok
-from helixcore.server.exceptions import DataIntegrityError
+from helixcore.db.wrapper import EmptyResultSetError, fetchall_dicts
 
 from helixtariff.conf.db import transaction
 from helixtariff.domain.objects import Client, ServiceType, \
     ServiceSet, ServiceSetRow, Tariff, Rule
-from helixtariff.logic import query_builder
 from helixtariff.logic import selector
 from helixtariff.rulesengine.checker import RuleChecker
 from helixtariff.rulesengine.engine import Engine
 from helixtariff.rulesengine.interaction import RequestDomainPrice
 from helixtariff.domain import security
-from helixcore.db.wrapper import EmptyResultSetError
 from helixtariff.error import TariffCycleError, RuleNotFound,\
     ServiceTypeNotFound
+from helixcore.test.util import profile
 
 
 def authentificate(method):
@@ -186,16 +185,47 @@ class Handler(object):
         service_set, types = self._get_service_set_info(curs, data['client_id'], data['name'])
         return response_ok(name=service_set.name, types=sorted([t.name for t in types]))
 
+    def _get_mapped_values(self, curs, q, k_name, v_name):
+        curs.execute(*q.glue())
+        raw = fetchall_dicts(curs)
+        result = {}
+        for d in raw:
+            result[d[k_name]] = d[v_name]
+        return result
+
+    def _get_types_names_mapped_by_id(self, curs, client_id):
+        q = Select(ServiceType.table, columns=['id', 'name'], cond=Eq('client_id', client_id), order_by='id')
+        return self._get_mapped_values(curs, q, 'id', 'name')
+
+    def _get_service_sets_names_mapped_by_id(self, curs, client_id):
+        q = Select(ServiceSet.table, columns=['id', 'name'], cond=Eq('client_id', client_id), order_by='id')
+        return self._get_mapped_values(curs, q, 'id', 'name')
+
+    def _get_service_set_rows(self, curs, service_sets_ids):
+        q = Select(ServiceSetRow.table, cond=In('service_set_id', service_sets_ids))
+        curs.execute(*q.glue())
+        return fetchall_dicts(curs)
+
     @transaction()
     @authentificate
     def view_service_sets(self, data, curs=None):
         client_id = data['client_id']
-        service_sets = mapping.get_list(curs, ServiceSet, cond=Eq('client_id', client_id), order_by='id')
-        service_sets_info = []
-        for s in service_sets:
-            _, types = self._get_service_set_info(curs, client_id, s.name)
-            service_sets_info.append({'name': s.name, 'types': sorted([t.name for t in types])})
-        return response_ok(service_sets=service_sets_info)
+        t_names_map = self._get_types_names_mapped_by_id(curs, client_id)
+        ss_names_map = self._get_service_sets_names_mapped_by_id(curs, client_id)
+        ss_rows = self._get_service_set_rows(curs, ss_names_map.keys())
+
+        service_sets_info = {}
+        for ss_row in ss_rows:
+            ss_name = ss_names_map[ss_row['service_set_id']]
+            t_name = t_names_map[ss_row['service_type_id']]
+            if ss_name not in service_sets_info:
+                service_sets_info[ss_name] = list()
+            service_sets_info[ss_name].append(t_name)
+
+        result = []
+        for k in sorted(service_sets_info.keys()):
+            result.append({'name': k, 'types': sorted(service_sets_info[k])})
+        return response_ok(service_sets=result)
 
     # tariff
     @transaction()
