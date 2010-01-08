@@ -249,25 +249,27 @@ class ValidatorTestCase(RootTestCase):
         self.validate_status_response('delete_rule')
 
     def test_get_domain_service_price(self):
-        self.api.validate_request('get_domain_service_price',
+        self.api.validate_request('get_price',
             {'login': 'l', 'password': 'p', 'tariff': 't', 'service_type': 's'})
-        self.api.validate_request('get_domain_service_price',
-            {'login': 'l', 'password': 'p', 'tariff': 't', 'service_type': 's', 'period': 3})
-        self.api.validate_request('get_domain_service_price',
-            {'login': 'l', 'password': 'p', 'tariff': 't', 'service_type': 's', 'period': 3, 'customer_id': 'c'})
+        self.api.validate_request('get_price',
+            {'login': 'l', 'password': 'p', 'tariff': 't', 'service_type': 's', 'context': {}})
+        self.api.validate_request('get_price',
+            {'login': 'l', 'password': 'p', 'tariff': 't', 'service_type': 's', 'context': {'a': 2}})
+        self.api.validate_request('get_price',
+            {'login': 'l', 'password': 'p', 'tariff': 't', 'service_type': 's', 'context': {'a': 1, 'b': 3}})
 
-        self.api.validate_response('get_domain_service_price',
+        self.api.validate_response('get_price',
             {'status': 'error', 'category': 'test', 'message': 'happens'})
-        self.api.validate_response('get_domain_service_price', {'status': 'ok', 'tariff': 'n',
+        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n',
             'tariffs_chain': [], 'service_type': 's', 'price': '10.09'})
-        self.api.validate_response('get_domain_service_price', {'status': 'ok', 'tariff': 'n',
-            'tariffs_chain': ['m'], 'service_type': 's', 'price': '10.09', 'period': 1})
-        self.api.validate_response('get_domain_service_price', {'status': 'ok', 'tariff': 'n',
-            'tariffs_chain': ['m', 'n'], 'service_type': 's', 'price': '10.09', 'period': 1, 'customer_id': 'l'})
+        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m'],
+            'service_type': 's', 'price': '10.09', 'context': {'period': 1}})
+        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m', 'n'],
+            'service_type': 's', 'price': '10.09', 'context': {'period': 1, 'customer_id': 'l'}})
 
     def test_get_domain_service_price_invalid(self):
-        self.assertRaises(ValidationError, self.api.validate_request, 'get_domain_service_price',
-            {'login': 'l', 'tariff_name': 't', 'service_type_name': 's', 'period': 'f'})
+        self.assertRaises(ValidationError, self.api.validate_request, 'get_price',
+            {'login': 'l', 'tariff_name': 't', 'service_type_name': 's',})
 
     def test_view_service_set(self):
         self.api.validate_request('view_service_set',

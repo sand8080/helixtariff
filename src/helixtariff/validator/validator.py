@@ -1,6 +1,6 @@
 import re
 from helixcore.server.api import ApiCall
-from helixcore.validol.validol import Scheme, Text, Optional, Positive, AnyOf
+from helixcore.validol.validol import Scheme, Text, Optional, Any, AnyOf
 
 iso_datetime_validator = re.compile(r"""
     (\d{2,4})
@@ -267,17 +267,16 @@ VIEW_RESPONSE_RULES = AnyOf(
 
 
 # --- price ---
-GET_DOMAIN_SERVICE_PRICE = dict(
+GET_PRICE = dict(
     {
         'tariff': Text(),
         'service_type': Text(),
-        Optional('period'): Positive(int),
-        Optional('customer_id'): Text(),
+        Optional('context'): Any(),
     },
     **AUTH_INFO
 )
 
-GET_DOMAIN_SERVICE_PRICE_RESPONSE = AnyOf(
+GET_PRICE_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **{
@@ -285,8 +284,7 @@ GET_DOMAIN_SERVICE_PRICE_RESPONSE = AnyOf(
             'tariffs_chain': [Text()],
             'service_type': Text(),
             'price': Text(),
-            Optional('period'): Positive(int),
-            Optional('customer_id'): Text(),
+            Optional('context'): Any(),
         }
     ),
     RESPONSE_STATUS_ERROR
@@ -378,6 +376,6 @@ protocol = [
     ApiCall('view_rules_response', Scheme(VIEW_RESPONSE_RULES)),
 
     # price
-    ApiCall('get_domain_service_price_request', Scheme(GET_DOMAIN_SERVICE_PRICE)),
-    ApiCall('get_domain_service_price_response', Scheme(GET_DOMAIN_SERVICE_PRICE_RESPONSE)),
+    ApiCall('get_price_request', Scheme(GET_PRICE)),
+    ApiCall('get_price_response', Scheme(GET_PRICE_RESPONSE)),
 ]

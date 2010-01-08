@@ -5,9 +5,8 @@ from helixcore.db.wrapper import EmptyResultSetError, fetchall_dicts
 
 from helixtariff.domain.objects import ServiceType, \
     ServiceSet, ServiceSetRow, Tariff, Rule, Client
-from helixtariff.logic import query_builder
 from helixtariff.domain import security
-from helixtariff.error import ClientNotFound
+from helixtariff.error import ClientNotFound, RuleNotFound
 
 
 def get_service_type_by_name(curs, client_id, name, for_update=False):
@@ -47,7 +46,10 @@ def get_auth_client(curs, login, password, for_update=False):
 
 
 def get_service_types_by_service_set(curs, client_id, name, for_update=False):
-    cond_descr_id = Eq('service_set_id', Scoped(query_builder.select_service_set_id(name)))
+    cond_name = Eq('name', name)
+    cond_client_id = Eq('client_id', client_id)
+    sel_ss = Select(ServiceSet.table, columns='id', cond=And(cond_name, cond_client_id))
+    cond_descr_id = Eq('service_set_id', Scoped(sel_ss))
     sel_type_ids = Select(ServiceSetRow.table, columns='service_type_id', cond=cond_descr_id)
     cond_type_in = In('id', Scoped(sel_type_ids))
     return mapping.get_list(curs, ServiceType, cond_type_in, order_by='id', for_update=for_update)
@@ -76,16 +78,34 @@ def get_rule(curs, client_id, tariff_name, service_type_name, for_update=False):
     cond_tariff_name = Eq('name', tariff_name)
     sel_tariff = Select(Tariff.table, columns='id', cond=And(cond_client_id, cond_tariff_name))
 
-    cond_service_type_name = Eq('name', service_type_name)
-    sel_service_type = Select(ServiceType.table, columns='id', cond=cond_service_type_name)
+    sel_service_type = _gen_sel_service_type(service_type_name, client_id)
 
     cond_tariff_id = Eq('tariff_id', Scoped(sel_tariff))
     cond_service_type_id = Eq('service_type_id', Scoped(sel_service_type))
     return mapping.get(curs, Rule, cond=And(cond_tariff_id, cond_service_type_id), for_update=for_update)
 
+
+def _gen_sel_service_type(name, client_id):
+    cond_n = Eq('name', name)
+    cond_c_id = Eq('client_id', client_id)
+    return Select(ServiceType.table, columns='id', cond=And(cond_n, cond_c_id))
+
+
 def get_rules(curs, client_id, tariff_name, for_update=False):
     tariff = get_tariff(curs, client_id, tariff_name)
     return mapping.get_list(curs, Rule, cond=Eq('tariff_id', tariff.id), for_update=for_update)
+
+
+def find_rule_in_tariffs(curs, tariffs_ids, client_id, service_type_name, for_update=False):
+    cond_t_ids = In('tariff_id', tariffs_ids)
+    sel_st = _gen_sel_service_type(service_type_name, client_id)
+    cond_st_name = Eq('service_type_id', Scoped(sel_st))
+    try:
+        rule = mapping.get(curs, Rule, cond=And(cond_t_ids, cond_st_name), for_update=for_update)
+        return rule
+    except EmptyResultSetError:
+        raise RuleNotFound('Rule for service %s not found in tariffs %s', (service_type_name, tariffs_ids))
+
 
 def _get_indexed_values(curs, q, k_name, v_name):
     curs.execute(*q.glue())
@@ -95,17 +115,25 @@ def _get_indexed_values(curs, q, k_name, v_name):
         result[d[k_name]] = d[v_name]
     return result
 
+
 def get_service_types_names_indexed_by_id(curs, client_id):
     q = Select(ServiceType.table, columns=['id', 'name'], cond=Eq('client_id', client_id))
     return _get_indexed_values(curs, q, 'id', 'name')
+
 
 def get_service_sets_names_indexed_by_id(curs, client_id):
     q = Select(ServiceSet.table, columns=['id', 'name'], cond=Eq('client_id', client_id))
     return _get_indexed_values(curs, q, 'id', 'name')
 
+
 def get_tariffs_names_indexed_by_id(curs, client_id):
     q = Select(Tariff.table, columns=['id', 'name'], cond=Eq('client_id', client_id))
     return _get_indexed_values(curs, q, 'id', 'name')
+
+def get_tariffs_parent_ids_indexed_by_id(curs, client_id):
+    q = Select(Tariff.table, columns=['id', 'parent_id'], cond=Eq('client_id', client_id))
+    return _get_indexed_values(curs, q, 'id', 'parent_id')
+
 
 def get_service_set_rows(curs, service_sets_ids):
     q = Select(ServiceSetRow.table, cond=In('service_set_id', service_sets_ids))

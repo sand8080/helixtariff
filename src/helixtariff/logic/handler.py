@@ -11,7 +11,7 @@ from helixtariff.domain.objects import Client, ServiceType, \
 from helixtariff.logic import selector
 from helixtariff.rulesengine.checker import RuleChecker
 from helixtariff.rulesengine.engine import Engine
-from helixtariff.rulesengine.interaction import RequestDomainPrice
+from helixtariff.rulesengine.interaction import RequestPrice
 from helixtariff.domain import security
 from helixtariff.error import TariffCycleError, RuleNotFound,\
     ServiceTypeNotFound
@@ -356,60 +356,45 @@ class Handler(object):
         return data[field] if field in data else default,
 
     # price
-    def _get_tariffs_chain(self, curs, client_id, tariff_name, service_type_name):
+    def _get_tariffs_chain(self, curs, client_id, tariff_name):
         '''
-        Finds first tariff with rule for service_type.
-        If tariff with rule not found - exception raised.
-        If tariff cycle found - exception raised.
+        @return: tariffs chain for tariff_name as [(tariff_id, tariff_name)]
         '''
-        def find_next_tariff():
-            tariffs_chain.append(tariff_name)
-            try:
-                selector.get_rule(curs, client_id, tariff_name, service_type_name)
-                return None
-            except EmptyResultSetError, _: #IGNORE:W0704
-                pass
+        tariff = selector.get_tariff(curs, client_id, tariff_name)
+        parents_idx = selector.get_tariffs_parent_ids_indexed_by_id(curs, client_id)
+        tariffs_idx = selector.get_tariffs_names_indexed_by_id(curs, client_id)
 
-            if tariff_name in tariffs_set:
-                raise TariffCycleError('Tariff cycle found in chain %s' % tariffs_chain)
-            tariffs_set.add(tariff_name)
-
-            tariff = selector.get_tariff(curs, client_id, tariff_name)
-            if tariff.parent_id is None:
-                raise RuleNotFound('No rule for service type %s in tariffs chain %s' % (service_type_name, tariffs_chain))
-            return selector.get_tariff_by_id(curs, client_id, tariff.parent_id)
-
+        t_id = tariff.id
         tariffs_chain = []
-        tariffs_set = set(tariffs_chain)
-
+        tariffs_ids_set = set()
         while True:
-            next_tariff = find_next_tariff()
-            if next_tariff is None:
+            if t_id is None:
                 break
-            else:
-                tariff_name = next_tariff.name
+            if t_id in tariffs_ids_set:
+                raise TariffCycleError('Tariff cycle found in chain %s' % tariffs_chain)
+            tariffs_chain.append((t_id, tariffs_idx[t_id]))
+            tariffs_ids_set.add(t_id)
+            t_id = parents_idx[t_id]
         return tariffs_chain
 
     @transaction()
-    def get_domain_service_price(self, data, curs=None):
-        client = selector.get_client_by_login(curs, data['login'])
+    @authentificate
+    def get_price(self, data, curs=None):
+        client_id = data['client_id']
         tariff_name = data['tariff']
         service_type_name = data['service_type']
-        tariffs_chain = self._get_tariffs_chain(curs, client.id, tariff_name, service_type_name)
-        request = RequestDomainPrice(
-            client.id,
-            tariffs_chain[-1],
-            data['service_type'],
-            period=self._get_optional_field_value(data, 'period'),
-            customer_id=self._get_optional_field_value(data, 'customer_id')
-        )
-        response = Engine().process(request)
-        result=dict(
-            tariff=data['tariff'],
-            tariffs_chain=tariffs_chain,
-            service_type=data['service_type'],
-            price=response.price
-        )
-        if 'customer_id' in data:
-            result['customer_id'] = data['custmer_id']
+        tariffs_chain = self._get_tariffs_chain(curs, client_id, tariff_name)
+        tariffs_ids = zip(*tariffs_chain)[0]
+        context = data['context'] if 'context' in data else {}
+        rule = selector.find_rule_in_tariffs(curs, tariffs_ids, client_id, service_type_name)
+        response = Engine().process(RequestPrice(rule, context))
+#        result=dict(
+#            tariff=data['tariff'],
+#            tariffs_chain=tariffs_chain,
+#            service_type=data['service_type'],
+#            price=response.price
+#        )
+#        if 'customer_id' in data:
+#            result['customer_id'] = data['custmer_id']
+        result = {}
         return response_ok(**result)
