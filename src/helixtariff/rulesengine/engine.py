@@ -1,6 +1,6 @@
 from helixtariff.error import HelixtariffError
 from helixtariff.rulesengine.interaction import ResponsePrice
-from helixtariff.rulesengine.context import moc as context #IGNORE:W0611 @UnusedImport
+#from helixtariff.rulesengine.context import moc as context #IGNORE:W0611 @UnusedImport
 
 
 class EngineError(HelixtariffError):
@@ -10,7 +10,7 @@ class EngineError(HelixtariffError):
 def process(request):
     price = None
 
-    exec request.rule.rule
+    exec request.rule.rule #IGNORE:W0122
 
     response = ResponsePrice(price)
     response.check_valid()

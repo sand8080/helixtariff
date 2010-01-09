@@ -260,8 +260,8 @@ class ValidatorTestCase(RootTestCase):
 
         self.api.validate_response('get_price',
             {'status': 'error', 'category': 'test', 'message': 'happens'})
-        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n',
-            'tariffs_chain': [], 'service_type': 's', 'price': '10.09'})
+        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': [],
+            'service_type': 's', 'price': '10.09', 'context': {}})
         self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m'],
             'service_type': 's', 'price': '10.09', 'context': {'period': 1}})
         self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m', 'n'],
@@ -337,23 +337,42 @@ class ValidatorTestCase(RootTestCase):
             ]
         })
 
-    def test_rules(self):
+    def test_view_rules(self):
         self.api.validate_request('view_rules',
             {'login': 'l', 'password': 'p', 'tariff': 't'})
         self.api.validate_response('view_rules',
             {'status': 'error', 'category': 't', 'message': 'm'})
-        self.api.validate_response('view_rules', {'status': 'ok', 'rules': []})
-        self.api.validate_response('view_rules', {'status': 'ok',
+        self.api.validate_response('view_rules', {'status': 'ok', 'tariff': 't', 'rules': []})
+        self.api.validate_response('view_rules', {'status': 'ok', 'tariff': 't',
             'rules': [
-                {'tariff': 't', 'service_type': 't', 'rule': 'r'},
+                {'service_type': 't', 'rule': 'r'},
             ]
         })
-        self.api.validate_response('view_rules', {'status': 'ok',
+        self.api.validate_response('view_rules', {'status': 'ok', 'tariff': 't',
             'rules': [
-                {'tariff': 't', 'service_type': 't', 'rule': 'r'},
-                {'tariff': 't', 'service_type': 't', 'rule': 'r'},
+                {'service_type': 't', 'rule': 'r'},
+                {'service_type': 't', 'rule': 'r'},
             ]
         })
+
+    def test_view_prices(self):
+        self.api.validate_request('view_prices',
+            {'login': 'l', 'password': 'p', 'tariff': 't'})
+        self.api.validate_response('view_prices',
+            {'status': 'error', 'category': 't', 'message': 'm'})
+        self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {},
+            'prices': []})
+        self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {'customer_id': 'c'},
+            'prices': []})
+        self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {'customer_id': 'c'},
+            'prices': [
+                {'tariffs_chain': ['m', 'n'], 'service_type': 's', 'price': '10.16'},
+            ]})
+        self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {'customer_id': 'c'},
+            'prices': [
+                {'tariffs_chain': ['m', 'n'], 'service_type': 's', 'price': '10.16'},
+                {'tariffs_chain': ['p'], 'service_type': 'l', 'price': '20.16'},
+            ]})
 
 
 if __name__ == '__main__':

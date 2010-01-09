@@ -82,7 +82,6 @@ if context.get_balance(request.customer_id) > 500: price -= 30
         for i, n in enumerate(self.service_types_names):
             r = 'price = %03d.%02d' % (i, i)
             expected_rules.append({
-                'tariff': self.tariff_name,
                 'service_type': n,
                 'rule': r,
             })
@@ -96,6 +95,7 @@ if context.get_balance(request.customer_id) > 500: price -= 30
         result = handle_action('view_rules', data)
 
         self.assertEqual('ok', result['status'])
+        self.assertEqual(self.tariff_name, result['tariff'])
         self.assertEqual(expected_rules, result['rules'])
 
 

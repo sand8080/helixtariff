@@ -222,14 +222,12 @@ VIEW_DETAILED_TARIFFS_RESPONSE = AnyOf(
 
 
 # --- rule ---
-RULE_INFO =     {
-    'tariff': Text(),
-    'service_type': Text(),
-    'rule': Text(),
-}
-
 ADD_RULE = dict(
-    RULE_INFO,
+    {
+        'tariff': Text(),
+        'service_type': Text(),
+        'rule': Text(),
+    },
     **AUTH_INFO
 )
 
@@ -251,16 +249,20 @@ DELETE_RULE = dict(
 )
 
 VIEW_RULES = dict(
-    {
-        'tariff': Text(),
-    },
+    {'tariff': Text(),},
     **AUTH_INFO
 )
 
-VIEW_RESPONSE_RULES = AnyOf(
+VIEW_RULES_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
-        **{'rules': [RULE_INFO]}
+        **{
+            'tariff': Text(),
+            'rules': [{
+                'service_type': Text(),
+                'rule': Text(),
+            }]
+        }
     ),
     RESPONSE_STATUS_ERROR
 )
@@ -284,7 +286,31 @@ GET_PRICE_RESPONSE = AnyOf(
             'tariffs_chain': [Text()],
             'service_type': Text(),
             'price': Text(),
-            Optional('context'): Any(),
+            'context': Any(),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+VIEW_PRICES = dict(
+    {
+        'tariff': Text(),
+        Optional('context'): Any(),
+    },
+    **AUTH_INFO
+)
+
+VIEW_PRICES_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'tariff': Text(),
+            'context': Any(),
+            'prices': [{
+                'tariffs_chain': [Text()],
+                'service_type': Text(),
+                'price': Text(),
+            }],
         }
     ),
     RESPONSE_STATUS_ERROR
@@ -373,9 +399,13 @@ protocol = [
     ApiCall('delete_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     ApiCall('view_rules_request', Scheme(VIEW_RULES)),
-    ApiCall('view_rules_response', Scheme(VIEW_RESPONSE_RULES)),
+    ApiCall('view_rules_response', Scheme(VIEW_RULES_RESPONSE)),
 
     # price
     ApiCall('get_price_request', Scheme(GET_PRICE)),
     ApiCall('get_price_response', Scheme(GET_PRICE_RESPONSE)),
+
+    ApiCall('view_prices_request', Scheme(VIEW_PRICES)),
+    ApiCall('view_prices_response', Scheme(VIEW_PRICES_RESPONSE)),
+
 ]

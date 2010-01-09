@@ -1,4 +1,3 @@
-from helixtariff.logic import selector
 import unittest
 from decimal import Decimal
 

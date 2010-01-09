@@ -345,11 +345,10 @@ class Handler(object):
         rules = []
         for r in selector.get_rules(curs, client_id, tariff.name):
             rules.append({
-                'tariff': tariff.name,
                 'service_type': st_names[r.service_type_id],
                 'rule': r.rule
             })
-        return response_ok(rules=rules)
+        return response_ok(tariff=tariff.name, rules=rules)
 
     def _get_optional_field_value(self, data, field, default=None):
         return data[field] if field in data else default,
