@@ -19,8 +19,7 @@ class ObjectNotFound(HelixtariffError):
 
 
 class RuleNotFound(HelixtariffError):
-    def __init__(self, name):
-        super(RuleNotFound, self).__init__('''Rule %s not found.''' % name)
+    pass
 
 
 class ServiceTypeNotFound(ObjectNotFound):

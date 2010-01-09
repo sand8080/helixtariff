@@ -52,6 +52,11 @@ class ApplicationTestCase(DbBasedTestCase):
         return self.cli.get_price(tariff_name, select_random(service_types_names))
 
     @profile
+    def view_prices(self, tariffs_detailed, repeats=1): #IGNORE:W0613
+        tariff_name = select_random(tariffs_detailed.keys())
+        return self.cli.view_prices(tariff_name)
+
+    @profile
     def get_wrong_price(self, tariffs_detailed, repeats=1): #IGNORE:W0613
         tariff_name = select_random(tariffs_detailed.keys())
         service_types_names = tariffs_detailed[tariff_name]['types']
@@ -89,8 +94,8 @@ class ApplicationTestCase(DbBasedTestCase):
         print
         print 'Service sets added'
 
-#        self.view_service_set(service_sets_names[0], repeats=50)
-#        self.view_service_sets(repeats=5)
+        self.view_service_set(service_sets_names[0], repeats=50)
+        self.view_service_sets(repeats=5)
 
         tariffs_names = [random_word() for _ in range(service_sets_num)]
         print 'Adding tariffs'
@@ -110,6 +115,7 @@ class ApplicationTestCase(DbBasedTestCase):
         self.view_detailed_tariffs(repeats=10)
         self.get_tariff_detailed(tariffs_names, repeats=50)
         self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=50)
+        self.view_prices(self.load_detailed_tariff_data(tariffs_names), repeats=50)
         self.get_wrong_price(self.load_detailed_tariff_data(tariffs_names), repeats=50)
         self.view_rules(tariffs_names[0], repeats=50)
 

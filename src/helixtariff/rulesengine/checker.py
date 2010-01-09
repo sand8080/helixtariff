@@ -10,7 +10,7 @@ class RuleChecker(object):
     def __init__(self):
         self.accepted_names = set([
             'datetime', 'now', 'year', 'month', 'day',
-            'if',
+            'if', 'else',
             'response', 'price',
             'context', 'get_balance',
             'request', 'customer_id', 'period', 'check_period', 'min_period', 'max_period',

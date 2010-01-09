@@ -50,6 +50,10 @@ class Client(ClientApplication):
         return self.request({'action': 'get_price', 'login': self.login,
             'password': self.password, 'tariff': tariff_name, 'service_type': service_type_name})
 
+    def view_prices(self, tariff_name):
+        return self.request({'action': 'view_prices', 'login': self.login,
+            'password': self.password, 'tariff': tariff_name})
+
     def get_service_types(self):
         return self.request({'action': 'get_service_types', 'login': self.login, 'password': self.password})
 

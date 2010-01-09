@@ -1,7 +1,7 @@
 from functools import partial
 
 import helixcore.mapping.actions as mapping
-from helixcore.db.sql import Eq
+from helixcore.db.sql import Eq, In, And
 from helixcore.server.response import response_ok
 from helixcore.db.wrapper import EmptyResultSetError
 
@@ -13,7 +13,8 @@ from helixtariff.rulesengine.checker import RuleChecker
 from helixtariff.rulesengine import engine
 from helixtariff.rulesengine.interaction import RequestPrice
 from helixtariff.domain import security
-from helixtariff.error import TariffCycleError, ServiceTypeNotFound
+from helixtariff.error import TariffCycleError, ServiceTypeNotFound,\
+    RuleNotFound
 
 
 def authentificate(method):
@@ -375,23 +376,79 @@ class Handler(object):
             t_id = parents_idx[t_id]
         return tariffs_chain
 
+    def _find_nearest_rule(self, indexed_rules, tariffs_ids, service_type_id):
+        '''
+        Finds first rule implementation in tariffs listed in tariffs_ids.
+        '''
+        for t_id in tariffs_ids:
+            k = (t_id, service_type_id)
+            if k in indexed_rules:
+                return indexed_rules[k]
+        raise EmptyResultSetError()
+
+
     @transaction()
     @authentificate
     def get_price(self, data, curs=None):
         client_id = data['client_id']
         tariff_name = data['tariff']
-        service_type_name = data['service_type']
-        ts_chain = self._get_tariffs_chain(curs, client_id, tariff_name)
-        ts_ids, ts_names = map(list, zip(*ts_chain))
-
-        rule = selector.find_rule_in_tariffs(curs, ts_ids, client_id, service_type_name)
         context = data['context'] if 'context' in data else {}
-        response = engine.process(RequestPrice(rule, context))
+        service_type_name = data['service_type']
+
+        ts_chain = self._get_tariffs_chain(curs, client_id, tariff_name)
+        tariffs_ids, tariffs_names = map(list, zip(*ts_chain))
+
+        try:
+            service_type = selector.get_service_type_by_name(curs, client_id, service_type_name)
+            indexed_rules = selector.get_rules_indexed_by_tariff_service_type_ids(curs, client_id,
+                tariffs_ids, [service_type.id])
+            rule = self._find_nearest_rule(indexed_rules, tariffs_ids, service_type.id)
+            response = engine.process(RequestPrice(rule, context))
+
+            return response_ok(
+                tariff=tariff_name,
+                tariffs_chain=tariffs_names[:tariffs_ids.index(rule.tariff_id) + 1],
+                service_type=service_type_name,
+                price=response.price,
+                context=context
+            )
+        except EmptyResultSetError:
+            raise RuleNotFound("Rule for service type '%s' not found in tariffs: %s" %
+                (service_type_name, tariffs_names))
+
+    @transaction()
+    @authentificate
+    def view_prices(self, data, curs=None):
+        client_id = data['client_id']
+        tariff_name = data['tariff']
+        context = data['context'] if 'context' in data else {}
+
+        ts_chain = self._get_tariffs_chain(curs, client_id, tariff_name)
+        tariffs_ids, tariffs_names = map(list, zip(*ts_chain))
+
+        service_sets_ids = selector.get_service_sets_ids(curs, tariffs_ids)
+        service_types_ids = selector.get_service_types_ids(curs, service_sets_ids)
+
+        indexed_rules = selector.get_rules_indexed_by_tariff_service_type_ids(curs, client_id,
+            tariffs_ids, service_types_ids)
+
+        prices = []
+        service_types_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
+        for st_id in service_types_ids:
+            try:
+                rule = self._find_nearest_rule(indexed_rules, tariffs_ids, st_id)
+                response = engine.process(RequestPrice(rule, context))
+                prices.append({
+                    'tariffs_chain': tariffs_names[:tariffs_ids.index(rule.tariff_id) + 1],
+                    'service_type': service_types_names_idx[rule.service_type_id],
+                    'price': response.price,
+                })
+            except EmptyResultSetError:
+                raise RuleNotFound("Rule for service type '%s' not found in tariffs: %s" %
+                    (service_types_names_idx[st_id], tariffs_names))
 
         return response_ok(
             tariff=tariff_name,
-            tariffs_chain=ts_names[:ts_ids.index(rule.tariff_id) + 1],
-            service_type=service_type_name,
-            price=response.price,
-            context=context
+            context=context,
+            prices=prices
         )

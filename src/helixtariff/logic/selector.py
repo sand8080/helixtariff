@@ -55,6 +55,7 @@ def get_service_types_by_service_set(curs, client_id, name, for_update=False):
     return mapping.get_list(curs, ServiceType, cond_type_in, order_by='id', for_update=for_update)
 
 
+
 def get_service_types(curs, client_id, for_update=False):
     return mapping.get_list(curs, ServiceType, cond=Eq('client_id', client_id), for_update=for_update)
 
@@ -99,15 +100,19 @@ def get_rules(curs, client_id, tariff_name, for_update=False):
     return mapping.get_list(curs, Rule, cond=Eq('tariff_id', tariff.id), for_update=for_update)
 
 
-def find_rule_in_tariffs(curs, tariffs_ids, client_id, service_type_name, for_update=False):
-    cond_t_ids = In('tariff_id', tariffs_ids)
-    sel_st = _gen_sel_service_type(service_type_name, client_id)
-    cond_st_name = Eq('service_type_id', Scoped(sel_st))
-    try:
-        rule = mapping.get(curs, Rule, cond=And(cond_t_ids, cond_st_name), for_update=for_update)
-        return rule
-    except EmptyResultSetError:
-        raise RuleNotFound('rule for service %s in tariffs %s' % (service_type_name, tariffs_ids))
+def get_rules_indexed_by_tariff_service_type_ids(curs, client_id, tariffs_ids, service_types_ids, for_update=False):
+    cond_names = In('id', service_types_ids)
+    cond_client_id = Eq('client_id', client_id)
+    sel_st_id = Select(ServiceType.table, columns='id', cond=And(cond_names, cond_client_id))
+
+    cond_st_name = In('service_type_id', Scoped(sel_st_id))
+    cond_tariffs_ids = In('tariff_id', tariffs_ids)
+
+    rules = mapping.get_list(curs, Rule, cond=And(cond_tariffs_ids, cond_st_name), for_update=for_update)
+    indexed_rules = {}
+    for r in rules:
+        indexed_rules[(r.tariff_id, r.service_type_id)] = r
+    return indexed_rules
 
 
 def _get_indexed_values(curs, q, k_name, v_name):
@@ -119,26 +124,41 @@ def _get_indexed_values(curs, q, k_name, v_name):
     return result
 
 
-def get_service_types_names_indexed_by_id(curs, client_id):
-    q = Select(ServiceType.table, columns=['id', 'name'], cond=Eq('client_id', client_id))
+def get_service_types_names_indexed_by_id(curs, client_id, for_update=False):
+    q = Select(ServiceType.table, columns=['id', 'name'], cond=Eq('client_id', client_id), for_update=for_update)
     return _get_indexed_values(curs, q, 'id', 'name')
 
 
-def get_service_sets_names_indexed_by_id(curs, client_id):
-    q = Select(ServiceSet.table, columns=['id', 'name'], cond=Eq('client_id', client_id))
+def get_service_sets_names_indexed_by_id(curs, client_id, for_update=False):
+    q = Select(ServiceSet.table, columns=['id', 'name'], cond=Eq('client_id', client_id), for_update=for_update)
     return _get_indexed_values(curs, q, 'id', 'name')
 
 
-def get_tariffs_names_indexed_by_id(curs, client_id):
-    q = Select(Tariff.table, columns=['id', 'name'], cond=Eq('client_id', client_id))
+def get_tariffs_names_indexed_by_id(curs, client_id, for_update=False):
+    q = Select(Tariff.table, columns=['id', 'name'], cond=Eq('client_id', client_id), for_update=for_update)
     return _get_indexed_values(curs, q, 'id', 'name')
 
-def get_tariffs_parent_ids_indexed_by_id(curs, client_id):
-    q = Select(Tariff.table, columns=['id', 'parent_id'], cond=Eq('client_id', client_id))
+
+def get_tariffs_parent_ids_indexed_by_id(curs, client_id, for_update=False):
+    q = Select(Tariff.table, columns=['id', 'parent_id'], cond=Eq('client_id', client_id), for_update=for_update)
     return _get_indexed_values(curs, q, 'id', 'parent_id')
 
 
-def get_service_set_rows(curs, service_sets_ids):
-    q = Select(ServiceSetRow.table, cond=In('service_set_id', service_sets_ids))
+def get_service_set_rows(curs, service_sets_ids, for_update=False):
+    q = Select(ServiceSetRow.table, cond=In('service_set_id', service_sets_ids), for_update=for_update)
     curs.execute(*q.glue())
     return fetchall_dicts(curs)
+
+
+def get_service_types_ids(curs, service_sets_ids, for_update=False):
+    q = Select(ServiceSetRow.table, columns='id', cond=In('service_set_id', service_sets_ids), for_update=for_update)
+    curs.execute(*q.glue())
+    result = fetchall_dicts(curs)
+    return [d['id'] for d in result]
+
+
+def get_service_sets_ids(curs, tariffs_ids, for_update=False):
+    q = Select(Tariff.table, columns='service_set_id', cond=In('id', tariffs_ids), for_update=for_update)
+    curs.execute(*q.glue())
+    result = fetchall_dicts(curs)
+    return [d['service_set_id'] for d in result]
