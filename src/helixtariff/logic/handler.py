@@ -10,11 +10,10 @@ from helixtariff.domain.objects import Client, ServiceType, \
     ServiceSet, ServiceSetRow, Tariff, Rule
 from helixtariff.logic import selector
 from helixtariff.rulesengine.checker import RuleChecker
-from helixtariff.rulesengine.engine import Engine
+from helixtariff.rulesengine import engine
 from helixtariff.rulesengine.interaction import RequestPrice
 from helixtariff.domain import security
-from helixtariff.error import TariffCycleError, RuleNotFound,\
-    ServiceTypeNotFound
+from helixtariff.error import TariffCycleError, ServiceTypeNotFound
 
 
 def authentificate(method):
@@ -383,18 +382,17 @@ class Handler(object):
         client_id = data['client_id']
         tariff_name = data['tariff']
         service_type_name = data['service_type']
-        tariffs_chain = self._get_tariffs_chain(curs, client_id, tariff_name)
-        tariffs_ids = zip(*tariffs_chain)[0]
+        ts_chain = self._get_tariffs_chain(curs, client_id, tariff_name)
+        ts_ids, ts_names = map(list, zip(*ts_chain))
+
+        rule = selector.find_rule_in_tariffs(curs, ts_ids, client_id, service_type_name)
         context = data['context'] if 'context' in data else {}
-        rule = selector.find_rule_in_tariffs(curs, tariffs_ids, client_id, service_type_name)
-        response = Engine().process(RequestPrice(rule, context))
-#        result=dict(
-#            tariff=data['tariff'],
-#            tariffs_chain=tariffs_chain,
-#            service_type=data['service_type'],
-#            price=response.price
-#        )
-#        if 'customer_id' in data:
-#            result['customer_id'] = data['custmer_id']
-        result = {}
-        return response_ok(**result)
+        response = engine.process(RequestPrice(rule, context))
+
+        return response_ok(
+            tariff=tariff_name,
+            tariffs_chain=ts_names[:ts_ids.index(rule.tariff_id) + 1],
+            service_type=service_type_name,
+            price=response.price,
+            context=context
+        )

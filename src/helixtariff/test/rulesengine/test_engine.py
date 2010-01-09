@@ -1,10 +1,11 @@
+from helixtariff.logic import selector
 import unittest
 from decimal import Decimal
 
 from helixtariff.test.db_based_test import ServiceTestCase
 
-from helixtariff.rulesengine.engine import Engine
-from helixtariff.rulesengine.interaction import RequestDomainPrice, PriceProcessingError
+from helixtariff.rulesengine import engine
+from helixtariff.rulesengine.interaction import RequestPrice, PriceProcessingError
 
 
 class EngineTestCase(ServiceTestCase):
@@ -21,12 +22,12 @@ class EngineTestCase(ServiceTestCase):
 
     def test_request_price_not_modified(self):
         self.add_rule(self.tariff_name, self.service_types_names[0], '')
-        e = Engine()
-        request = RequestDomainPrice(self.get_root_client().id, self.tariff_name, self.service_types_names[0])
-        self.assertRaises(PriceProcessingError, e.process, request)
+        rule = self.get_rule(self.get_root_client().id, self.tariff_name, self.service_types_names[0])
+        request = RequestPrice(rule)
+        self.assertRaises(PriceProcessingError, engine.process, request)
 
     def test_request_price(self):
-        rule = '''
+        raw_rule = '''
 request.check_period(min_period=1, max_period=3)
 price = 15.01
 
@@ -36,39 +37,33 @@ if request.customer_id == 'lucky':
 if request.period > 1:
     price += 10.00 * (request.period - 1)
 '''
-        self.add_rule(self.tariff_name, self.service_types_names[0], rule)
-
-        e = Engine()
-        cleint_id = self.get_root_client().id
-        response = e.process(RequestDomainPrice(cleint_id, self.tariff_name,
-            self.service_types_names[0], period=1))
+        client_id = self.get_root_client().id
+        st_name = self.service_types_names[0]
+        self.add_rule(self.tariff_name, st_name, raw_rule)
+        rule = self.get_rule(client_id, self.tariff_name, st_name)
+        response = engine.process(RequestPrice(rule, context={'period': 1}))
         self.assertEqual(Decimal('15.01'), response._price) #IGNORE:W0212
         self.assertEqual('15.01', response.price)
 
-        response = e.process(RequestDomainPrice(cleint_id, self.tariff_name,
-            self.service_types_names[0], period=2))
+        response = engine.process(RequestPrice(rule, context={'period': 2}))
         self.assertEqual(Decimal('25.01'), response._price) #IGNORE:W0212
         self.assertEqual('25.01', response.price)
 
-        response = e.process(RequestDomainPrice(cleint_id, self.tariff_name,
-            self.service_types_names[0], period=3))
+        response = engine.process(RequestPrice(rule, context={'period': 3}))
         self.assertEqual(Decimal('35.01'), response._price) #IGNORE:W0212
         self.assertEqual('35.01', response.price)
 
-        response = e.process(RequestDomainPrice(cleint_id, self.tariff_name,
-            self.service_types_names[0], period=1, customer_id='lucky'))
+        response = engine.process(RequestPrice(rule, context={'period': 1, 'customer_id': 'lucky'}))
         self.assertEqual(Decimal('10.00'), response._price) #IGNORE:W0212
 
-        response = e.process(RequestDomainPrice(cleint_id, self.tariff_name,
-            self.service_types_names[0], period=2, customer_id='lucky'))
+        response = engine.process(RequestPrice(rule, context={'period': 2, 'customer_id': 'lucky'}))
         self.assertEqual(Decimal('20.00'), response._price) #IGNORE:W0212
 
-        response = e.process(RequestDomainPrice(cleint_id, self.tariff_name,
-            self.service_types_names[0], period=3, customer_id='lucky'))
+        response = engine.process(RequestPrice(rule, context={'period': 3, 'customer_id': 'lucky'}))
         self.assertEqual(Decimal('30.00'), response._price)  #IGNORE:W0212
 
-        self.assertRaises(PriceProcessingError, e.process,
-            RequestDomainPrice(cleint_id, self.tariff_name, self.service_types_names[0], period=4))
+        self.assertRaises(PriceProcessingError, engine.process,
+            RequestPrice(rule, context={'period': 4}))
 
 
 if __name__ == '__main__':

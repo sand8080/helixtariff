@@ -47,7 +47,7 @@ class Client(ClientApplication):
             'tariff': tariff_name, 'service_type': service_type_name, 'rule': rule})
 
     def get_price(self, tariff_name, service_type_name):
-        return self.request({'action': 'get_domain_service_price', 'login': self.login,
+        return self.request({'action': 'get_price', 'login': self.login,
             'password': self.password, 'tariff': tariff_name, 'service_type': service_type_name})
 
     def get_service_types(self):

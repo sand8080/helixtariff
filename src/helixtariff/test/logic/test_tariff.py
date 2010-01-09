@@ -1,3 +1,4 @@
+from helixtariff.error import TariffNotFound
 import unittest
 
 from helixcore.server.exceptions import DataIntegrityError
@@ -119,7 +120,7 @@ class TariffTestCase(ServiceTestCase):
             'name': child_name,
         }
         handle_action('delete_tariff', data)
-        self.assertRaises(EmptyResultSetError, self.get_tariff, self.root_client_id, child_name)
+        self.assertRaises(TariffNotFound, self.get_tariff, self.root_client_id, child_name)
 
         data = {
             'login': self.test_client_login,
@@ -127,7 +128,7 @@ class TariffTestCase(ServiceTestCase):
             'name': parent_name,
         }
         handle_action('delete_tariff', data)
-        self.assertRaises(EmptyResultSetError, self.get_tariff, self.root_client_id, parent_name)
+        self.assertRaises(TariffNotFound, self.get_tariff, self.root_client_id, parent_name)
 
     def test_get_tariff(self):
         parent_name = 'parent'
