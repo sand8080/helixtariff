@@ -95,7 +95,7 @@ class ApplicationTestCase(DbBasedTestCase):
         print 'Service sets added'
 
         self.view_service_set(service_sets_names[0], repeats=50)
-        self.view_service_sets(repeats=5)
+        self.view_service_sets(repeats=10)
 
         tariffs_names = [random_word() for _ in range(service_sets_num)]
         print 'Adding tariffs'
