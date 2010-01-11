@@ -94,7 +94,9 @@ class ApplicationTestCase(DbBasedTestCase):
         print
         print 'Service sets added'
 
+        self.view_service_set(service_sets_names[0], repeats=1)
         self.view_service_set(service_sets_names[0], repeats=50)
+        self.view_service_sets(repeats=1)
         self.view_service_sets(repeats=10)
 
         tariffs_names = [random_word() for _ in range(service_sets_num)]
@@ -111,12 +113,19 @@ class ApplicationTestCase(DbBasedTestCase):
             print 'Prices added for tariff %s' % tariff_name
         print 'Tariffs added'
 
+        self.view_tariffs(repeats=1)
         self.view_tariffs(repeats=50)
+        self.view_detailed_tariffs(repeats=1)
         self.view_detailed_tariffs(repeats=10)
+        self.get_tariff_detailed(tariffs_names, repeats=1)
         self.get_tariff_detailed(tariffs_names, repeats=50)
+        self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=1)
         self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=50)
+        self.view_prices(self.load_detailed_tariff_data(tariffs_names), repeats=1)
         self.view_prices(self.load_detailed_tariff_data(tariffs_names), repeats=50)
+        self.get_wrong_price(self.load_detailed_tariff_data(tariffs_names), repeats=1)
         self.get_wrong_price(self.load_detailed_tariff_data(tariffs_names), repeats=50)
+        self.view_rules(tariffs_names[0], repeats=1)
         self.view_rules(tariffs_names[0], repeats=50)
 
     def test_loading(self):
@@ -128,14 +137,14 @@ class ApplicationTestCase(DbBasedTestCase):
 
         pool.wait_all()
 
-    def test_ping_ok(self):
-        self.check_status_ok(self.cli.ping())
-
-    def test_invalid_request(self):
-        raw_result = self.cli.request({'action': 'fakeaction'})
-        result = cjson.decode(raw_result)
-        self.assertEqual('error', result['status'])
-        self.assertEqual('validation', result['category'])
+#    def test_ping_ok(self):
+#        self.check_status_ok(self.cli.ping())
+#
+#    def test_invalid_request(self):
+#        raw_result = self.cli.request({'action': 'fakeaction'})
+#        result = cjson.decode(raw_result)
+#        self.assertEqual('error', result['status'])
+#        self.assertEqual('validation', result['category'])
 
 
 if __name__ == '__main__':

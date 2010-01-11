@@ -146,7 +146,7 @@ class TariffTestCase(ServiceTestCase):
         tariff_data = result['tariff']
         self.assertEqual(parent_name, tariff_data['name'])
         self.assertEqual(self.service_set_name, tariff_data['service_set'])
-        self.assertEqual(None, tariff_data['parent_tariff'])
+        self.assertEqual([parent_name], tariff_data['tariffs_chain'])
         self.assertEqual(self.in_archive, tariff_data['in_archive'])
 
         data = {
@@ -159,7 +159,7 @@ class TariffTestCase(ServiceTestCase):
         tariff_data = result['tariff']
         self.assertEqual(child_name, tariff_data['name'])
         self.assertEqual(self.service_set_name, tariff_data['service_set'])
-        self.assertEqual(parent_name, tariff_data['parent_tariff'])
+        self.assertEqual([child_name, parent_name], tariff_data['tariffs_chain'])
         self.assertEqual(self.in_archive, tariff_data['in_archive'])
 
     def test_get_tariff_detailed(self):
@@ -179,7 +179,7 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(parent_name, tariff_data['name'])
         self.assertEqual(self.service_set_name, tariff_data['service_set'])
         self.assertEqual(sorted(self.service_types_names), tariff_data['types'])
-        self.assertEqual(None, tariff_data['parent_tariff'])
+        self.assertEqual([parent_name], tariff_data['tariffs_chain'])
         self.assertEqual(self.in_archive, tariff_data['in_archive'])
 
         data = {
@@ -193,7 +193,7 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(child_name, tariff_data['name'])
         self.assertEqual(self.service_set_name, tariff_data['service_set'])
         self.assertEqual(sorted(self.service_types_names), tariff_data['types'])
-        self.assertEqual(parent_name, tariff_data['parent_tariff'])
+        self.assertEqual([child_name, parent_name], tariff_data['tariffs_chain'])
         self.assertEqual(self.in_archive, tariff_data['in_archive'])
 
         empty_set_descr_name = 'empty'
@@ -212,7 +212,7 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(empty_set_descr_name, tariff_data['service_set'])
         self.assertEqual([], tariff_data['types'])
         self.assertEqual(False, tariff_data['in_archive'])
-        self.assertEqual(parent_name, tariff_data['parent_tariff'])
+        self.assertEqual([tariff_name, parent_name], tariff_data['tariffs_chain'])
 
     def test_view_tariffs(self):
         data = {
@@ -236,12 +236,12 @@ class TariffTestCase(ServiceTestCase):
         tariffs = result['tariffs']
         self.assertEqual(2, len(tariffs))
         self.assertEqual(
-            {'parent_tariff': None, 'name': parent_name,
+            {'tariffs_chain': [parent_name], 'name': parent_name,
                 'service_set': self.service_set_name, 'in_archive': self.in_archive},
             tariffs[0]
         )
         self.assertEqual(
-            {'parent_tariff': parent_name, 'name': child_name,
+            {'tariffs_chain': [child_name, parent_name], 'name': child_name,
                 'service_set': self.service_set_name, 'in_archive': self.in_archive},
             tariffs[1]
         )
@@ -271,12 +271,12 @@ class TariffTestCase(ServiceTestCase):
         tariffs = result['tariffs']
         self.assertEqual(2, len(tariffs))
         self.assertEqual(
-            {'parent_tariff': None, 'name': parent_name, 'service_set': self.service_set_name,
+            {'tariffs_chain': [parent_name], 'name': parent_name, 'service_set': self.service_set_name,
                 'in_archive': self.in_archive, 'types': types_names},
             tariffs[0]
         )
         self.assertEqual(
-            {'parent_tariff': parent_name, 'name': child_name, 'service_set': self.service_set_name,
+            {'tariffs_chain': [child_name, parent_name], 'name': child_name, 'service_set': self.service_set_name,
                 'in_archive': self.in_archive, 'types': types_names},
             tariffs[1]
         )

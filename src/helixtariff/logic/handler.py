@@ -1,7 +1,7 @@
 from functools import partial
 
 import helixcore.mapping.actions as mapping
-from helixcore.db.sql import Eq, In, And
+from helixcore.db.sql import Eq
 from helixcore.server.response import response_ok
 from helixcore.db.wrapper import EmptyResultSetError
 
@@ -253,19 +253,26 @@ class Handler(object):
         return response_ok()
 
     def _get_tariffs_data(self, curs, client_id, tariffs):
-        t_names = selector.get_tariffs_names_indexed_by_id(curs, client_id)
-        ss_names = selector.get_service_sets_names_indexed_by_id(curs, client_id)
+        service_sets_names = selector.get_service_sets_names_indexed_by_id(curs, client_id)
+        tariffs_names_idx = selector.get_tariffs_names_indexed_by_id(curs, client_id)
+        parents_names_idx = selector.get_tariffs_parent_ids_indexed_by_id(curs, client_id)
+
         result = []
         for t in tariffs:
+            ts_chain = self._calculate_tariffs_chain(t.id, tariffs_names_idx, parents_names_idx)
+            _, tariffs_names = map(list, zip(*ts_chain))
             result.append(
                 {
                     'name': t.name,
-                    'service_set': ss_names.get(t.service_set_id),
-                    'parent_tariff': t_names.get(t.parent_id),
+                    'service_set': service_sets_names.get(t.service_set_id),
+                    'tariffs_chain': tariffs_names,
                     'in_archive': t.in_archive,
                 }
             )
         return result
+
+    def _tariffs_chain_names(self, tariff_id, tariffs_ids, tariffs_names):
+        return tariffs_names[:tariffs_ids.index(tariff_id) + 1]
 
     @transaction()
     @authentificate
@@ -355,26 +362,31 @@ class Handler(object):
         return data[field] if field in data else default,
 
     # price
+    def _calculate_tariffs_chain(self, tariff_id, tariffs_names_idx, parents_names_idx):
+        '''
+        @return: tariffs chain for tariff.name as [(tariff_id, tariff_name)]
+        '''
+        tariffs_chain = []
+        tariffs_ids_set = set()
+        while True:
+            if tariff_id is None:
+                break
+            if tariff_id in tariffs_ids_set:
+                raise TariffCycleError('Tariff cycle found in chain %s' % tariffs_chain)
+            tariffs_chain.append((tariff_id, tariffs_names_idx[tariff_id]))
+            tariffs_ids_set.add(tariff_id)
+            tariff_id = parents_names_idx[tariff_id]
+        return tariffs_chain
+
     def _get_tariffs_chain(self, curs, client_id, tariff_name):
         '''
         @return: tariffs chain for tariff_name as [(tariff_id, tariff_name)]
         '''
-        tariff = selector.get_tariff(curs, client_id, tariff_name)
-        parents_idx = selector.get_tariffs_parent_ids_indexed_by_id(curs, client_id)
-        tariffs_idx = selector.get_tariffs_names_indexed_by_id(curs, client_id)
-
-        t_id = tariff.id
-        tariffs_chain = []
-        tariffs_ids_set = set()
-        while True:
-            if t_id is None:
-                break
-            if t_id in tariffs_ids_set:
-                raise TariffCycleError('Tariff cycle found in chain %s' % tariffs_chain)
-            tariffs_chain.append((t_id, tariffs_idx[t_id]))
-            tariffs_ids_set.add(t_id)
-            t_id = parents_idx[t_id]
-        return tariffs_chain
+        return self._calculate_tariffs_chain(
+            selector.get_tariff(curs, client_id, tariff_name).id,
+            selector.get_tariffs_names_indexed_by_id(curs, client_id),
+            selector.get_tariffs_parent_ids_indexed_by_id(curs, client_id)
+        )
 
     def _find_nearest_rule(self, indexed_rules, tariffs_ids, service_type_id):
         '''
@@ -439,7 +451,7 @@ class Handler(object):
                 rule = self._find_nearest_rule(indexed_rules, tariffs_ids, st_id)
                 response = engine.process(RequestPrice(rule, context))
                 prices.append({
-                    'tariffs_chain': tariffs_names[:tariffs_ids.index(rule.tariff_id) + 1],
+                    'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, tariffs_ids, tariffs_names),
                     'service_type': service_types_names_idx[rule.service_type_id],
                     'price': response.price,
                 })
