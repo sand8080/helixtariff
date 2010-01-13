@@ -1,23 +1,6 @@
-import re
 from helixcore.server.api import ApiCall
 from helixcore.validol.validol import Scheme, Text, Optional, Any, AnyOf
 
-iso_datetime_validator = re.compile(r"""
-    (\d{2,4})
-    (?:-?([01]\d))?
-    (?:-?([0-3]\d))?
-    (?:T
-        ([0-2]\d)
-        (?::?([0-5]\d))?
-        (?::?([0-5]\d))?
-        (?:[\,\.](\d+))?
-    )?
-    (Z|
-        ([+-][0-2]\d)
-        (?::?([0-5]\d))?
-    )?
-    """
-)
 
 NullableText = AnyOf(Text(), None)
 
@@ -181,7 +164,7 @@ GET_TARIFF = dict(
 GET_TARIFF_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
-        tariff=TARIFF_INFO
+        **TARIFF_INFO
     ),
     RESPONSE_STATUS_ERROR
 )
@@ -206,7 +189,7 @@ GET_TARIFF_DETAILED = GET_TARIFF
 GET_TARIFF_DETAILED_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
-        tariff=DETAILED_TARIFF_INFO
+        **DETAILED_TARIFF_INFO
     ),
     RESPONSE_STATUS_ERROR
 )
@@ -246,6 +229,26 @@ DELETE_RULE = dict(
         'service_type': Text(),
     },
     **AUTH_INFO
+)
+
+GET_RULE = dict(
+    {
+        'tariff': Text(),
+        'service_type': Text(),
+    },
+    **AUTH_INFO
+)
+
+GET_RULES_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'tariff': Text(),
+            'service_type': Text(),
+            'rule': Text(),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
 )
 
 VIEW_RULES = dict(
@@ -397,6 +400,9 @@ protocol = [
 
     ApiCall('delete_rule_request', Scheme(DELETE_RULE)),
     ApiCall('delete_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('get_rule_request', Scheme(GET_RULE)),
+    ApiCall('get_rule_response', Scheme(GET_RULES_RESPONSE)),
 
     ApiCall('view_rules_request', Scheme(VIEW_RULES)),
     ApiCall('view_rules_response', Scheme(VIEW_RULES_RESPONSE)),

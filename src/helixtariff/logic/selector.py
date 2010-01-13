@@ -6,7 +6,7 @@ from helixcore.db.wrapper import EmptyResultSetError, fetchall_dicts
 from helixtariff.domain.objects import ServiceType, \
     ServiceSet, ServiceSetRow, Tariff, Rule, Client
 from helixtariff.domain import security
-from helixtariff.error import ClientNotFound, RuleNotFound, TariffNotFound
+from helixtariff.error import ClientNotFound, TariffNotFound, RuleNotFound
 
 
 def get_service_type_by_name(curs, client_id, name, for_update=False):
@@ -86,7 +86,11 @@ def get_rule(curs, client_id, tariff_name, service_type_name, for_update=False):
 
     cond_tariff_id = Eq('tariff_id', Scoped(sel_tariff))
     cond_service_type_id = Eq('service_type_id', Scoped(sel_service_type))
-    return mapping.get(curs, Rule, cond=And(cond_tariff_id, cond_service_type_id), for_update=for_update)
+    try:
+        return mapping.get(curs, Rule, cond=And(cond_tariff_id, cond_service_type_id), for_update=for_update)
+    except EmptyResultSetError:
+        raise RuleNotFound("Rule not found in tariff '%s' for service_type '%s'" %
+            (tariff_name, service_type_name))
 
 
 def _gen_sel_service_type(name, client_id):

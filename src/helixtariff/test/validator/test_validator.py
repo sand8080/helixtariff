@@ -194,19 +194,19 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_request('get_tariff',
             {'login': 'l', 'password': 'p', 'name': 'приведи друга'})
         self.api.validate_response('get_tariff', {'status': 'error', 'category': 't', 'message': 'h'})
-        self.api.validate_response('get_tariff', {'status': 'ok', 'tariff':
-            {'name': 'n', 'service_set': 's', 'tariffs_chain': ['n'], 'in_archive': False}})
-        self.api.validate_response('get_tariff', {'status': 'ok', 'tariff':
-            {'name': 'n', 'service_set': 's', 'tariffs_chain': ['n', 't'], 'in_archive': True}})
+        self.api.validate_response('get_tariff', {'status': 'ok', 'name': 'n',
+            'service_set': 's', 'tariffs_chain': ['n'], 'in_archive': False})
+        self.api.validate_response('get_tariff', {'status': 'ok', 'name': 'n',
+            'service_set': 's', 'tariffs_chain': ['n', 't'], 'in_archive': True})
 
     def test_get_tariff_detailed(self):
         self.api.validate_request('get_tariff_detailed',
             {'login': 'l', 'password': 'p', 'name': 'приведи друга'})
         self.api.validate_response('get_tariff_detailed', {'status': 'error', 'category': 't', 'message': 'm'})
-        self.api.validate_response('get_tariff_detailed', {'status': 'ok', 'tariff':
-            {'name': 'n', 'service_set': 's', 'tariffs_chain': ['n'], 'types': ['one', 'two'], 'in_archive': False}})
-        self.api.validate_response('get_tariff_detailed', {'status': 'ok', 'tariff':
-            {'name': 'n', 'tariffs_chain': ['n', 't'], 'service_set': 's', 'types': [], 'in_archive': True}})
+        self.api.validate_response('get_tariff_detailed', {'status': 'ok', 'name': 'n',
+            'service_set': 's', 'tariffs_chain': ['n'], 'types': ['one', 'two'], 'in_archive': False})
+        self.api.validate_response('get_tariff_detailed', {'status': 'ok', 'name': 'n',
+            'tariffs_chain': ['n', 't'], 'service_set': 's', 'types': [], 'in_archive': True})
 
     def test_add_rule(self):
         self.api.validate_request(
@@ -237,16 +237,35 @@ class ValidatorTestCase(RootTestCase):
             'modify_rule', {'tariff': 'auto', 'service_type': 'ru'})
 
     def test_delete_rule(self):
-        self.api.validate_request(
-            'delete_rule',
-            {
-                'login': 'l',
-                'password': 'p',
-                'tariff': 'auto',
-                'service_type': 'ru'
-            }
-        )
+        self.api.validate_request('delete_rule', {'login': 'l', 'password': 'p',
+            'tariff': 'auto', 'service_type': 'ru'})
         self.validate_status_response('delete_rule')
+
+    def test_get_rule(self):
+        self.api.validate_request('get_rule', {'login': 'l', 'password': 'p',
+            'tariff': 'auto', 'service_type': 'ru'})
+        self.api.validate_response('get_rule',
+            {'status': 'error', 'category': 't', 'message': 'm'})
+        self.api.validate_response('get_rule', {'status': 'ok', 'tariff': 't',
+            'service_type': 't', 'rule': 'r'})
+
+    def test_view_rules(self):
+        self.api.validate_request('view_rules',
+            {'login': 'l', 'password': 'p', 'tariff': 't'})
+        self.api.validate_response('view_rules',
+            {'status': 'error', 'category': 't', 'message': 'm'})
+        self.api.validate_response('view_rules', {'status': 'ok', 'tariff': 't', 'rules': []})
+        self.api.validate_response('view_rules', {'status': 'ok', 'tariff': 't',
+            'rules': [
+                {'service_type': 't', 'rule': 'r'},
+            ]
+        })
+        self.api.validate_response('view_rules', {'status': 'ok', 'tariff': 't',
+            'rules': [
+                {'service_type': 't', 'rule': 'r'},
+                {'service_type': 't', 'rule': 'r'},
+            ]
+        })
 
     def test_get_domain_service_price(self):
         self.api.validate_request('get_price',
@@ -334,24 +353,6 @@ class ValidatorTestCase(RootTestCase):
             'tariffs': [
                 {'name': 'n', 'service_set': 's', 'tariffs_chain': ['n'], 'in_archive': False, 'types': ['a', 'b']},
                 {'name': 'n', 'service_set': 's', 'tariffs_chain': ['n', 't'], 'in_archive': True, 'types': []},
-            ]
-        })
-
-    def test_view_rules(self):
-        self.api.validate_request('view_rules',
-            {'login': 'l', 'password': 'p', 'tariff': 't'})
-        self.api.validate_response('view_rules',
-            {'status': 'error', 'category': 't', 'message': 'm'})
-        self.api.validate_response('view_rules', {'status': 'ok', 'tariff': 't', 'rules': []})
-        self.api.validate_response('view_rules', {'status': 'ok', 'tariff': 't',
-            'rules': [
-                {'service_type': 't', 'rule': 'r'},
-            ]
-        })
-        self.api.validate_response('view_rules', {'status': 'ok', 'tariff': 't',
-            'rules': [
-                {'service_type': 't', 'rule': 'r'},
-                {'service_type': 't', 'rule': 'r'},
             ]
         })
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from helixtariff.error import RuleNotFound
 import unittest
 from functools import partial
 
@@ -64,7 +65,7 @@ if context.get_balance(request.customer_id) > 500: price -= 30
             'service_type': self.service_types_names[0]
         }
         handle_action('delete_rule', data)
-        self.assertRaises(EmptyResultSetError, self.get_rule, self.get_root_client().id,
+        self.assertRaises(RuleNotFound, self.get_rule, self.get_root_client().id,
             self.tariff_name, self.service_types_names[0])
 
     def test_view_rules(self):
@@ -97,6 +98,33 @@ if context.get_balance(request.customer_id) > 500: price -= 30
         self.assertEqual('ok', result['status'])
         self.assertEqual(self.tariff_name, result['tariff'])
         self.assertEqual(expected_rules, result['rules'])
+
+    def test_get_rule(self):
+        client = self.get_client_by_login(self.test_client_login)
+        data = {
+            'login': client.login,
+            'password': self.test_client_password,
+            'tariff': self.tariff_name,
+            'service_type': self.service_types_names[0],
+        }
+        self.assertRaises(RuleNotFound, handle_action, 'get_rule', data)
+
+        for i, n in enumerate(self.service_types_names):
+            r = 'price = %03d.%02d' % (i, i)
+            self.add_rule(self.tariff_name, n, r)
+
+            data = {
+                'login': client.login,
+                'password': self.test_client_password,
+                'tariff': self.tariff_name,
+                'service_type': n,
+            }
+            response = handle_action('get_rule', data)
+
+            self.assertEqual('ok', response['status'])
+            self.assertEqual(self.tariff_name, response['tariff'])
+            self.assertEqual(n, response['service_type'])
+            self.assertEqual(r, response['rule'])
 
 
 if __name__ == '__main__':

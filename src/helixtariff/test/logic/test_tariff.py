@@ -141,26 +141,22 @@ class TariffTestCase(ServiceTestCase):
             'password': self.test_client_password,
             'name': parent_name
         }
-        result = handle_action('get_tariff', data)
-        self.assertTrue('tariff' in result)
-        tariff_data = result['tariff']
-        self.assertEqual(parent_name, tariff_data['name'])
-        self.assertEqual(self.service_set_name, tariff_data['service_set'])
-        self.assertEqual([parent_name], tariff_data['tariffs_chain'])
-        self.assertEqual(self.in_archive, tariff_data['in_archive'])
+        response = handle_action('get_tariff', data)
+        self.assertEqual(parent_name, response['name'])
+        self.assertEqual(self.service_set_name, response['service_set'])
+        self.assertEqual([parent_name], response['tariffs_chain'])
+        self.assertEqual(self.in_archive, response['in_archive'])
 
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
             'name': child_name
         }
-        result = handle_action('get_tariff', data)
-        self.assertTrue('tariff' in result)
-        tariff_data = result['tariff']
-        self.assertEqual(child_name, tariff_data['name'])
-        self.assertEqual(self.service_set_name, tariff_data['service_set'])
-        self.assertEqual([child_name, parent_name], tariff_data['tariffs_chain'])
-        self.assertEqual(self.in_archive, tariff_data['in_archive'])
+        response = handle_action('get_tariff', data)
+        self.assertEqual(child_name, response['name'])
+        self.assertEqual(self.service_set_name, response['service_set'])
+        self.assertEqual([child_name, parent_name], response['tariffs_chain'])
+        self.assertEqual(self.in_archive, response['in_archive'])
 
     def test_get_tariff_detailed(self):
         parent_name = 'parent'
@@ -173,28 +169,24 @@ class TariffTestCase(ServiceTestCase):
             'password': self.test_client_password,
             'name': parent_name
         }
-        result = handle_action('get_tariff_detailed', data)
-        self.assertTrue('tariff' in result)
-        tariff_data = result['tariff']
-        self.assertEqual(parent_name, tariff_data['name'])
-        self.assertEqual(self.service_set_name, tariff_data['service_set'])
-        self.assertEqual(sorted(self.service_types_names), tariff_data['types'])
-        self.assertEqual([parent_name], tariff_data['tariffs_chain'])
-        self.assertEqual(self.in_archive, tariff_data['in_archive'])
+        response = handle_action('get_tariff_detailed', data)
+        self.assertEqual(parent_name, response['name'])
+        self.assertEqual(self.service_set_name, response['service_set'])
+        self.assertEqual(sorted(self.service_types_names), response['types'])
+        self.assertEqual([parent_name], response['tariffs_chain'])
+        self.assertEqual(self.in_archive, response['in_archive'])
 
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
             'name': child_name
         }
-        result = handle_action('get_tariff_detailed', data)
-        self.assertTrue('tariff' in result)
-        tariff_data = result['tariff']
-        self.assertEqual(child_name, tariff_data['name'])
-        self.assertEqual(self.service_set_name, tariff_data['service_set'])
-        self.assertEqual(sorted(self.service_types_names), tariff_data['types'])
-        self.assertEqual([child_name, parent_name], tariff_data['tariffs_chain'])
-        self.assertEqual(self.in_archive, tariff_data['in_archive'])
+        response = handle_action('get_tariff_detailed', data)
+        self.assertEqual(child_name, response['name'])
+        self.assertEqual(self.service_set_name, response['service_set'])
+        self.assertEqual(sorted(self.service_types_names), response['types'])
+        self.assertEqual([child_name, parent_name], response['tariffs_chain'])
+        self.assertEqual(self.in_archive, response['in_archive'])
 
         empty_set_descr_name = 'empty'
         tariff_name = 'no services'
@@ -205,14 +197,12 @@ class TariffTestCase(ServiceTestCase):
             'password': self.test_client_password,
             'name': tariff_name
         }
-        result = handle_action('get_tariff_detailed', data)
-        self.assertTrue('tariff' in result)
-        tariff_data = result['tariff']
-        self.assertEqual(tariff_name, tariff_data['name'])
-        self.assertEqual(empty_set_descr_name, tariff_data['service_set'])
-        self.assertEqual([], tariff_data['types'])
-        self.assertEqual(False, tariff_data['in_archive'])
-        self.assertEqual([tariff_name, parent_name], tariff_data['tariffs_chain'])
+        response = handle_action('get_tariff_detailed', data)
+        self.assertEqual(tariff_name, response['name'])
+        self.assertEqual(empty_set_descr_name, response['service_set'])
+        self.assertEqual([], response['types'])
+        self.assertEqual(False, response['in_archive'])
+        self.assertEqual([tariff_name, parent_name], response['tariffs_chain'])
 
     def test_view_tariffs(self):
         data = {

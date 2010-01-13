@@ -3,7 +3,7 @@ from functools import partial
 import helixcore.mapping.actions as mapping
 from helixcore.db.sql import Eq
 from helixcore.server.response import response_ok
-from helixcore.db.wrapper import EmptyResultSetError
+from helixcore.db.wrapper import EmptyResultSetError, SelectedMoreThanOneRow
 
 from helixtariff.conf.db import transaction
 from helixtariff.domain.objects import Client, ServiceType, \
@@ -280,7 +280,7 @@ class Handler(object):
         client_id = data['client_id']
         tariff = selector.get_tariff(curs, client_id, data['name'])
         tariffs_data = self._get_tariffs_data(curs, client_id, [tariff])
-        return response_ok(tariff=tariffs_data[0])
+        return response_ok(**tariffs_data[0])
 
     @transaction()
     @authentificate
@@ -291,7 +291,7 @@ class Handler(object):
         tariff_data = tariffs_data[0]
         types = selector.get_service_types_by_service_set(curs, client_id, tariff_data['service_set'])
         tariff_data['types'] = sorted([t.name for t in types])
-        return response_ok(tariff=tariff_data)
+        return response_ok(**tariff_data)
 
     @transaction()
     @authentificate
@@ -346,14 +346,23 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    def get_rule(self, data, curs=None):
+        client_id = data['client_id']
+        tariff_name = data['tariff']
+        service_type_name = data['service_type']
+        rule = selector.get_rule(curs, client_id, tariff_name, service_type_name)
+        return response_ok(tariff=tariff_name, service_type=service_type_name, rule=rule.rule)
+
+    @transaction()
+    @authentificate
     def view_rules(self, data, curs=None):
         client_id = data['client_id']
         tariff = selector.get_tariff(curs, client_id, data['tariff'])
-        st_names = selector.get_service_types_names_indexed_by_id(curs, client_id)
+        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
         rules = []
         for r in selector.get_rules(curs, client_id, tariff.name):
             rules.append({
-                'service_type': st_names[r.service_type_id],
+                'service_type': st_names_idx[r.service_type_id],
                 'rule': r.rule
             })
         return response_ok(tariff=tariff.name, rules=rules)

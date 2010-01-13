@@ -30,11 +30,10 @@ class Client(ClientApplication):
             'name': name, 'service_set': service_set_name, 'in_archive': False, 'parent_tariff': None})
 
     def get_tariff_detailed(self, name):
-        response = cjson.decode(
+        return cjson.decode(
             self.request({'action': 'get_tariff_detailed', 'login': self.login, 'password': self.password,
                 'name': name})
         )
-        return response['tariff']
 
     def view_tariffs(self):
         return self.request({'action': 'view_tariffs', 'login': self.login, 'password': self.password})
