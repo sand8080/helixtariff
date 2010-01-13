@@ -1,4 +1,4 @@
-from decimal import Decimal, Context, DecimalException
+from decimal import Decimal
 
 
 class PriceProcessingError(Exception):
@@ -27,20 +27,11 @@ class RequestPrice(object):
 
 class ResponsePrice(object):
     def __init__(self, price):
-        self.price = price
+        try:
+            self.price = Decimal(price)
+        except TypeError, e:
+            raise PriceProcessingError(e)
 
     def check_valid(self):
-        if self._price is None:
+        if self.price is None:
             raise PriceProcessingError('Price was not processed in rules.')
-
-    def get_price(self):
-        return '%s' % self._price
-
-    def set_price(self, price):
-        try:
-            self._price = Decimal('%s' % price, Context(prec=2)) #IGNORE:W0201
-        except DecimalException:
-            raise PriceProcessingError('Invalid price value: %s.' % price)
-
-    # Hiding price for Decimal precision processing
-    price = property(get_price, set_price)
