@@ -267,7 +267,7 @@ class ValidatorTestCase(RootTestCase):
             ]
         })
 
-    def test_get_domain_service_price(self):
+    def test_get_price(self):
         self.api.validate_request('get_price',
             {'login': 'l', 'password': 'p', 'tariff': 't', 'service_type': 's'})
         self.api.validate_request('get_price',
@@ -286,9 +286,11 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m', 'n'],
             'service_type': 's', 'price': '10.09', 'context': {'period': 1, 'customer_id': 'l'}})
 
-    def test_get_domain_service_price_invalid(self):
+    def test_get_invalid(self):
         self.assertRaises(ValidationError, self.api.validate_request, 'get_price',
             {'login': 'l', 'tariff_name': 't', 'service_type_name': 's',})
+        self.assertRaises(ValidationError, self.api.validate_response, 'get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m', 'n'],
+            'service_type': 's', 'price': 'ERROR_HERE', 'context': {'period': 1, 'customer_id': 'l'}})
 
     def test_view_service_set(self):
         self.api.validate_request('view_service_set',
