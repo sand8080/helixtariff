@@ -247,6 +247,5 @@ class PriceTestCase(ServiceTestCase):
         }
         self.assertRaises(RuleNotFound, handle_action, 'view_prices', data)
 
-
 if __name__ == '__main__':
     unittest.main()
