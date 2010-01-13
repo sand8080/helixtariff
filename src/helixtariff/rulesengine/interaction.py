@@ -27,11 +27,11 @@ class RequestPrice(object):
 
 class ResponsePrice(object):
     def __init__(self, price):
+        if price is None:
+            raise PriceProcessingError('Price was not processed in rules.')
         try:
-            self.price = Decimal(price)
+            str_price = '%s' % price
+            Decimal(str_price)
+            self.price = str_price
         except TypeError, e:
             raise PriceProcessingError(e)
-
-    def check_valid(self):
-        if self.price is None:
-            raise PriceProcessingError('Price was not processed in rules.')

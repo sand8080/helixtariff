@@ -9,9 +9,5 @@ class EngineError(HelixtariffError):
 
 def process(request):
     price = None
-
     exec request.rule.rule #IGNORE:W0122
-
-    response = ResponsePrice(price)
-    response.check_valid()
-    return response
+    return ResponsePrice(price)
