@@ -1,3 +1,4 @@
+# coding=utf-8
 from eventlet import api, util, coros
 from decimal import Decimal
 util.wrap_socket_with_coroutine_socket()
@@ -21,7 +22,8 @@ api.spawn(Server.run)
 class ApplicationTestCase(DbBasedTestCase):
     def setUp(self):
         super(ApplicationTestCase, self).setUp()
-        self.cli = Client(settings.server_host, settings.server_port, '%s' % datetime.datetime.now(), 'qazwsx')
+        self.cli = Client(settings.server_host, settings.server_port,
+            u'егор %s' % datetime.datetime.now(), 'qazwsx')
 
     def check_status_ok(self, raw_result):
         self.assertEqual('ok', cjson.decode(raw_result)['status'])
@@ -112,7 +114,6 @@ class ApplicationTestCase(DbBasedTestCase):
             print
             print 'Prices added for tariff %s' % tariff_name
         print 'Tariffs added'
-
         self.view_tariffs(repeats=1)
         self.view_tariffs(repeats=50)
         self.view_detailed_tariffs(repeats=1)
@@ -137,14 +138,14 @@ class ApplicationTestCase(DbBasedTestCase):
 
         pool.wait_all()
 
-#    def test_ping_ok(self):
-#        self.check_status_ok(self.cli.ping())
-#
-#    def test_invalid_request(self):
-#        raw_result = self.cli.request({'action': 'fakeaction'})
-#        result = cjson.decode(raw_result)
-#        self.assertEqual('error', result['status'])
-#        self.assertEqual('validation', result['category'])
+    def test_ping_ok(self):
+        self.check_status_ok(self.cli.ping())
+
+    def test_invalid_request(self):
+        raw_result = self.cli.request({'action': 'fakeaction'})
+        result = cjson.decode(raw_result)
+        self.assertEqual('error', result['status'])
+        self.assertEqual('validation', result['category'])
 
 
 if __name__ == '__main__':

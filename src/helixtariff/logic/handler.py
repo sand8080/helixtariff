@@ -3,7 +3,7 @@ from functools import partial
 import helixcore.mapping.actions as mapping
 from helixcore.db.sql import Eq
 from helixcore.server.response import response_ok
-from helixcore.db.wrapper import EmptyResultSetError, SelectedMoreThanOneRow
+from helixcore.db.wrapper import EmptyResultSetError
 
 from helixtariff.conf.db import transaction
 from helixtariff.domain.objects import Client, ServiceType, \
@@ -13,8 +13,7 @@ from helixtariff.rulesengine.checker import RuleChecker
 from helixtariff.rulesengine import engine
 from helixtariff.rulesengine.interaction import RequestPrice
 from helixtariff.domain import security
-from helixtariff.error import TariffCycleError, ServiceTypeNotFound,\
-    RuleNotFound
+from helixtariff.error import TariffCycleError, ServiceTypeNotFound, RuleNotFound
 
 
 def authentificate(method):
