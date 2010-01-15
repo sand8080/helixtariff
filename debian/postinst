@@ -10,7 +10,7 @@ case "$1" in
             . /usr/share/debconf/confmodule
             db_version 2.0
 
-            db_get helixbilling/hostname
+            db_get helixtariff/hostname
             # hostname value now in RET
             . /opt/helixutils/substitute.sh
             echo "Setting $RET as server_name into nginx config"
