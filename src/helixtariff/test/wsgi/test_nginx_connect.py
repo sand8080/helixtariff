@@ -27,8 +27,8 @@ class NginxTestCase(DbBasedTestCase):
         self.cli = Client(self.nginx_host, self.nginx_port, '%s' % datetime.datetime.now(),
             'qazwsx', protocol='https')
 
-    def check_status_ok(self, raw_result):
-        self.assertEqual('ok', cjson.decode(raw_result)['status'])
+    def check_status_ok(self, response):
+        self.assertEqual('ok', response['status'])
 
     def ping(self):
         return self.cli.ping()
@@ -42,11 +42,10 @@ class NginxTestCase(DbBasedTestCase):
         self.ping_loading(repeats=50)
 
     def test_get_empty_service_types(self):
-        raw_result = self.cli.get_service_types()
-        result = cjson.decode(raw_result)
-        self.assertEqual('error', result['status'])
-        self.cli.add_client()
-        self.check_status_ok(self.cli.get_service_types())
+        response = self.cli.get_service_types() #IGNORE:E1101
+        self.assertEqual('error', response['status'])
+        self.cli.add_client() #IGNORE:E1101
+        self.check_status_ok(self.cli.get_service_types()) #IGNORE:E1101
 
     def test_invalid_request(self):
         raw_result = self.cli.request({'action': 'fakeaction'})
