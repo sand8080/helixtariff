@@ -115,7 +115,7 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def rename_service_set(self, data, curs=None):
+    def modify_service_set(self, data, curs=None):
         loader = partial(selector.get_service_set_by_name, curs, data['client_id'],
             data['name'], for_update=True)
         self.update_obj(curs, data, loader)
@@ -177,12 +177,6 @@ class Handler(object):
 
         return response_ok()
 
-    @transaction()
-    @authentificate
-    def view_service_set(self, data, curs=None):
-        service_set, types = self._get_service_set_info(curs, data['client_id'], data['name'])
-        return response_ok(name=service_set.name, types=sorted([t.name for t in types]))
-
     def _get_service_sets_types(self, curs, client_id):
         '''
         @return: dictionary {service_set_name: [types_names]}
@@ -200,6 +194,12 @@ class Handler(object):
         for l in service_sets_info.values():
             l.sort()
         return service_sets_info
+
+    @transaction()
+    @authentificate
+    def get_service_set(self, data, curs=None):
+        service_set, types = self._get_service_set_info(curs, data['client_id'], data['name'])
+        return response_ok(name=service_set.name, types=sorted([t.name for t in types]))
 
     @transaction()
     @authentificate

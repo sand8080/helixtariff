@@ -20,7 +20,7 @@ class ServiceSetTestCase(ServiceTestCase):
     def test_add_service_sets(self):
         pass
 
-    def test_rename_service_set(self):
+    def test_modify_service_set(self):
         name = self.service_sets[0]
         client = self.get_client_by_login(self.test_client_login)
         s_old = self.get_service_set_by_name(client.id, name)
@@ -32,7 +32,7 @@ class ServiceSetTestCase(ServiceTestCase):
             'name': name,
             'new_name': new_name
         }
-        handle_action('rename_service_set', data)
+        handle_action('modify_service_set', data)
 
         s_new = self.get_service_set_by_name(client.id, new_name)
         self.assertEqual(s_old.id, s_new.id)
@@ -80,10 +80,10 @@ class ServiceSetTestCase(ServiceTestCase):
         self.delete_from_service_set(service_set_name, self.service_types_names[1:])
         self.delete_from_service_set(service_set_name, self.service_types_names)
 
-    def test_view_service_set(self):
+    def test_get_service_set(self):
         service_set_name = self.service_sets[0]
         self.add_to_service_set(service_set_name, self.service_types_names)
-        result = handle_action('view_service_set', {'login': self.test_client_login,
+        result = handle_action('get_service_set', {'login': self.test_client_login,
             'password': self.test_client_password, 'name': service_set_name,})
         self.assertEqual('ok', result['status'])
         self.assertEqual(service_set_name, result['name'])

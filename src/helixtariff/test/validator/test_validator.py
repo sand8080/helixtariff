@@ -68,9 +68,9 @@ class ValidatorTestCase(RootTestCase):
         self.validate_status_response('add_service_set')
 
     def test_rename_service_set(self):
-        self.api.validate_request('rename_service_set', {'login': 'l', 'password': 'p',
+        self.api.validate_request('modify_service_set', {'login': 'l', 'password': 'p',
             'name': 'basic', 'new_name': 'restricted'})
-        self.validate_status_response('rename_service_set')
+        self.validate_status_response('modify_service_set')
 
     def test_delete_service_set(self):
         self.api.validate_request('delete_service_set', {'login': 'l', 'password': 'p', 'name': 'basic'})
@@ -293,14 +293,14 @@ class ValidatorTestCase(RootTestCase):
             'service_type': 's', 'price': 'ERROR_HERE', 'context': {'period': 1, 'customer_id': 'l'}})
 
     def test_view_service_set(self):
-        self.api.validate_request('view_service_set',
+        self.api.validate_request('get_service_set',
             {'login': 'l', 'password': 'p', 'name': 't'})
-        self.api.validate_response('view_service_set',
+        self.api.validate_response('get_service_set',
             {'status': 'error', 'category': 'test', 'message': 'happens'})
-        self.api.validate_response('view_service_set', {'status': 'ok', 'name': 'n', 'types': []})
-        self.api.validate_response('view_service_set', {'status': 'ok', 'name': 'n',
+        self.api.validate_response('get_service_set', {'status': 'ok', 'name': 'n', 'types': []})
+        self.api.validate_response('get_service_set', {'status': 'ok', 'name': 'n',
             'types': ['n']})
-        self.api.validate_response('view_service_set', {'status': 'ok', 'name': 'n',
+        self.api.validate_response('get_service_set', {'status': 'ok', 'name': 'n',
             'types': ['n', 'm']})
 
     def test_view_service_sets(self):

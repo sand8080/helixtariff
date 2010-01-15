@@ -54,6 +54,22 @@ class NginxTestCase(DbBasedTestCase):
         self.assertEqual('error', result['status'])
         self.assertEqual('validation', result['category'])
 
+    def test_service_set(self):
+        login = u'перес'
+        password = 'qazwsx'
+        service_type = u'помощь зала'
+        service_set = u'программа помощи малому бизнесу'
+        self.cli.request({'action': 'add_client', 'login': login, 'password': password})
+        self.cli.request({'action': 'add_service_type', 'login': login, 'password': password,
+            'name': service_type})
+        self.cli.request({'action': 'add_service_set', 'login': login, 'password': password,
+            'name': service_set})
+        self.cli.request({'action': 'add_to_service_set', 'login': login, 'password': password,
+            'name': service_set, 'types': [service_type]})
+        self.cli.request({'action': 'get_service_set', 'login': login, 'password': password,
+            'name': service_set})
+        self.cli.request({'action': 'view_service_sets', 'login': login, 'password': password})
+
     def test_unicode(self):
         login = u'василий'
         password = 'qazwsx'

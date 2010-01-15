@@ -66,7 +66,7 @@ ADD_SERVICE_SET = dict(
     **AUTH_INFO
 )
 
-RENAME_SERVICE_SET = dict(
+MODIFY_SERVICE_SET = dict(
     {
         'name': Text(),
         'new_name': Text(),
@@ -100,12 +100,12 @@ SERVICE_SET_INFO = dict({
     'types': [Text()],
 })
 
-VIEW_SERVICE_SET = dict(
+GET_SERVICE_SET = dict(
     {'name': Text()},
     **AUTH_INFO
 )
 
-VIEW_SERVICE_SET_RESPONSE = AnyOf(
+GET_SERVICE_SET_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **SERVICE_SET_INFO
@@ -351,8 +351,8 @@ protocol = [
     ApiCall('add_service_set_request', Scheme(ADD_SERVICE_SET)),
     ApiCall('add_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('rename_service_set_request', Scheme(RENAME_SERVICE_SET)),
-    ApiCall('rename_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('modify_service_set_request', Scheme(MODIFY_SERVICE_SET)),
+    ApiCall('modify_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     ApiCall('delete_service_set_request', Scheme(DELETE_SERVICE_SET)),
     ApiCall('delete_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
@@ -363,8 +363,8 @@ protocol = [
     ApiCall('delete_from_service_set_request', Scheme(DELETE_FROM_SERVICE_SET)),
     ApiCall('delete_from_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('view_service_set_request', Scheme(VIEW_SERVICE_SET)),
-    ApiCall('view_service_set_response', Scheme(VIEW_SERVICE_SET_RESPONSE)),
+    ApiCall('get_service_set_request', Scheme(GET_SERVICE_SET)),
+    ApiCall('get_service_set_response', Scheme(GET_SERVICE_SET_RESPONSE)),
 
     ApiCall('view_service_sets_request', Scheme(VIEW_SERVICE_SETS)),
     ApiCall('view_service_sets_response', Scheme(VIEW_SERVICE_SETS_RESPONSE)),
