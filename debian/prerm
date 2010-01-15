@@ -4,6 +4,6 @@ set -e
 
 . /usr/share/debconf/confmodule
 . /usr/share/dbconfig-common/dpkg/prerm.pgsql
-dbc_go helixbilling $@
+dbc_go helixtariff $@
 
 #DEBHELPER#
