@@ -1,68 +1,21 @@
 from helixcore.test.util import ClientApplication
-import cjson
 
 
 class Client(ClientApplication):
     def __init__(self, host, port, login, password, protocol='http'):
         super(Client, self).__init__(host, port, login, password, protocol=protocol)
 
-    def ping(self):
-        return self.request({'action': 'ping'})
 
-    def add_client(self):
-        return self.request({'action': 'add_client', 'login': self.login,
-            'password': self.password})
+def make_api_call(f_name):
+    def m(self, **kwargs):
+        kwargs['action'] = f_name
+        return self.request(kwargs)
+    m.__name__ = f_name #IGNORE:W0621
+    return m
 
-    def add_service_type(self, name):
-        return self.request({'action': 'add_service_type', 'login': self.login,
-            'password': self.password, 'name': name})
 
-    def add_service_set(self, name):
-        return self.request({'action': 'add_service_set', 'login': self.login, 'password': self.password,
-            'name': name})
-
-    def add_to_service_set(self, name, types):
-        return self.request({'action': 'add_to_service_set', 'login': self.login, 'password': self.password,
-            'name': name, 'types': types})
-
-    def add_tariff(self, name, service_set_name):
-        return self.request({'action': 'add_tariff', 'login': self.login, 'password': self.password,
-            'name': name, 'service_set': service_set_name, 'in_archive': False, 'parent_tariff': None})
-
-    def get_tariff_detailed(self, name):
-        return cjson.decode(
-            self.request({'action': 'get_tariff_detailed', 'login': self.login, 'password': self.password,
-                'name': name})
-        )
-
-    def view_tariffs(self):
-        return self.request({'action': 'view_tariffs', 'login': self.login, 'password': self.password})
-
-    def view_detailed_tariffs(self):
-        return self.request({'action': 'view_detailed_tariffs', 'login': self.login, 'password': self.password})
-
-    def add_rule(self, tariff_name, service_type_name, rule):
-        return self.request({'action': 'add_rule', 'login': self.login, 'password': self.password,
-            'tariff': tariff_name, 'service_type': service_type_name, 'rule': rule})
-
-    def get_price(self, tariff_name, service_type_name):
-        return self.request({'action': 'get_price', 'login': self.login,
-            'password': self.password, 'tariff': tariff_name, 'service_type': service_type_name})
-
-    def view_prices(self, tariff_name):
-        return self.request({'action': 'view_prices', 'login': self.login,
-            'password': self.password, 'tariff': tariff_name})
-
-    def get_service_types(self):
-        return self.request({'action': 'get_service_types', 'login': self.login, 'password': self.password})
-
-    def view_service_set(self, name):
-        return self.request({'action': 'view_service_set', 'login': self.login, 'password': self.password,
-            'name': name})
-
-    def view_service_sets(self):
-        return self.request({'action': 'view_service_sets', 'login': self.login, 'password': self.password})
-
-    def view_rules(self, tariff_name):
-        return self.request({'action': 'view_rules', 'login': self.login, 'password': self.password,
-            'tariff': tariff_name})
+for func_name in ['ping', 'add_client', 'add_service_type', 'add_service_set', 'add_to_service_set',
+    'get_service_set', 'view_service_sets', 'add_tariff', 'get_tariff_detailed', 'view_tariffs',
+    'view_detailed_tariffs', 'add_rule', 'get_price', 'view_prices', 'get_service_type',
+    'view_rules']:
+    setattr(Client, func_name, make_api_call(func_name))
