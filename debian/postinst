@@ -18,6 +18,7 @@ case "$1" in
 
             if [ -f /usr/share/dbconfig-common/dpkg/postinst.pgsql  ]; then
 
+                echo "Configuring helixtariff database"
                 . /usr/share/dbconfig-common/dpkg/postinst.pgsql
 
                 dbc_generate_include='template:/usr/share/python-support/helixtariff/helixtariff/conf/settings.py'
@@ -30,10 +31,12 @@ case "$1" in
 
                 dbc_go helixtariff $@
 
+                echo "Helixtariff database configured"
             fi
         fi
 
         if which update-python-modules >/dev/null 2>&1; then
+            echo "Updating python modules"
             update-python-modules  helixtariff
         fi
 
