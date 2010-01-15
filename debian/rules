@@ -53,7 +53,7 @@ install: build
 	find $(DESTDIR_SHARE) -name '*pyc' -exec rm {} \;
 	install src/helixtariff_run $(FAKE_ROOT)/usr/bin
 	install -m 0644 supervisor-config/helixtariff.ini $(FAKE_ROOT)/etc/supervisor/process-available
-	cp $(DESTDIR)/helixtariff/conf/settings.py $(DESTDIR_SHARE)/settings.py.tpl
+	mv $(DESTDIR)/helixtariff/conf/settings.py $(DESTDIR_SHARE)/settings.py.tpl
 	install -d -m 0755 $(FAKE_ROOT)/etc/nginx/sites-available
 	cp -r nginx/* $(FAKE_ROOT)/etc/nginx/sites-available
 
