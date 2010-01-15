@@ -109,6 +109,13 @@ class ServiceSetTestCase(ServiceTestCase):
             else:
                 self.assertEqual([], i['types'])
 
+    def test_view_empty_service_sets(self):
+        login = 'test'
+        password = 'qazwsx'
+        self.add_client(login, password)
+        response = handle_action('view_service_sets', {'login': login, 'password': password})
+        print response
+
 
 if __name__ == '__main__':
     unittest.main()
