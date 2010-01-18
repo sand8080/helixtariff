@@ -114,7 +114,9 @@ class ServiceSetTestCase(ServiceTestCase):
         password = 'qazwsx'
         self.add_client(login, password)
         response = handle_action('view_service_sets', {'login': login, 'password': password})
-        print response
+        self.assertEqual('ok', response['status'])
+        self.assertEqual([], response['service_sets'])
+
 
 
 if __name__ == '__main__':

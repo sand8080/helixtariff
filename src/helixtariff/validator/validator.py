@@ -1,5 +1,5 @@
 from helixcore.server.api import ApiCall
-from helixcore.validol.validol import Scheme, Text, Optional, Any, AnyOf, DecimalText
+from helixcore.validol.validol import Scheme, Text, Optional, FlatDict, AnyOf, DecimalText
 
 
 NullableText = AnyOf(Text(), None)
@@ -288,7 +288,7 @@ GET_PRICE_RESPONSE = AnyOf(
             'tariff': Text(),
             'tariffs_chain': [Text()],
             'service_type': Text(),
-            'price': Text(),
+            'price': DecimalText(),
             'context': FlatDict(),
         }
     ),

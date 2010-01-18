@@ -25,44 +25,47 @@ class ApplicationTestCase(DbBasedTestCase):
         self.cli = Client(settings.server_host, settings.server_port,
             u'егор %s' % datetime.datetime.now(), 'qazwsx')
 
-    def check_status_ok(self, raw_result):
-        self.assertEqual('ok', cjson.decode(raw_result)['status'])
+    def check_status_ok(self, response):
+        self.assertEqual('ok', response['status'])
 
     def load_detailed_tariff_data(self, tariffs_names):
         tariffs = {}
         for n in tariffs_names:
-            tariffs[n] = self.cli.get_tariff_detailed(n) #IGNORE:E1101
+            tariffs[n] = self.cli.get_tariff_detailed(login=self.cli.login, #IGNORE:E1101
+                password=self.cli.password, name=n)
         return tariffs
 
     @profile
     def get_tariff_detailed(self, tariffs_names, repeats=1): #IGNORE:W0613
         tariff_name = select_random(tariffs_names)
-        return self.cli.get_tariff_detailed(tariff_name) #IGNORE:E1101
+        return self.cli.get_tariff_detailed(login=self.cli.login, password=self.cli.password, #IGNORE:E1101
+            name=tariff_name)
 
     @profile
     def view_tariffs(self, repeats=1): #IGNORE:W0613
-        return self.cli.view_tariffs() #IGNORE:E1101
+        return self.cli.view_tariffs(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
 
     @profile
     def view_detailed_tariffs(self, repeats=1): #IGNORE:W0613
-        return self.cli.view_detailed_tariffs() #IGNORE:E1101
+        return self.cli.view_detailed_tariffs(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
 
     @profile
     def get_price(self, tariffs_detailed, repeats=1): #IGNORE:W0613
         tariff_name = select_random(tariffs_detailed.keys())
         service_types_names = tariffs_detailed[tariff_name]['types']
-        return self.cli.get_price(tariff_name, select_random(service_types_names)) #IGNORE:E1101
+        return self.cli.get_price(login=self.cli.login, password=self.cli.password, #IGNORE:E1101
+            tariff=tariff_name, service_type=select_random(service_types_names))
 
     @profile
-    def view_prices(self, tariffs_detailed, repeats=1): #IGNORE:W0613
-        tariff_name = select_random(tariffs_detailed.keys())
-        return self.cli.view_prices(tariff_name)  #IGNORE:E1101
+    def view_all_prices(self, tariffs_detailed, repeats=1): #IGNORE:W0613
+        for n in tariffs_detailed.keys():
+            self.cli.view_prices(login=self.cli.login, password=self.cli.password, #IGNORE:E1101
+                tariff=n)
 
     @profile
-    def get_wrong_price(self, tariffs_detailed, repeats=1): #IGNORE:W0613
-        tariff_name = select_random(tariffs_detailed.keys())
-        service_types_names = tariffs_detailed[tariff_name]['types']
-        return self.cli.get_price(tariff_name, select_random(service_types_names) + 'fake')  #IGNORE:E1101
+    def view_prices(self, tariff_name, repeats=1): #IGNORE:W0613
+        self.cli.view_prices(login=self.cli.login, password=self.cli.password, #IGNORE:E1101
+            tariff=tariff_name)
 
     @profile
     def get_service_set(self, name, repeats=1): #IGNORE:W0613
@@ -75,10 +78,12 @@ class ApplicationTestCase(DbBasedTestCase):
 
     @profile
     def view_rules(self, tariff_name, repeats=1): #IGNORE:W0613
-        return self.cli.view_rules(tariff_name) #IGNORE:E1101
+        return self.cli.view_rules(login=self.cli.login, password=self.cli.password, #IGNORE:E1101
+            tariff=tariff_name)
 
     def loader_task(self):
         types_num = 100
+#        types_num = 3
         types = [random_word() for _ in xrange(types_num)]
         print 'Adding types'
         for t in types:
@@ -86,6 +91,7 @@ class ApplicationTestCase(DbBasedTestCase):
         print 'Types added'
 
         service_sets_num = 20
+#        service_sets_num = 2
         service_sets_names = []
         print 'Adding service sets'
         for _ in xrange(service_sets_num):
@@ -121,20 +127,20 @@ class ApplicationTestCase(DbBasedTestCase):
             print
             print 'Prices added for tariff %s' % tariff_name
         print 'Tariffs added'
-#        self.view_tariffs(repeats=1)
-#        self.view_tariffs(repeats=50)
-#        self.view_detailed_tariffs(repeats=1)
-#        self.view_detailed_tariffs(repeats=10)
-#        self.get_tariff_detailed(tariffs_names, repeats=1)
-#        self.get_tariff_detailed(tariffs_names, repeats=50)
-#        self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=1)
-#        self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=50)
-#        self.view_prices(self.load_detailed_tariff_data(tariffs_names), repeats=1)
-#        self.view_prices(self.load_detailed_tariff_data(tariffs_names), repeats=50)
-#        self.get_wrong_price(self.load_detailed_tariff_data(tariffs_names), repeats=1)
-#        self.get_wrong_price(self.load_detailed_tariff_data(tariffs_names), repeats=50)
-#        self.view_rules(tariffs_names[0], repeats=1)
-#        self.view_rules(tariffs_names[0], repeats=50)
+
+        self.view_tariffs(repeats=1)
+        self.view_tariffs(repeats=50)
+        self.view_detailed_tariffs(repeats=1)
+        self.view_detailed_tariffs(repeats=10)
+        self.get_tariff_detailed(tariffs_names, repeats=1)
+        self.get_tariff_detailed(tariffs_names, repeats=50)
+        self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=1)
+        self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=50)
+        self.view_prices(self.load_detailed_tariff_data(tariffs_names).keys()[0], repeats=1)
+        self.view_prices(self.load_detailed_tariff_data(tariffs_names).keys()[0], repeats=50)
+        self.view_all_prices(self.load_detailed_tariff_data(tariffs_names), repeats=1)
+        self.view_rules(tariffs_names[0], repeats=1)
+        self.view_rules(tariffs_names[0], repeats=50)
 
     def test_loading(self):
         self.cli.add_client(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
@@ -145,13 +151,13 @@ class ApplicationTestCase(DbBasedTestCase):
 
         pool.wait_all()
 
-#    def test_ping_ok(self):
-#        self.check_status_ok(self.cli.ping()) #IGNORE:E1101
-#    def test_invalid_request(self):
-#        raw_result = self.cli.request({'action': 'fakeaction'})
-#        result = cjson.decode(raw_result)
-#        self.assertEqual('error', result['status'])
-#        self.assertEqual('validation', result['category'])
+    def test_ping_ok(self):
+        self.check_status_ok(self.cli.ping()) #IGNORE:E1101
+
+    def test_invalid_request(self):
+        response = self.cli.request({'action': 'fakeaction'})
+        self.assertEqual('error', response['status'])
+        self.assertEqual('validation', response['category'])
 
 
 if __name__ == '__main__':
