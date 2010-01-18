@@ -42,16 +42,17 @@ class NginxTestCase(DbBasedTestCase):
         self.ping_loading(repeats=50)
 
     def test_get_empty_service_types(self):
-        response = self.cli.get_service_types() #IGNORE:E1101
+        response = self.cli.view_service_types(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
         self.assertEqual('error', response['status'])
-        self.cli.add_client() #IGNORE:E1101
-        self.check_status_ok(self.cli.get_service_types()) #IGNORE:E1101
+        self.cli.add_client(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
+        self.check_status_ok(
+            self.cli.view_service_types(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
+        )
 
     def test_invalid_request(self):
-        raw_result = self.cli.request({'action': 'fakeaction'})
-        result = cjson.decode(raw_result)
-        self.assertEqual('error', result['status'])
-        self.assertEqual('validation', result['category'])
+        response = self.cli.request({'action': 'fakeaction'})
+        self.assertEqual('error', response['status'])
+        self.assertEqual('validation', response['category'])
 
     def test_service_set(self):
         login = u'перес'
@@ -72,8 +73,10 @@ class NginxTestCase(DbBasedTestCase):
     def test_unicode(self):
         login = u'василий'
         password = 'qazwsx'
-        self.cli.request({'action': 'add_client', 'login': login, 'password': password})
-        self.cli.request({'action': 'get_service_types', 'login': login, 'password': password})
+        response = self.cli.request({'action': 'add_client', 'login': login, 'password': password})
+        self.check_status_ok(response)
+        response = self.cli.request({'action': 'view_service_types', 'login': login, 'password': password})
+        self.check_status_ok(response)
 
     def test_bytestr(self):
         a = Api(protocol)
@@ -86,10 +89,10 @@ class NginxTestCase(DbBasedTestCase):
         _, decoded_data = a.handle_request(request)
         handler.add_service_type(decoded_data)
 
-        request = '{"action": "get_service_types", "login": "c", "password": "f"}'
+        request = '{"action": "view_service_types", "login": "c", "password": "f"}'
         _, decoded_data = a.handle_request(request)
-        response = handler.get_service_types(decoded_data)
-        self.assertEqual(response['service_types'], [u'\u0447\u0447\u0447'])
+        response = handler.view_service_types(decoded_data)
+        self.assertEqual([u'\u0447\u0447\u0447'], response['service_types'])
 
 
 if __name__ == '__main__':
