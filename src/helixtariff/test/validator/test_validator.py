@@ -50,11 +50,11 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_request('modify_service_type', {'login': 'l', 'password': 'p', 'name': 'register_ru', 'new_name': 'register_RU'})
         self.validate_status_response('modify_service_type')
 
-    def test_get_service_types(self):
-        self.api.validate_request('get_service_types', {'login': 'l', 'password': 'p'})
-        self.api.validate_response('get_service_types', {'status': 'ok', 'service_types': []})
-        self.api.validate_response('get_service_types', {'status': 'ok', 'service_types': ['one', 'two']})
-        self.api.validate_response('get_service_types', {'status': 'error', 'category': 'test', 'message': 'happens'})
+    def test_view_service_types(self):
+        self.api.validate_request('view_service_types', {'login': 'l', 'password': 'p'})
+        self.api.validate_response('view_service_types', {'status': 'ok', 'service_types': []})
+        self.api.validate_response('view_service_types', {'status': 'ok', 'service_types': ['one', 'two']})
+        self.api.validate_response('view_service_types', {'status': 'error', 'category': 'test', 'message': 'happens'})
 
     def test_modify_service_type_invalid(self):
         self.assertRaises(ValidationError, self.api.validate_request, 'modify_service_type', {'login': 'l', 'password': 'p', 'name': 'cheli0s'})

@@ -53,9 +53,9 @@ MODIFY_SERVICE_TYPE = dict(
 
 DELETE_SERVICE_TYPE = SERVICE_TYPE
 
-GET_SERVICE_TYPES = AUTH_INFO
+VIEW_SERVICE_TYPES = AUTH_INFO
 
-GET_SERVICE_TYPES_RESPONSE = AnyOf(
+VIEW_SERVICE_TYPES_RESPONSE = AnyOf(
     dict(RESPONSE_STATUS_OK, service_types=[Text()]),
     RESPONSE_STATUS_ERROR
 )
@@ -344,8 +344,8 @@ protocol = [
     ApiCall('delete_service_type_request', Scheme(DELETE_SERVICE_TYPE)),
     ApiCall('delete_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('get_service_types_request', Scheme(GET_SERVICE_TYPES)),
-    ApiCall('get_service_types_response', Scheme(GET_SERVICE_TYPES_RESPONSE)),
+    ApiCall('view_service_types_request', Scheme(VIEW_SERVICE_TYPES)),
+    ApiCall('view_service_types_response', Scheme(VIEW_SERVICE_TYPES_RESPONSE)),
 
     # service set
     ApiCall('add_service_set_request', Scheme(ADD_SERVICE_SET)),

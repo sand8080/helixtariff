@@ -100,7 +100,7 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def get_service_types(self, data, curs=None):
+    def view_service_types(self, data, curs=None):
         service_types = selector.get_service_types(curs, data['client_id'])
         return response_ok(
             service_types=[t.name for t in service_types]
