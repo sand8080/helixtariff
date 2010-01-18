@@ -228,19 +228,33 @@ class Handler(object):
         mapping.insert(curs, Tariff(**data))
         return response_ok()
 
+    def _get_new_parent_id(self, curs, client_id, tariff_name, new_parent_name):
+        if new_parent_name is None:
+            return None
+        tariffs_names_idx = selector.get_tariffs_names_indexed_by_id(curs, client_id)
+        tariffs_ids_idx = dict([(v, k) for (k, v) in tariffs_names_idx.iteritems()])
+        tariff_id = tariffs_ids_idx[tariff_name]
+        new_parent_id = tariffs_ids_idx[new_parent_name]
+        parents_ids_idx = selector.get_tariffs_parent_ids_indexed_by_id(curs, client_id)
+        parents_ids_idx[tariff_id] = new_parent_id
+        self._calculate_tariffs_chain(
+            tariff_id,
+            tariffs_names_idx,
+            parents_ids_idx
+        )
+        return new_parent_id
+
     @transaction()
     @authentificate
     def modify_tariff(self, data, curs=None):
+        client_id = data['client_id']
+        tariff_name = data['name']
         if 'new_parent_tariff' in data:
-            parent_tariff = data['new_parent_tariff']
-            if parent_tariff is None:
-                parent_id = None
-            else:
-                parent_id = selector.get_tariff(curs, data['client_id'], parent_tariff).id
+            new_parent_name = data['new_parent_tariff']
+            data['new_parent_id'] = self._get_new_parent_id(curs, client_id,
+                tariff_name, new_parent_name)
             del data['new_parent_tariff']
-            data['new_parent_id'] = parent_id
-
-        loader = partial(selector.get_tariff, curs, data['client_id'], data['name'], for_update=True)
+        loader = partial(selector.get_tariff, curs, client_id, tariff_name, for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 

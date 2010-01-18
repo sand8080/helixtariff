@@ -1,4 +1,3 @@
-from helixtariff.error import TariffNotFound
 import unittest
 
 from helixcore.server.exceptions import DataIntegrityError
@@ -6,6 +5,7 @@ from helixcore.db.wrapper import EmptyResultSetError
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
+from helixtariff.error import TariffNotFound, TariffCycleError
 
 
 class TariffTestCase(ServiceTestCase):
@@ -37,6 +37,19 @@ class TariffTestCase(ServiceTestCase):
         self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_name,
             self.name, self.in_archive, None
         )
+
+    def test_cycle_restriction(self):
+        self.add_tariff(self.service_set_name, self.name, self.in_archive, None)
+        t = self.get_tariff(self.root_client_id, self.name)
+        child_name = 'child of %s' % self.name
+        self.add_tariff(self.service_set_name, child_name, self.in_archive, t.name)
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': self.name,
+            'new_parent_tariff': child_name,
+        }
+        self.assertRaises(TariffCycleError, handle_action, 'modify_tariff', data)
 
     def test_modify_tariff(self):
         self.test_add_tariff()
