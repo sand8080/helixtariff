@@ -155,10 +155,11 @@ def get_service_set_rows(curs, service_sets_ids, for_update=False):
 
 
 def get_service_types_ids(curs, service_sets_ids, for_update=False):
-    q = Select(ServiceSetRow.table, columns='id', cond=In('service_set_id', service_sets_ids), for_update=for_update)
+    q = Select(ServiceSetRow.table, columns='service_type_id', cond=In('service_set_id', service_sets_ids),
+        for_update=for_update)
     curs.execute(*q.glue())
     result = fetchall_dicts(curs)
-    return [d['id'] for d in result]
+    return [d['service_type_id'] for d in result]
 
 
 def get_service_sets_ids(curs, tariffs_ids, for_update=False):
