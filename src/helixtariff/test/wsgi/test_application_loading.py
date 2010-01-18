@@ -5,7 +5,6 @@ util.wrap_socket_with_coroutine_socket()
 
 import unittest
 import datetime
-import cjson
 import random
 
 from helixcore.test.util import random_word, select_random, profile
@@ -52,7 +51,7 @@ class ApplicationTestCase(DbBasedTestCase):
     @profile
     def get_price(self, tariffs_detailed, repeats=1): #IGNORE:W0613
         tariff_name = select_random(tariffs_detailed.keys())
-        service_types_names = tariffs_detailed[tariff_name]['types']
+        service_types_names = tariffs_detailed[tariff_name]['service_types']
         return self.cli.get_price(login=self.cli.login, password=self.cli.password, #IGNORE:E1101
             tariff=tariff_name, service_type=select_random(service_types_names))
 
@@ -100,7 +99,7 @@ class ApplicationTestCase(DbBasedTestCase):
             self.cli.add_service_set(login=self.cli.login, password=self.cli.password, name=service_set_name)#IGNORE:E1101
             types_to_add = types[random.randint(0, types_num / 2):random.randint(types_num / 2 + 1, types_num)]
             self.cli.add_to_service_set(login=self.cli.login, password=self.cli.password, #IGNORE:E1101
-                name=service_set_name, types=types_to_add)
+                name=service_set_name, service_types=types_to_add)
             print '.',
         print
         print 'Service sets added'
@@ -119,7 +118,7 @@ class ApplicationTestCase(DbBasedTestCase):
             tariff_detailed_data = self.cli.get_tariff_detailed(login=self.cli.login, #IGNORE:E1101
                 password=self.cli.password, name=tariff_name)
             print 'Adding prices for tariff %s' % tariff_name
-            for service_type_name in tariff_detailed_data['types']:
+            for service_type_name in tariff_detailed_data['service_types']:
                 print '*',
                 rule = 'price = %s' % (Decimal(random.randint(2000, 9000)) / 100)
                 self.cli.add_rule(login=self.cli.login, password=self.cli.password, #IGNORE:E1101

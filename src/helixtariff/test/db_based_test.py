@@ -75,39 +75,39 @@ class ServiceTestCase(DbBasedTestCase):
     def get_service_types_by_service_set_name(self, client_id, name, curs=None):
         return selector.get_service_types_by_service_set(curs, client_id, name)
 
-    def add_to_service_set(self, name, types):
+    def add_to_service_set(self, name, service_types):
         client = self.get_client_by_login(self.test_client_login)
         data = {
             'login': client.login,
             'password': self.test_client_password,
             'name': name,
-            'types': types
+            'service_types': service_types
         }
-        types = self.get_service_types_by_service_set_name(client.id, data['name'])
-        expected = set([t.name for t in types])
-        expected.update(data['types'])
+        service_types = self.get_service_types_by_service_set_name(client.id, data['name'])
+        expected = set([t.name for t in service_types])
+        expected.update(data['service_types'])
 
         handle_action('add_to_service_set', data)
 
-        types = self.get_service_types_by_service_set_name(client.id, data['name'])
-        actual = set([t.name for t in types])
+        service_types = self.get_service_types_by_service_set_name(client.id, data['name'])
+        actual = set([t.name for t in service_types])
         self.assertEqual(expected, actual)
 
-    def delete_from_service_set(self, name, types):
+    def delete_from_service_set(self, name, service_types):
         client = self.get_client_by_login(self.test_client_login)
         data = {
             'login': client.login,
             'password': self.test_client_password,
             'name': name,
-            'types': types
+            'service_types': service_types
         }
-        types = self.get_service_types_by_service_set_name(client.id, data['name'])
-        expected = set([t.name for t in types]).difference(data['types'])
+        service_types = self.get_service_types_by_service_set_name(client.id, data['name'])
+        expected = set([t.name for t in service_types]).difference(data['service_types'])
 
         handle_action('delete_from_service_set', data)
 
-        types = self.get_service_types_by_service_set_name(client.id, data['name'])
-        actual = set([t.name for t in types])
+        service_types = self.get_service_types_by_service_set_name(client.id, data['name'])
+        actual = set([t.name for t in service_types])
         self.assertEqual(expected, actual)
 
     @transaction()

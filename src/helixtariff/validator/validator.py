@@ -56,7 +56,7 @@ DELETE_SERVICE_TYPE = SERVICE_TYPE
 GET_SERVICE_TYPES = AUTH_INFO
 
 GET_SERVICE_TYPES_RESPONSE = AnyOf(
-    dict(RESPONSE_STATUS_OK, types=[Text()]),
+    dict(RESPONSE_STATUS_OK, service_types=[Text()]),
     RESPONSE_STATUS_ERROR
 )
 
@@ -82,7 +82,7 @@ DELETE_SERVICE_SET = dict(
 ADD_TO_SERVICE_SET = dict(
     {
         'name': Text(),
-        'types': [Text()],
+        'service_types': [Text()],
     },
     **AUTH_INFO
 )
@@ -90,14 +90,14 @@ ADD_TO_SERVICE_SET = dict(
 DELETE_FROM_SERVICE_SET = dict(
     {
         'name': Text(),
-        'types': [Text()],
+        'service_types': [Text()],
     },
     **AUTH_INFO
 )
 
 SERVICE_SET_INFO = dict({
     'name': Text(),
-    'types': [Text()],
+    'service_types': [Text()],
 })
 
 GET_SERVICE_SET = dict(
@@ -180,7 +180,7 @@ VIEW_TARIFFS_RESPONSE = AnyOf(
 )
 
 DETAILED_TARIFF_INFO = dict(
-    {'types': [Text()]},
+    {'service_types': [Text()]},
     **TARIFF_INFO
 )
 

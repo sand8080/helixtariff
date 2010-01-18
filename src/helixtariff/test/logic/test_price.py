@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
-from helixtariff.error import TariffCycleError, RuleNotFound, TariffNotFound
+from helixtariff.error import RuleNotFound, TariffNotFound
 
 
 class PriceTestCase(ServiceTestCase):
@@ -19,22 +19,6 @@ class PriceTestCase(ServiceTestCase):
         self.add_to_service_set(self.service_set_name, [self.service_type_name])
         self.add_tariff(self.service_set_name, self.tariff_name, False, None)
         self.add_rule(self.tariff_name, self.service_type_name, 'price = %s' % self.price)
-
-    def test_tariffs_cycle(self):
-        tariff_0 = 'tariff 0'
-        self.add_tariff(self.service_set_name, tariff_0, False, None)
-        tariff_1 = 'tariff 1'
-        self.add_tariff(self.service_set_name, tariff_1, False, tariff_0)
-        tariff_2 = 'tariff 2'
-        self.add_tariff(self.service_set_name, tariff_2, False, tariff_0)
-        self.modify_tariff(tariff_0, tariff_2)
-        data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
-            'tariff': tariff_2,
-            'service_type': self.service_type_name,
-        }
-        self.assertRaises(TariffCycleError, handle_action, 'get_price', data)
 
     def test_no_rule_found(self):
         tariff_0 = 'tariff 0'

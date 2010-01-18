@@ -101,9 +101,9 @@ class Handler(object):
     @transaction()
     @authentificate
     def get_service_types(self, data, curs=None):
-        types = selector.get_service_types(curs, data['client_id'])
+        service_types = selector.get_service_types(curs, data['client_id'])
         return response_ok(
-            types=[t.name for t in types]
+            service_types=[t.name for t in service_types]
         )
 
     # server_set
@@ -130,8 +130,8 @@ class Handler(object):
 
     def _get_service_set_info(self, curs, client_id, service_set_name):
         service_set = selector.get_service_set_by_name(curs, client_id, service_set_name)
-        types = selector.get_service_types_by_service_set(curs, client_id, service_set.name)
-        return service_set, types
+        service_types = selector.get_service_types_by_service_set(curs, client_id, service_set.name)
+        return service_set, service_types
 
     def _process_service_set_row(self, curs, service_set, types_names, func):
         for n in types_names:
@@ -149,7 +149,7 @@ class Handler(object):
         client_id, name = data['client_id'], data['name']
         service_set, types = self._get_service_set_info(curs, client_id, name)
         types_in_set = [t.name for t in types]
-        types_to_add = set(filter(lambda x: x not in types_in_set, data['types']))
+        types_to_add = set(filter(lambda x: x not in types_in_set, data['service_types']))
         for n in types_to_add:
             try:
                 t = selector.get_service_type_by_name(curs, service_set.client_id, n)
@@ -165,7 +165,7 @@ class Handler(object):
         client_id, name = data['client_id'], data['name']
         service_set, types = self._get_service_set_info(curs, client_id, name)
         types_in_set = [t.name for t in types]
-        types_to_del = set(filter(lambda x: x in types_in_set, data['types']))
+        types_to_del = set(filter(lambda x: x in types_in_set, data['service_types']))
         for n in types_to_del:
             try:
                 t = selector.get_service_type_by_name(curs, service_set.client_id, n)
@@ -198,8 +198,11 @@ class Handler(object):
     @transaction()
     @authentificate
     def get_service_set(self, data, curs=None):
-        service_set, types = self._get_service_set_info(curs, data['client_id'], data['name'])
-        return response_ok(name=service_set.name, types=sorted([t.name for t in types]))
+        service_set, service_types = self._get_service_set_info(curs, data['client_id'], data['name'])
+        return response_ok(
+            name=service_set.name,
+            service_types=sorted([t.name for t in service_types])
+        )
 
     @transaction()
     @authentificate
@@ -208,7 +211,7 @@ class Handler(object):
         service_sets_types = self._get_service_sets_types(curs, client_id)
         result = []
         for k in sorted(service_sets_types.keys()):
-            result.append({'name': k, 'types': sorted(service_sets_types[k])})
+            result.append({'name': k, 'service_types': sorted(service_sets_types[k])})
         return response_ok(service_sets=result)
 
     # tariff
@@ -303,7 +306,7 @@ class Handler(object):
         tariffs_data = self._get_tariffs_data(curs, client_id, [tariff])
         tariff_data = tariffs_data[0]
         types = selector.get_service_types_by_service_set(curs, client_id, tariff_data['service_set'])
-        tariff_data['types'] = sorted([t.name for t in types])
+        tariff_data['service_types'] = sorted([t.name for t in types])
         return response_ok(**tariff_data)
 
     @transaction()
@@ -321,7 +324,7 @@ class Handler(object):
         service_sets_types = self._get_service_sets_types(curs, client_id)
         tariffs_data = self._get_tariffs_data(curs, client_id, tariffs)
         for d in tariffs_data:
-            d['types'] = service_sets_types[d['service_set']]
+            d['service_types'] = service_sets_types[d['service_set']]
         return response_ok(tariffs=tariffs_data)
 
     # rule

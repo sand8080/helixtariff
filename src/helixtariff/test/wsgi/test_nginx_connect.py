@@ -31,7 +31,7 @@ class NginxTestCase(DbBasedTestCase):
         self.assertEqual('ok', response['status'])
 
     def ping(self):
-        return self.cli.ping()
+        return self.cli.ping() #IGNORE:E1101
 
     @profile
     def ping_loading(self, repeats=1): #IGNORE:W0613
@@ -64,7 +64,7 @@ class NginxTestCase(DbBasedTestCase):
         self.cli.request({'action': 'add_service_set', 'login': login, 'password': password,
             'name': service_set})
         self.cli.request({'action': 'add_to_service_set', 'login': login, 'password': password,
-            'name': service_set, 'types': [service_type]})
+            'name': service_set, 'service_types': [service_type]})
         self.cli.request({'action': 'get_service_set', 'login': login, 'password': password,
             'name': service_set})
         self.cli.request({'action': 'view_service_sets', 'login': login, 'password': password})
@@ -89,7 +89,7 @@ class NginxTestCase(DbBasedTestCase):
         request = '{"action": "get_service_types", "login": "c", "password": "f"}'
         _, decoded_data = a.handle_request(request)
         response = handler.get_service_types(decoded_data)
-        self.assertEqual(response['types'], [u'\u0447\u0447\u0447'])
+        self.assertEqual(response['service_types'], [u'\u0447\u0447\u0447'])
 
 
 if __name__ == '__main__':
