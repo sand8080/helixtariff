@@ -276,7 +276,7 @@ GET_PRICE = dict(
     {
         'tariff': Text(),
         'service_type': Text(),
-        Optional('context'): Any(),
+        Optional('context'): FlatDict(),
     },
     **AUTH_INFO
 )
@@ -288,8 +288,8 @@ GET_PRICE_RESPONSE = AnyOf(
             'tariff': Text(),
             'tariffs_chain': [Text()],
             'service_type': Text(),
-            'price': DecimalText(),
-            'context': Any(),
+            'price': Text(),
+            'context': FlatDict(),
         }
     ),
     RESPONSE_STATUS_ERROR
@@ -298,7 +298,7 @@ GET_PRICE_RESPONSE = AnyOf(
 VIEW_PRICES = dict(
     {
         'tariff': Text(),
-        Optional('context'): Any(),
+        Optional('context'): FlatDict(),
     },
     **AUTH_INFO
 )
@@ -308,7 +308,7 @@ VIEW_PRICES_RESPONSE = AnyOf(
         RESPONSE_STATUS_OK,
         **{
             'tariff': Text(),
-            'context': Any(),
+            'context': FlatDict(),
             'prices': [{
                 'tariffs_chain': [Text()],
                 'service_type': Text(),

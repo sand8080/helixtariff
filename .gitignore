@@ -13,5 +13,6 @@ debian/helixtariff.substvars
 debian/helixtariff
 debian/LAST_VERSION
 debian/changelog
+src/generated-*
 src/docs.html
 src/helixcore
