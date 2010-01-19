@@ -1,14 +1,16 @@
 # coding=utf-8
 import datetime
-import cjson
 import unittest
 from eventlet import api, util
 
 from helixcore.test.util import profile
+from helixcore.server.response import response_app_error
+from helixcore.validol.validol import Scheme
 
 from helixtariff.test.db_based_test import DbBasedTestCase
 from helixtariff.test.wsgi.client import Client
 from helixtariff.wsgi.server import Server
+from helixtariff.validator.validator import protocol, ApiCall, RESPONSE_STATUS_ERROR
 
 util.wrap_socket_with_coroutine_socket()
 
@@ -93,6 +95,20 @@ class NginxTestCase(DbBasedTestCase):
         _, decoded_data = a.handle_request(request)
         response = handler.view_service_types(decoded_data)
         self.assertEqual([u'\u0447\u0447\u0447'], response['service_types'])
+
+    def test_number_in_error_message(self):
+        global protocol
+        def incorect_error_message(self, _):
+            return response_app_error(1)
+        Handler.incorect_error_message = incorect_error_message
+        protocol += [
+            ApiCall('incorect_error_message_request', Scheme({})),
+            ApiCall('incorect_error_message_response', Scheme(RESPONSE_STATUS_ERROR)),
+        ]
+        cli = Client(self.nginx_host, self.nginx_port, 'cli0', 'qazwsx', protocol='https')
+        response = cli.incorect_error_message() #IGNORE:E1101
+        self.assertEqual('error', response['status'])
+        self.assertEqual('validation', response['category'])
 
 
 if __name__ == '__main__':
