@@ -86,8 +86,10 @@ def get_rule(curs, client_id, tariff_name, service_type_name, for_update=False):
 
     cond_tariff_id = Eq('tariff_id', Scoped(sel_tariff))
     cond_service_type_id = Eq('service_type_id', Scoped(sel_service_type))
+    cond_result = And(cond_client_id, cond_tariff_id)
+    cond_result = And(cond_result, cond_service_type_id)
     try:
-        return mapping.get(curs, Rule, cond=And(cond_tariff_id, cond_service_type_id), for_update=for_update)
+        return mapping.get(curs, Rule, cond=cond_result, for_update=for_update)
     except EmptyResultSetError:
         raise RuleNotFound("Rule not found in tariff '%s' for service_type '%s'" %
             (tariff_name, service_type_name))
