@@ -13,7 +13,8 @@ from helixtariff.rulesengine.checker import RuleChecker
 from helixtariff.rulesengine import engine
 from helixtariff.rulesengine.interaction import RequestPrice
 from helixtariff.domain import security
-from helixtariff.error import TariffCycleError, ServiceTypeNotFound, RuleNotFound
+from helixtariff.error import TariffCycleError, ServiceTypeNotFound, RuleNotFound,\
+    ServiceSetNotEmpty, ServiceTypeUsed
 
 
 def authentificate(method):
@@ -27,8 +28,7 @@ def authentificate(method):
 
 class Handler(object):
     '''Handles all API actions. Method names are called like actions.'''
-
-    def ping(self, data): #IGNORE:W0613
+    def ping(self, _):
         return response_ok()
 
     def get_client_id(self, curs, data):
@@ -107,25 +107,69 @@ class Handler(object):
         )
 
     # server_set
+    def _set_service_types_to_service_set(self, curs, client_id, service_set, service_types_names):
+        curs.execute(*mapping.Delete(ServiceSetRow.table, cond=Eq('service_set_id', service_set.id)).glue())
+        service_types_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
+        service_types_ids_idx = dict([(v, k) for (k, v) in service_types_names_idx.items()])
+        ids_to_set = [service_types_ids_idx[n] for n in service_types_names]
+
+        for t_id in ids_to_set:
+            mapping.insert(curs, ServiceSetRow(service_set_id=service_set.id, service_type_id=t_id))
+
     @transaction()
     @authentificate
     def add_service_set(self, data, curs=None):
-        mapping.insert(curs, ServiceSet(**data))
+        service_types_names = data['service_types']
+        del data['service_types']
+        client_id = data['client_id']
+
+        service_set = ServiceSet(**data)
+        mapping.insert(curs, service_set)
+        self._set_service_types_to_service_set(curs, client_id, service_set, service_types_names)
+
         return response_ok()
+
+    def _check_types_not_used(self, curs, client_id, service_types_names):
+        service_types_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
+        service_types_ids_idx = dict([(v, k) for (k, v) in service_types_names_idx.items()])
+        service_types_ids = [service_types_ids_idx[n] for n in service_types_names]
+        rules = selector.get_rules_for_service_types(curs, client_id, service_types_ids)
+        if rules:
+            tariffs_names_idx = selector.get_tariffs_names_indexed_by_id(curs, client_id)
+            usage = {}
+            for r in rules:
+                tariff_name = tariffs_names_idx[r.tariff_id]
+                if tariff_name not in usage:
+                    usage[tariff_name] = []
+                usage[tariff_name].append(service_types_names_idx[r.service_type_id])
+            raise ServiceTypeUsed('Service types %s used in %s' % (service_types_names, usage))
 
     @transaction()
     @authentificate
     def modify_service_set(self, data, curs=None):
-        loader = partial(selector.get_service_set_by_name, curs, data['client_id'],
+        client_id = data['client_id']
+        service_set = selector.get_service_set_by_name(curs, data['client_id'],
             data['name'], for_update=True)
+        def loader():
+            return service_set
+        if 'new_service_types' in data:
+            old_service_types_names = [t.name for t in selector.get_service_types_by_service_set(curs, client_id, service_set.name)]
+            service_types_names = data['new_service_types']
+            service_types_names_to_check = list(set(old_service_types_names) - set(service_types_names))
+            self._check_types_not_used(curs, client_id, service_types_names_to_check)
+            del data['new_service_types']
+            self._set_service_types_to_service_set(curs, client_id, service_set, service_types_names)
         self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
     @authentificate
     def delete_service_set(self, data, curs=None):
-        t = selector.get_service_set_by_name(curs, data['client_id'], data['name'], for_update=True)
-        mapping.delete(curs, t)
+        client_id = data['client_id']
+        service_set = selector.get_service_set_by_name(curs, client_id, data['name'], for_update=True)
+        if selector.get_service_set_rows(curs, [service_set.id]):
+            raise ServiceSetNotEmpty(service_set.name)
+        mapping.delete(curs, service_set)
         return response_ok()
 
     def _get_service_set_info(self, curs, client_id, service_set_name):
@@ -340,7 +384,6 @@ class Handler(object):
         del data['service_type']
         data['service_type_id'] = service_type.id
 
-        del data['client_id']
         mapping.insert(curs, Rule(**data))
         return response_ok()
 
@@ -435,23 +478,23 @@ class Handler(object):
         ts_chain = self._get_tariffs_chain(curs, client_id, tariff_name)
         tariffs_ids, tariffs_names = map(list, zip(*ts_chain))
 
+        service_type = selector.get_service_type_by_name(curs, client_id, service_type_name)
+        indexed_rules = selector.get_rules_indexed_by_tariff_service_type_ids(curs, client_id,
+            tariffs_ids, [service_type.id])
         try:
-            service_type = selector.get_service_type_by_name(curs, client_id, service_type_name)
-            indexed_rules = selector.get_rules_indexed_by_tariff_service_type_ids(curs, client_id,
-                tariffs_ids, [service_type.id])
             rule = self._find_nearest_rule(indexed_rules, tariffs_ids, service_type.id)
-            response = engine.process(RequestPrice(rule, context))
-
-            return response_ok(
-                tariff=tariff_name,
-                tariffs_chain=tariffs_names[:tariffs_ids.index(rule.tariff_id) + 1],
-                service_type=service_type_name,
-                price=response.price,
-                context=context
-            )
         except EmptyResultSetError:
             raise RuleNotFound("Rule for service type '%s' not found in tariffs: %s" %
                 (service_type_name, tariffs_names))
+        response = engine.process(RequestPrice(rule, context))
+
+        return response_ok(
+            tariff=tariff_name,
+            tariffs_chain=tariffs_names[:tariffs_ids.index(rule.tariff_id) + 1],
+            service_type=service_type_name,
+            price=response.price,
+            context=context
+        )
 
     @transaction()
     @authentificate

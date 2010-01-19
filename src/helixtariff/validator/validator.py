@@ -62,36 +62,24 @@ VIEW_SERVICE_TYPES_RESPONSE = AnyOf(
 
 # --- service set ---
 ADD_SERVICE_SET = dict(
-    {'name': Text()},
+    {
+        'name': Text(),
+        'service_types': [Text()],
+    },
     **AUTH_INFO
 )
 
 MODIFY_SERVICE_SET = dict(
     {
         'name': Text(),
-        'new_name': Text(),
+        Optional('new_name'): Text(),
+        Optional('new_service_types'): [Text()],
     },
     **AUTH_INFO
 )
 
 DELETE_SERVICE_SET = dict(
     {'name': Text()},
-    **AUTH_INFO
-)
-
-ADD_TO_SERVICE_SET = dict(
-    {
-        'name': Text(),
-        'service_types': [Text()],
-    },
-    **AUTH_INFO
-)
-
-DELETE_FROM_SERVICE_SET = dict(
-    {
-        'name': Text(),
-        'service_types': [Text()],
-    },
     **AUTH_INFO
 )
 
@@ -288,7 +276,7 @@ GET_PRICE_RESPONSE = AnyOf(
             'tariff': Text(),
             'tariffs_chain': [Text()],
             'service_type': Text(),
-            'price': DecimalText(),
+            'price': AnyOf(DecimalText(), None),
             'context': FlatDict(),
         }
     ),
@@ -312,7 +300,8 @@ VIEW_PRICES_RESPONSE = AnyOf(
             'prices': [{
                 'tariffs_chain': [Text()],
                 'service_type': Text(),
-                'price': DecimalText(),
+#                'price_calculation': AnyOf('normal', 'service_type_disabled', 'price_undefined'),
+                'price': AnyOf(DecimalText(), None),
             }],
         }
     ),
@@ -356,12 +345,6 @@ protocol = [
 
     ApiCall('delete_service_set_request', Scheme(DELETE_SERVICE_SET)),
     ApiCall('delete_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
-
-    ApiCall('add_to_service_set_request', Scheme(ADD_TO_SERVICE_SET)),
-    ApiCall('add_to_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
-
-    ApiCall('delete_from_service_set_request', Scheme(DELETE_FROM_SERVICE_SET)),
-    ApiCall('delete_from_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     ApiCall('get_service_set_request', Scheme(GET_SERVICE_SET)),
     ApiCall('get_service_set_response', Scheme(GET_SERVICE_SET_RESPONSE)),

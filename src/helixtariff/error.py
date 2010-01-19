@@ -22,9 +22,18 @@ class RuleNotFound(HelixtariffError):
     pass
 
 
+class ServiceTypeUsed(ObjectNotFound):
+    pass
+
+
 class ServiceTypeNotFound(ObjectNotFound):
     def __init__(self, name):
         super(ServiceTypeNotFound, self).__init__('''Service type '%s' not found''' % name)
+
+
+class ServiceSetNotEmpty(ObjectNotFound):
+    def __init__(self, name):
+        super(ServiceSetNotEmpty, self).__init__('''Service set '%s' contains service types''' % name)
 
 
 class ClientNotFound(EmptyResultSetError, HelixtariffError):

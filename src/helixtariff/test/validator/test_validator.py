@@ -64,41 +64,24 @@ class ValidatorTestCase(RootTestCase):
         self.validate_status_response('delete_service_type')
 
     def test_add_service_set(self):
-        self.api.validate_request('add_service_set', {'login': 'l', 'password': 'p', 'name': 'basic'})
+        self.api.validate_request('add_service_set', {'login': 'l', 'password': 'p',
+            'name': 'basic', 'service_types': []})
+        self.api.validate_request('add_service_set', {'login': 'l', 'password': 'p',
+            'name': 'basic', 'service_types': ['a', 'b', 'c']})
         self.validate_status_response('add_service_set')
 
-    def test_rename_service_set(self):
+    def test_modify_service_set(self):
+        self.api.validate_request('modify_service_set', {'login': 'l', 'password': 'p',
+            'name': 'basic'})
         self.api.validate_request('modify_service_set', {'login': 'l', 'password': 'p',
             'name': 'basic', 'new_name': 'restricted'})
+        self.api.validate_request('modify_service_set', {'login': 'l', 'password': 'p',
+            'name': 'basic', 'new_name': 'restricted', 'new_service_types': ['1', '2']})
         self.validate_status_response('modify_service_set')
 
     def test_delete_service_set(self):
         self.api.validate_request('delete_service_set', {'login': 'l', 'password': 'p', 'name': 'basic'})
         self.validate_status_response('delete_service_set')
-
-    def test_add_to_service_set(self):
-        self.api.validate_request(
-            'add_to_service_set',
-            {
-                'login': 'l',
-                'password': 'p',
-                'name': 'basic',
-                'service_types': ['ssl123', 'sslsuper0']
-            }
-        )
-        self.validate_status_response('add_to_service_set')
-
-    def test_delete_from_service_set(self):
-        self.api.validate_request(
-            'delete_from_service_set',
-            {
-                'login': 'l',
-                'password': 'p',
-                'name': 'basic',
-                'service_types': ['ssl123', 'sslsuper0']
-            }
-        )
-        self.validate_status_response('delete_from_service_set')
 
     def test_add_tariff(self):
         self.api.validate_request(
@@ -279,6 +262,8 @@ class ValidatorTestCase(RootTestCase):
 
         self.api.validate_response('get_price',
             {'status': 'error', 'category': 'test', 'message': 'happens'})
+        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': [],
+            'service_type': 's', 'price': None, 'context': {}})
         self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': [],
             'service_type': 's', 'price': '10.09', 'context': {}})
         self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m'],

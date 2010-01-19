@@ -5,6 +5,7 @@ util.wrap_socket_with_coroutine_socket()
 
 from functools import partial
 
+import helixtariff.conf.lock_order
 import helixcore.db.wrapper as wrapper
 from settings import DSN
 

@@ -10,9 +10,9 @@ def apply(curs): #IGNORE:W0622
             service_set_id integer NOT NULL,
             FOREIGN KEY (service_set_id) REFERENCES service_set(id),
             client_id integer NOT NULL,
+            FOREIGN KEY (client_id) REFERENCES client(id),
             name varchar NOT NULL,
-            in_archive boolean DEFAULT FALSE,
-            FOREIGN KEY (client_id) REFERENCES client(id)
+            in_archive boolean DEFAULT FALSE
         )
     ''')
     print 'Creating unique index on tariff (client_id, name)'

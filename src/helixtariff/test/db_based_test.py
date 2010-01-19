@@ -47,15 +47,17 @@ class ServiceTestCase(DbBasedTestCase):
     def get_root_client(self):
         return self.get_client_by_login(self.test_client_login)
 
-    def add_service_sets(self, service_sets):
+    def add_service_sets(self, service_sets, service_types_names):
         client = self.get_client_by_login(self.test_client_login)
         for s in service_sets:
-            handle_action(
-                'add_service_set',
-                {'login': self.test_client_login, 'password': self.test_client_password, 'name': s}
+            handle_action('add_service_set', {'login': self.test_client_login, 'password': self.test_client_password,
+                'name': s, 'service_types': service_types_names}
             )
             service_set = self.get_service_set_by_name(client.id, s)
             self.assertEqual(s, service_set.name)
+            service_types = self.get_service_types_by_service_set_name(client.id, service_set.name)
+            st_names = [t.name for t in service_types]
+            self.assertEqual(sorted(service_types_names), sorted(st_names))
 
     @transaction()
     def get_service_type_by_name(self, client_id, name, curs=None):
@@ -75,44 +77,32 @@ class ServiceTestCase(DbBasedTestCase):
     def get_service_types_by_service_set_name(self, client_id, name, curs=None):
         return selector.get_service_types_by_service_set(curs, client_id, name)
 
-    def add_to_service_set(self, name, service_types):
+    def modify_service_set(self, name, new_name=None, new_service_types=None):
         client = self.get_client_by_login(self.test_client_login)
         data = {
             'login': client.login,
             'password': self.test_client_password,
             'name': name,
-            'service_types': service_types
         }
-        service_types = self.get_service_types_by_service_set_name(client.id, data['name'])
-        expected = set([t.name for t in service_types])
-        expected.update(data['service_types'])
+        if new_name is not None:
+            data['new_name'] = new_name
+        if new_service_types is not None:
+            data['new_service_types'] = new_service_types
+        handle_action('modify_service_set', data)
 
-        handle_action('add_to_service_set', data)
-
-        service_types = self.get_service_types_by_service_set_name(client.id, data['name'])
-        actual = set([t.name for t in service_types])
-        self.assertEqual(expected, actual)
-
-    def delete_from_service_set(self, name, service_types):
-        client = self.get_client_by_login(self.test_client_login)
-        data = {
-            'login': client.login,
-            'password': self.test_client_password,
-            'name': name,
-            'service_types': service_types
-        }
-        service_types = self.get_service_types_by_service_set_name(client.id, data['name'])
-        expected = set([t.name for t in service_types]).difference(data['service_types'])
-
-        handle_action('delete_from_service_set', data)
-
-        service_types = self.get_service_types_by_service_set_name(client.id, data['name'])
-        actual = set([t.name for t in service_types])
-        self.assertEqual(expected, actual)
+        n = new_name if new_name else name
+        service_set = self.get_service_set_by_name(client.id, n)
+        service_types = self.get_service_types_by_service_set_name(client.id, service_set.name)
+        actual_service_types = set([t.name for t in service_types])
+        self.assertEqual(sorted(new_service_types), sorted(actual_service_types))
 
     @transaction()
     def get_service_set_by_name(self, client_id, name, curs=None):
         return selector.get_service_set_by_name(curs, client_id, name)
+
+    @transaction()
+    def get_service_set_rows(self, service_set, curs=None):
+        return selector.get_service_set_rows(curs, [service_set.id])
 
     @transaction()
     def get_tariff(self, client_id, name, curs=None):

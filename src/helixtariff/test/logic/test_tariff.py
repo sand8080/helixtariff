@@ -20,9 +20,8 @@ class TariffTestCase(ServiceTestCase):
 
     def setUp(self):
         super(TariffTestCase, self).setUp()
-        self.add_service_sets([self.service_set_name])
         self.add_types(self.service_types_names)
-        self.add_to_service_set(self.service_set_name, self.service_types_names)
+        self.add_service_sets([self.service_set_name], self.service_types_names)
 
     def test_add_tariff(self):
         self.add_tariff(self.service_set_name, self.name, self.in_archive, None)
@@ -197,10 +196,10 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual([child_name, parent_name], response['tariffs_chain'])
         self.assertEqual(self.in_archive, response['in_archive'])
 
-        empty_set_descr_name = 'empty'
+        empty_set_name = 'empty'
         tariff_name = 'no services'
-        self.add_service_sets([empty_set_descr_name])
-        self.add_tariff(empty_set_descr_name, tariff_name, False, parent_name)
+        self.add_service_sets([empty_set_name], [])
+        self.add_tariff(empty_set_name, tariff_name, False, parent_name)
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
@@ -208,7 +207,7 @@ class TariffTestCase(ServiceTestCase):
         }
         response = handle_action('get_tariff_detailed', data)
         self.assertEqual(tariff_name, response['name'])
-        self.assertEqual(empty_set_descr_name, response['service_set'])
+        self.assertEqual(empty_set_name, response['service_set'])
         self.assertEqual([], response['service_types'])
         self.assertEqual(False, response['in_archive'])
         self.assertEqual([tariff_name, parent_name], response['tariffs_chain'])

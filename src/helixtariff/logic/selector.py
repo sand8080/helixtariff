@@ -104,6 +104,12 @@ def get_rules(curs, client_id, tariff_name, for_update=False):
     return mapping.get_list(curs, Rule, cond=Eq('tariff_id', tariff.id), for_update=for_update)
 
 
+def get_rules_for_service_types(curs, client_id, service_types_ids, for_update=False):
+    cond_c_id = Eq('client_id', client_id)
+    cond_st_ids = In('service_type_id', service_types_ids)
+    return mapping.get_list(curs, Rule, cond=And(cond_c_id, cond_st_ids), for_update=for_update)
+
+
 def get_rules_indexed_by_tariff_service_type_ids(curs, client_id, tariffs_ids, service_types_ids, for_update=False):
     cond_names = In('id', service_types_ids)
     cond_client_id = Eq('client_id', client_id)
