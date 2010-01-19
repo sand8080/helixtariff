@@ -96,9 +96,8 @@ class ApplicationTestCase(DbBasedTestCase):
         for _ in xrange(service_sets_num):
             service_set_name = random_word()
             service_sets_names.append(service_set_name)
-            self.cli.add_service_set(login=self.cli.login, password=self.cli.password, name=service_set_name)#IGNORE:E1101
             types_to_add = types[random.randint(0, types_num / 2):random.randint(types_num / 2 + 1, types_num)]
-            self.cli.add_to_service_set(login=self.cli.login, password=self.cli.password, #IGNORE:E1101
+            self.cli.add_service_set(login=self.cli.login, password=self.cli.password, #IGNORE:E1101
                 name=service_set_name, service_types=types_to_add)
             print '.',
         print

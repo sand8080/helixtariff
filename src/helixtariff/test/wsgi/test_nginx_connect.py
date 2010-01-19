@@ -6,19 +6,18 @@ from eventlet import api, util
 from helixcore.test.util import profile
 from helixcore.server.response import response_app_error
 from helixcore.validol.validol import Scheme
+from helixcore.server.api import Api
 
 from helixtariff.test.db_based_test import DbBasedTestCase
 from helixtariff.test.wsgi.client import Client
 from helixtariff.wsgi.server import Server
 from helixtariff.validator.validator import protocol, ApiCall, RESPONSE_STATUS_ERROR
+from helixtariff.logic.handler import Handler
 
 util.wrap_socket_with_coroutine_socket()
 
 api.spawn(Server.run)
 
-from helixcore.server.api import Api
-from helixtariff.validator.validator import protocol
-from helixtariff.logic.handler import Handler
 
 class NginxTestCase(DbBasedTestCase):
     nginx_host = 'localhost'
@@ -44,8 +43,6 @@ class NginxTestCase(DbBasedTestCase):
         self.ping_loading(repeats=50)
 
     def test_get_empty_service_types(self):
-        response = self.cli.view_service_types(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
-        self.assertEqual('error', response['status'])
         self.cli.add_client(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
         self.check_status_ok(
             self.cli.view_service_types(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
@@ -65,8 +62,6 @@ class NginxTestCase(DbBasedTestCase):
         self.cli.request({'action': 'add_service_type', 'login': login, 'password': password,
             'name': service_type})
         self.cli.request({'action': 'add_service_set', 'login': login, 'password': password,
-            'name': service_set})
-        self.cli.request({'action': 'add_to_service_set', 'login': login, 'password': password,
             'name': service_set, 'service_types': [service_type]})
         self.cli.request({'action': 'get_service_set', 'login': login, 'password': password,
             'name': service_set})
@@ -97,8 +92,8 @@ class NginxTestCase(DbBasedTestCase):
         self.assertEqual([u'\u0447\u0447\u0447'], response['service_types'])
 
     def test_number_in_error_message(self):
-        global protocol
-        def incorect_error_message(self, _):
+        global protocol #IGNORE:W0603
+        def incorect_error_message(self, _): #IGNORE:W0613
             return response_app_error(1)
         Handler.incorect_error_message = incorect_error_message
         protocol += [
