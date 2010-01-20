@@ -15,7 +15,7 @@ class EngineTestCase(ServiceTestCase):
     def setUp(self):
         super(EngineTestCase, self).setUp()
         self.add_service_sets([self.service_set_name])
-        self.add_types(self.service_types_names)
+        self.add_service_types(self.service_types_names)
         self.add_to_service_set(self.service_set_name, self.service_types_names)
         self.add_tariff(self.service_set_name, self.tariff_name, False, None)
 

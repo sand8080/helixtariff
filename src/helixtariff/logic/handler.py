@@ -94,7 +94,15 @@ class Handler(object):
     @transaction()
     @authentificate
     def delete_service_type(self, data, curs=None):
-        t = selector.get_service_type_by_name(curs, data['client_id'], data['name'], for_update=True)
+        c_id = data['client_id']
+        st_name = data['name']
+        t = selector.get_service_type_by_name(curs, c_id, st_name, for_update=True)
+        ss_ids = selector.get_service_sets_ids_by_service_type(curs, t)
+        if ss_ids:
+            ss_names_idx = selector.get_service_sets_names_indexed_by_id(curs, c_id)
+            ss_names = [ss_names_idx[idx] for idx in ss_ids]
+            raise ServiceTypeUsed('''Service type '%s' used in service sets %s''' %
+                (st_name, ss_names))
         mapping.delete(curs, t)
         return response_ok()
 

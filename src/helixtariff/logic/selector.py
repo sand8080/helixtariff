@@ -7,6 +7,7 @@ from helixtariff.domain.objects import ServiceType, \
     ServiceSet, ServiceSetRow, Tariff, Rule, Client
 from helixtariff.domain import security
 from helixtariff.error import ClientNotFound, TariffNotFound, RuleNotFound
+from helixcore.mapping.actions import get_obj_by_field
 
 
 def get_service_type_by_name(curs, client_id, name, for_update=False):
@@ -144,6 +145,12 @@ def get_service_types_names_indexed_by_id(curs, client_id, for_update=False):
 def get_service_sets_names_indexed_by_id(curs, client_id, for_update=False):
     q = Select(ServiceSet.table, columns=['id', 'name'], cond=Eq('client_id', client_id), for_update=for_update)
     return _get_indexed_values(curs, q, 'id', 'name')
+
+
+def get_service_sets_ids_by_service_type(curs, service_type, for_update=False):
+    ss_rows = mapping.get_list(curs, ServiceSetRow, cond=Eq('service_type_id', service_type.id),
+        for_update=for_update)
+    return [r.service_set_id for r in ss_rows]
 
 
 def get_tariffs_names_indexed_by_id(curs, client_id, for_update=False):

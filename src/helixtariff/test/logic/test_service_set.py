@@ -13,7 +13,7 @@ class ServiceSetTestCase(ServiceTestCase):
 
     def setUp(self):
         super(ServiceSetTestCase, self).setUp()
-        self.add_types(self.service_types_names)
+        self.add_service_types(self.service_types_names)
         self.add_service_sets(self.service_sets, self.service_types_names)
 
 #    def test_add_service_sets(self):
