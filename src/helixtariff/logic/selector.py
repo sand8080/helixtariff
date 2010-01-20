@@ -156,10 +156,17 @@ def get_tariffs_parent_ids_indexed_by_id(curs, client_id, for_update=False):
     return _get_indexed_values(curs, q, 'id', 'parent_id')
 
 
+def get_tariffs_binded_with_service_sets(curs, client_id, service_sets_ids, for_update=False):
+    cond_client_id = Eq('client_id', client_id)
+    cond_ss_ids = In('service_set_id', service_sets_ids)
+    return mapping.get_list(curs, Tariff, cond=And(cond_client_id, cond_ss_ids), for_update=for_update)
+
+
 def get_service_set_rows(curs, service_sets_ids, for_update=False):
     q = Select(ServiceSetRow.table, cond=In('service_set_id', service_sets_ids), for_update=for_update)
     curs.execute(*q.glue())
-    return fetchall_dicts(curs)
+    result = fetchall_dicts(curs)
+    return [ServiceSetRow(**d) for d in result]
 
 
 def get_service_types_ids(curs, service_sets_ids, for_update=False):

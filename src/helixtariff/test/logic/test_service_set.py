@@ -16,9 +16,9 @@ class ServiceSetTestCase(ServiceTestCase):
         self.add_types(self.service_types_names)
         self.add_service_sets(self.service_sets, self.service_types_names)
 
-    def test_add_service_sets(self):
-        pass
-
+#    def test_add_service_sets(self):
+#        pass
+#
     def test_modify_service_set(self):
         name = self.service_sets[0]
         client = self.get_client_by_login(self.test_client_login)
@@ -54,13 +54,12 @@ class ServiceSetTestCase(ServiceTestCase):
         service_set = self.get_service_set_by_name(client.id, new_name)
         self.assertEqual(len(actual_service_types_names), len(self.get_service_set_rows(service_set)))
 
-    def test_modify_service_set_with_rules(self):
+    def test_modify_service_set_with_binded_rules(self):
         service_set_name = self.service_sets[0]
         service_type_name = self.service_types_names[0]
         tariff_name = 't0'
         self.add_tariff(service_set_name, tariff_name, False, None)
         self.add_rule(tariff_name, service_type_name, 'price = 2.01')
-
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
@@ -69,12 +68,31 @@ class ServiceSetTestCase(ServiceTestCase):
         }
         self.assertRaises(ServiceTypeUsed, handle_action, 'modify_service_set', data)
 
+        another_service_set_name = 'another %s' % service_set_name
+        self.add_service_sets([another_service_set_name], self.service_types_names)
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': another_service_set_name,
+            'new_service_types': self.service_types_names[1:]
+        }
+        response = handle_action('modify_service_set', data)
+        self.assertEqual('ok', response['status'])
+
     def test_delete_service_set(self):
         name = self.service_sets[0]
-        client = self.get_client_by_login(self.test_client_login)
-        service_type = self.get_service_set_by_name(client.id, name)
         data = {
-            'login': client.login,
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': name
+        }
+        self.assertRaises(ServiceSetNotEmpty, handle_action, 'delete_service_set', data)
+
+        client_id = self.get_client_by_login(self.test_client_login).id
+        service_type = self.get_service_set_by_name(client_id, name)
+
+        data = {
+            'login': self.test_client_login,
             'password': self.test_client_password,
             'name': name,
             'new_service_types': []
@@ -82,12 +100,12 @@ class ServiceSetTestCase(ServiceTestCase):
         handle_action('modify_service_set', data)
 
         data = {
-            'login': client.login,
+            'login': self.test_client_login,
             'password': self.test_client_password,
             'name': name
         }
         handle_action('delete_service_set', data)
-        self.assertRaises(EmptyResultSetError, self.get_service_set_by_name, client.id, name)
+        self.assertRaises(EmptyResultSetError, self.get_service_set_by_name, client_id, name)
         self.assertEqual([], self.get_service_set_rows(service_type))
 
     def test_delete_nonempty_service_set_failure(self):

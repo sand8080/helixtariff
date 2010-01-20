@@ -1,7 +1,7 @@
 from functools import partial
 
 import helixcore.mapping.actions as mapping
-from helixcore.db.sql import Eq
+from helixcore.db.sql import Eq, In, And
 from helixcore.server.response import response_ok
 from helixcore.db.wrapper import EmptyResultSetError
 
@@ -129,13 +129,15 @@ class Handler(object):
 
         return response_ok()
 
-    def _check_types_not_used(self, curs, client_id, service_types_names):
+    def _check_types_not_used(self, curs, client_id, service_sets_ids, service_types_names):
         service_types_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
         service_types_ids_idx = dict([(v, k) for (k, v) in service_types_names_idx.items()])
-        service_types_ids = [service_types_ids_idx[n] for n in service_types_names]
-        rules = selector.get_rules_for_service_types(curs, client_id, service_types_ids)
+        tariffs = selector.get_tariffs_binded_with_service_sets(curs, client_id, service_sets_ids)
+        cond_t_ids = In('tariff_id', [t.id for t in tariffs])
+        cond_st_ids = In('service_type_id', [service_types_ids_idx[n] for n in service_types_names])
+        rules = mapping.get_list(curs, Rule, cond=And(cond_t_ids, cond_st_ids))
         if rules:
-            tariffs_names_idx = selector.get_tariffs_names_indexed_by_id(curs, client_id)
+            tariffs_names_idx = dict([(t.id, t.name) for t in tariffs])
             usage = {}
             for r in rules:
                 tariff_name = tariffs_names_idx[r.tariff_id]
@@ -156,7 +158,7 @@ class Handler(object):
             old_service_types_names = [t.name for t in selector.get_service_types_by_service_set(curs, client_id, service_set.name)]
             service_types_names = data['new_service_types']
             service_types_names_to_check = list(set(old_service_types_names) - set(service_types_names))
-            self._check_types_not_used(curs, client_id, service_types_names_to_check)
+            self._check_types_not_used(curs, client_id, [service_set.id], service_types_names_to_check)
             del data['new_service_types']
             self._set_service_types_to_service_set(curs, client_id, service_set, service_types_names)
         self.update_obj(curs, data, loader)
@@ -221,7 +223,7 @@ class Handler(object):
 
         return response_ok()
 
-    def _get_service_sets_types(self, curs, client_id):
+    def _get_service_sets_types_dict(self, curs, client_id):
         '''
         @return: dictionary {service_set_name: [types_names]}
         '''
@@ -232,8 +234,8 @@ class Handler(object):
         for n in ss_names.values():
             service_sets_info[n] = list()
         for ss_row in ss_rows:
-            ss_name = ss_names[ss_row['service_set_id']]
-            t_name = t_names[ss_row['service_type_id']]
+            ss_name = ss_names[ss_row.service_set_id]
+            t_name = t_names[ss_row.service_type_id]
             service_sets_info[ss_name].append(t_name)
         for l in service_sets_info.values():
             l.sort()
@@ -252,7 +254,7 @@ class Handler(object):
     @authentificate
     def view_service_sets(self, data, curs=None):
         client_id = data['client_id']
-        service_sets_types = self._get_service_sets_types(curs, client_id)
+        service_sets_types = self._get_service_sets_types_dict(curs, client_id)
         result = []
         for k in sorted(service_sets_types.keys()):
             result.append({'name': k, 'service_types': sorted(service_sets_types[k])})
@@ -301,6 +303,10 @@ class Handler(object):
             data['new_parent_id'] = self._get_new_parent_id(curs, client_id,
                 tariff_name, new_parent_name)
             del data['new_parent_tariff']
+        if 'new_service_set' in data:
+
+            del data['new_service_set']
+
         loader = partial(selector.get_tariff, curs, client_id, tariff_name, for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
@@ -365,7 +371,7 @@ class Handler(object):
     def view_detailed_tariffs(self, data, curs=None):
         client_id = data['client_id']
         tariffs = mapping.get_list(curs, Tariff, cond=Eq('client_id', client_id))
-        service_sets_types = self._get_service_sets_types(curs, client_id)
+        service_sets_types = self._get_service_sets_types_dict(curs, client_id)
         tariffs_data = self._get_tariffs_data(curs, client_id, tariffs)
         for d in tariffs_data:
             d['service_types'] = service_sets_types[d['service_set']]
