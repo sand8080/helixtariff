@@ -128,6 +128,7 @@ MODIFY_TARIFF = dict(
         Optional('new_name'): Text(),
         Optional('new_parent_tariff'): NullableText,
         Optional('new_in_archive'): bool,
+        Optional('new_service_set'): Text(),
     },
     **AUTH_INFO
 )
@@ -157,27 +158,27 @@ GET_TARIFF_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-VIEW_TARIFFS = AUTH_INFO
-
-VIEW_TARIFFS_RESPONSE = AnyOf(
-    dict(
-        RESPONSE_STATUS_OK,
-        **{'tariffs': [TARIFF_INFO]}
-    ),
-    RESPONSE_STATUS_ERROR
-)
+GET_TARIFF_DETAILED = GET_TARIFF
 
 DETAILED_TARIFF_INFO = dict(
     {'service_types': [Text()]},
     **TARIFF_INFO
 )
 
-GET_TARIFF_DETAILED = GET_TARIFF
-
 GET_TARIFF_DETAILED_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **DETAILED_TARIFF_INFO
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+VIEW_TARIFFS = AUTH_INFO
+
+VIEW_TARIFFS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{'tariffs': [TARIFF_INFO]}
     ),
     RESPONSE_STATUS_ERROR
 )
@@ -240,7 +241,7 @@ GET_RULES_RESPONSE = AnyOf(
 )
 
 VIEW_RULES = dict(
-    {'tariff': Text(),},
+    {'tariff': Text()},
     **AUTH_INFO
 )
 

@@ -6,18 +6,24 @@ from helixcore.db.wrapper import EmptyResultSetError, fetchall_dicts
 from helixtariff.domain.objects import ServiceType, \
     ServiceSet, ServiceSetRow, Tariff, Rule, Client
 from helixtariff.domain import security
-from helixtariff.error import ClientNotFound, TariffNotFound, RuleNotFound
-from helixcore.mapping.actions import get_obj_by_field
+from helixtariff.error import ClientNotFound, TariffNotFound, RuleNotFound,\
+    ServiceTypeNotFound, ServiceSetNotFound
 
 
 def get_service_type_by_name(curs, client_id, name, for_update=False):
-    fields = {'client_id': client_id, 'name': name}
-    return mapping.get_obj_by_fields(curs, ServiceType, fields, for_update)
+    try:
+        return mapping.get_obj_by_fields(curs, ServiceType,
+            {'client_id': client_id, 'name': name}, for_update)
+    except EmptyResultSetError:
+        raise ServiceTypeNotFound(name)
 
 
 def get_service_set_by_name(curs, client_id, name, for_update=False):
-    return mapping.get_obj_by_fields(curs, ServiceSet,
-        {'client_id': client_id, 'name': name}, for_update)
+    try:
+        return mapping.get_obj_by_fields(curs, ServiceSet,
+            {'client_id': client_id, 'name': name}, for_update)
+    except EmptyResultSetError:
+        raise ServiceSetNotFound(name)
 
 
 def get_service_set(curs, id, for_update=False): #IGNORE:W0622
@@ -76,6 +82,12 @@ def get_tariff_by_id(curs, client_id, tariff_id, for_update=False):
     cond_id = Eq('id', tariff_id)
     cond = And(cond_client_id, cond_id)
     return mapping.get(curs, Tariff, cond=cond, for_update=for_update)
+
+
+def get_child_tariffs(curs, tariff, for_update=False):
+    cond_c_id = Eq('client_id', tariff.client_id)
+    cond_pt_id = Eq('parent_id', tariff.id)
+    return mapping.get_list(curs, Tariff, cond=And(cond_c_id, cond_pt_id), for_update=for_update)
 
 
 def get_rule(curs, client_id, tariff_name, service_type_name, for_update=False):

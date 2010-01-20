@@ -47,9 +47,9 @@ class ServiceTestCase(DbBasedTestCase):
     def get_root_client(self):
         return self.get_client_by_login(self.test_client_login)
 
-    def add_service_sets(self, service_sets, service_types_names):
+    def add_service_sets(self, service_sets_names, service_types_names):
         client = self.get_client_by_login(self.test_client_login)
-        for s in service_sets:
+        for s in service_sets_names:
             handle_action('add_service_set', {'login': self.test_client_login, 'password': self.test_client_password,
                 'name': s, 'service_types': service_types_names}
             )
@@ -63,7 +63,7 @@ class ServiceTestCase(DbBasedTestCase):
     def get_service_type_by_name(self, client_id, name, curs=None):
         return selector.get_service_type_by_name(curs, client_id, name)
 
-    def add_types(self, service_types):
+    def add_service_types(self, service_types):
         for t in service_types:
             handle_action(
                 'add_service_type',

@@ -26,6 +26,10 @@ class ServiceTypeUsed(ObjectNotFound):
     pass
 
 
+class TariffUsed(ObjectNotFound):
+    pass
+
+
 class ServiceTypeNotFound(ObjectNotFound):
     def __init__(self, name):
         super(ServiceTypeNotFound, self).__init__('''Service type '%s' not found''' % name)
@@ -34,6 +38,11 @@ class ServiceTypeNotFound(ObjectNotFound):
 class ServiceSetNotEmpty(ObjectNotFound):
     def __init__(self, name):
         super(ServiceSetNotEmpty, self).__init__('''Service set '%s' contains service types''' % name)
+
+
+class ServiceSetNotFound(ObjectNotFound):
+    def __init__(self, name):
+        super(ServiceSetNotFound, self).__init__('''Service set '%s' not found''' % name)
 
 
 class ClientNotFound(EmptyResultSetError, HelixtariffError):

@@ -1,11 +1,11 @@
 import unittest
 
 from helixcore.server.exceptions import DataIntegrityError
-from helixcore.db.wrapper import EmptyResultSetError
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
-from helixtariff.error import TariffNotFound, TariffCycleError
+from helixtariff.error import TariffNotFound, TariffCycleError,\
+    ServiceSetNotFound, TariffUsed
 
 
 class TariffTestCase(ServiceTestCase):
@@ -20,7 +20,7 @@ class TariffTestCase(ServiceTestCase):
 
     def setUp(self):
         super(TariffTestCase, self).setUp()
-        self.add_types(self.service_types_names)
+        self.add_service_types(self.service_types_names)
         self.add_service_sets([self.service_set_name], self.service_types_names)
 
     def test_add_tariff(self):
@@ -29,7 +29,7 @@ class TariffTestCase(ServiceTestCase):
         self.add_tariff(self.service_set_name, 'child of %s' % self.name, self.in_archive, t.name)
 
     def test_add_tariff_failure(self):
-        self.assertRaises(EmptyResultSetError, self.add_tariff, self.service_set_name + 'fake',
+        self.assertRaises(ServiceSetNotFound, self.add_tariff, self.service_set_name + 'fake',
             self.name, self.in_archive, None
         )
         self.add_tariff(self.service_set_name, self.name, self.in_archive, None)
@@ -61,6 +61,24 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(new_name, t.name)
         self.assertEqual(self.root_client_id, t.client_id)
         self.assertEqual(not self.in_archive, t.in_archive)
+
+    def test_modify_tariff_service_set_without_rules(self):
+        self.add_tariff(self.service_set_name, self.name, False, None)
+        new_service_set_name = 'new_%s' % self.service_set_name
+        self.add_service_sets([new_service_set_name], self.service_types_names[2:])
+        client_id = self.get_root_client().id
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': self.name,
+            'new_service_set': new_service_set_name,
+        }
+        handle_action('modify_tariff', data)
+        t = self.get_tariff(self.root_client_id, self.name)
+        new_service_set = self.get_service_set_by_name(client_id, new_service_set_name)
+        self.assertEqual(self.name, t.name)
+        self.assertEqual(client_id, t.client_id)
+        self.assertEqual(new_service_set.id, t.service_set_id)
 
     def test_modify_parent_tariff(self):
         parent_name = 'parent'
@@ -96,7 +114,7 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(self.get_tariff(self.root_client_id, parent_name).id, t.parent_id)
 
     def test_modify_tariff_do_nothing(self):
-        self.test_add_tariff()
+        self.add_tariff(self.service_set_name, self.name, self.in_archive, None)
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
@@ -107,14 +125,15 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(self.name, t.name)
         self.assertEqual(self.root_client_id, t.client_id)
 
-    def test_delete_tariff_failure(self):
-        self.test_add_tariff()
+    def test_delete_parent_tariff(self):
+        self.add_tariff(self.service_set_name, self.name, self.in_archive, None)
+        self.add_tariff(self.service_set_name, 'child of %s' % self.name, self.in_archive, self.name)
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
             'name': self.name,
         }
-        self.assertRaises(DataIntegrityError, handle_action, 'delete_tariff', data)
+        self.assertRaises(TariffUsed, handle_action, 'delete_tariff', data)
 
     def test_delete_tariff(self):
         parent_name = 'parent'

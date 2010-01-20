@@ -14,7 +14,7 @@ from helixtariff.rulesengine import engine
 from helixtariff.rulesengine.interaction import RequestPrice
 from helixtariff.domain import security
 from helixtariff.error import TariffCycleError, ServiceTypeNotFound, RuleNotFound,\
-    ServiceSetNotEmpty, ServiceTypeUsed
+    ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed
 
 
 def authentificate(method):
@@ -196,41 +196,6 @@ class Handler(object):
             except EmptyResultSetError, _:
                 raise ServiceTypeNotFound(n)
 
-
-    @transaction()
-    @authentificate
-    def add_to_service_set(self, data, curs=None):
-        client_id, name = data['client_id'], data['name']
-        service_set, types = self._get_service_set_info(curs, client_id, name)
-        types_in_set = [t.name for t in types]
-        types_to_add = set(filter(lambda x: x not in types_in_set, data['service_types']))
-        for n in types_to_add:
-            try:
-                t = selector.get_service_type_by_name(curs, service_set.client_id, n)
-                r = ServiceSetRow(**{'service_type_id': t.id, 'service_set_id': service_set.id})
-                mapping.insert(curs, r)
-            except EmptyResultSetError, _:
-                raise ServiceTypeNotFound(n)
-        return response_ok()
-
-    @transaction()
-    @authentificate
-    def delete_from_service_set(self, data, curs=None):
-        client_id, name = data['client_id'], data['name']
-        service_set, types = self._get_service_set_info(curs, client_id, name)
-        types_in_set = [t.name for t in types]
-        types_to_del = set(filter(lambda x: x in types_in_set, data['service_types']))
-        for n in types_to_del:
-            try:
-                t = selector.get_service_type_by_name(curs, service_set.client_id, n)
-                r = mapping.get_obj_by_fields(curs, ServiceSetRow,
-                    {'service_type_id': t.id, 'service_set_id': service_set.id}, False)
-                mapping.delete(curs, r)
-            except EmptyResultSetError, _:
-                raise ServiceTypeNotFound(n)
-
-        return response_ok()
-
     def _get_service_sets_types_dict(self, curs, client_id):
         '''
         @return: dictionary {service_set_name: [types_names]}
@@ -304,26 +269,36 @@ class Handler(object):
     @transaction()
     @authentificate
     def modify_tariff(self, data, curs=None):
-        client_id = data['client_id']
-        tariff_name = data['name']
+        c_id = data['client_id']
+        t_name = data['name']
+        t = selector.get_tariff(curs, c_id, t_name, for_update=True)
         if 'new_parent_tariff' in data:
-            new_parent_name = data['new_parent_tariff']
-            data['new_parent_id'] = self._get_new_parent_id(curs, client_id,
-                tariff_name, new_parent_name)
+            new_p_name = data['new_parent_tariff']
+            data['new_parent_id'] = self._get_new_parent_id(curs, c_id,
+                t_name, new_p_name)
             del data['new_parent_tariff']
         if 'new_service_set' in data:
-
+            new_ss = selector.get_service_set_by_name(curs, c_id, data['new_service_set'])
+            st_names_idx = selector.get_service_types_names_indexed_by_id(curs, c_id)
+            old_st_ids = selector.get_service_types_ids(curs, [t.service_set_id])
+            new_st_ids = selector.get_service_types_ids(curs, [new_ss.id])
+            st_names_to_check = [st_names_idx[idx] for idx in set(old_st_ids) - set(new_st_ids)]
+            self._check_types_not_used(curs, c_id, [new_ss.id], st_names_to_check)
+            data['new_service_set_id'] = new_ss.id
             del data['new_service_set']
-
-        loader = partial(selector.get_tariff, curs, client_id, tariff_name, for_update=True)
+        def loader():
+            return t
         self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
     @authentificate
     def delete_tariff(self, data, curs=None):
-        obj = selector.get_tariff(curs, data['client_id'], data['name'])
-        mapping.delete(curs, obj)
+        t = selector.get_tariff(curs, data['client_id'], data['name'])
+        childs = selector.get_child_tariffs(curs, t)
+        if childs:
+            raise TariffUsed('''Tariff '%s' is parent of %s''' % (t.name, [t.name for t in childs]))
+        mapping.delete(curs, t)
         return response_ok()
 
     def _get_tariffs_data(self, curs, client_id, tariffs):

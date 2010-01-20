@@ -109,65 +109,22 @@ class ValidatorTestCase(RootTestCase):
         self.validate_status_response('add_tariff')
 
     def test_modify_tariff(self):
-        self.api.validate_request(
-            'modify_tariff',
-            {
-                'login': 'l',
-                'password': 'p',
-                'name': 'приведи друга',
-                'new_name': 'для блондинок'
-            }
-        )
-        self.api.validate_request(
-            'modify_tariff',
-            {
-                'login': 'l',
-                'password': 'p',
-                'name': 'приведи друга',
-                'new_in_archive': True
-            }
-        )
-        self.api.validate_request(
-            'modify_tariff',
-            {
-                'login': 'l',
-                'password': 'p',
-                'name': 'приведи друга',
-                'new_name': 'для блондинок',
-                'new_in_archive': True
-            }
-        )
-        self.api.validate_request(
-            'modify_tariff',
-            {
-                'login': 'l',
-                'password': 'p',
-                'name': 'приведи друга',
-                'new_name': 'для блондинок',
-                'new_in_archive': True,
-                'new_parent_tariff': None
-            }
-        )
-        self.api.validate_request(
-            'modify_tariff',
-            {
-                'login': 'l',
-                'password': 'p',
-                'name': 'приведи друга',
-                'new_name': 'для блондинок',
-                'new_in_archive': True,
-                'new_parent_tariff': 'первый целевой'
-            }
-        )
-        self.api.validate_request(
-            'modify_tariff',
-            {
-                'login': 'l',
-                'password': 'p',
-                'name': 'приведи друга'
-            }
-        )
+        self.api.validate_request('modify_tariff', {'login': 'l', 'password': 'p',
+            'name': 'n', 'new_name': 'nn'})
+        self.api.validate_request('modify_tariff', {'login': 'l', 'password': 'p',
+            'name': 'n', 'new_in_archive': True})
+        self.api.validate_request('modify_tariff', {'login': 'l', 'password': 'p',
+            'name': 'n', 'new_name': 'nn', 'new_in_archive': True})
+        self.api.validate_request('modify_tariff', {'login': 'l', 'password': 'p',
+            'name': 'n', 'new_name': 'nn', 'new_in_archive': True, 'new_parent_tariff': None})
+        self.api.validate_request('modify_tariff', {'login': 'l', 'password': 'p',
+            'name': 'n', 'new_name': 'nn', 'new_in_archive': True, 'new_parent_tariff': 't'})
+        self.api.validate_request('modify_tariff', {'login': 'l', 'password': 'p',
+            'name': 'n', 'new_name': 'nn', 'new_service_set': 's'})
+        self.api.validate_request('modify_tariff', {'login': 'l', 'password': 'p', 'name': 'n'})
         self.validate_status_response('modify_tariff')
+        self.api.validate_response('modify_tariff',
+            {'status': 'error', 'category': 't', 'message': 'm'})
 
     def test_delete_tariff(self):
         self.api.validate_request('delete_tariff', {'login': 'l', 'password': 'p', 'name': 'приведи друга'})
