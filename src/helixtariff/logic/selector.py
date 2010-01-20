@@ -114,9 +114,10 @@ def _gen_sel_service_type(name, client_id):
     return Select(ServiceType.table, columns='id', cond=And(cond_n, cond_c_id))
 
 
-def get_rules(curs, client_id, tariff_name, for_update=False):
-    tariff = get_tariff(curs, client_id, tariff_name)
-    return mapping.get_list(curs, Rule, cond=Eq('tariff_id', tariff.id), for_update=for_update)
+def get_rules(curs, tariff, for_update=False):
+    cond_c_id = Eq('client_id', tariff.client_id)
+    cond_t_id = Eq('tariff_id', tariff.id)
+    return mapping.get_list(curs, Rule, cond=And(cond_c_id, cond_t_id), for_update=for_update)
 
 
 def get_rules_for_service_types(curs, client_id, service_types_ids, for_update=False):

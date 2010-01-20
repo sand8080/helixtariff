@@ -294,10 +294,17 @@ class Handler(object):
     @transaction()
     @authentificate
     def delete_tariff(self, data, curs=None):
-        t = selector.get_tariff(curs, data['client_id'], data['name'])
+        c_id = data['client_id']
+        t_name = data['name']
+        t = selector.get_tariff(curs, c_id, t_name, for_update=True)
         childs = selector.get_child_tariffs(curs, t)
         if childs:
             raise TariffUsed('''Tariff '%s' is parent of %s''' % (t.name, [t.name for t in childs]))
+        rules = selector.get_rules(curs, t)
+        if rules:
+            st_names_idx = selector.get_service_sets_names_indexed_by_id(curs, c_id)
+            raise TariffUsed('''In tariff '%s' defined rules for services %s''' %
+                (t.name, [st_names_idx[idx] for idx in st_names_idx]))
         mapping.delete(curs, t)
         return response_ok()
 
@@ -408,7 +415,7 @@ class Handler(object):
         tariff = selector.get_tariff(curs, client_id, data['tariff'])
         st_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
         rules = []
-        for r in selector.get_rules(curs, client_id, tariff.name):
+        for r in selector.get_rules(curs, client_id, tariff):
             rules.append({
                 'service_type': st_names_idx[r.service_type_id],
                 'rule': r.rule
