@@ -379,7 +379,6 @@ class Handler(object):
         service_type = selector.get_service_type_by_name(curs, data['client_id'], data['service_type'])
         del data['service_type']
         data['service_type_id'] = service_type.id
-
         mapping.insert(curs, Rule(**data))
         return response_ok()
 
@@ -415,7 +414,7 @@ class Handler(object):
         tariff = selector.get_tariff(curs, client_id, data['tariff'])
         st_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
         rules = []
-        for r in selector.get_rules(curs, client_id, tariff):
+        for r in selector.get_rules(curs, tariff):
             rules.append({
                 'service_type': st_names_idx[r.service_type_id],
                 'rule': r.rule

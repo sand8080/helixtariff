@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from helixtariff.error import RuleNotFound
 import unittest
 from functools import partial
 
 from helixcore.server.exceptions import DataIntegrityError
+from helixcore.db.wrapper import ObjectAlreadyExists
 
+from helixtariff.error import RuleNotFound
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
 
@@ -16,7 +17,7 @@ class RuleTestCase(ServiceTestCase):
 
     def setUp(self):
         super(RuleTestCase, self).setUp()
-        self.add_types(self.service_types_names)
+        self.add_service_types(self.service_types_names)
         self.add_service_sets([self.service_set_name], self.service_types_names)
         self.add_tariff(self.service_set_name, self.tariff_name, False, None)
 
@@ -28,9 +29,9 @@ if context.get_balance(request.customer_id) > 500: price -= 30
         self.add_rule(self.tariff_name, self.service_types_names[0], rule)
 
     def test_add_rule_duplicate(self):
-        self.add_rule(self.tariff_name, self.service_types_names[0], '')
         self.add_rule(self.tariff_name, self.service_types_names[1], '')
-        self.assertRaises(DataIntegrityError, self.add_rule, self.tariff_name, self.service_types_names[1], '')
+        self.assertRaises(ObjectAlreadyExists, self.add_rule,
+            self.tariff_name, self.service_types_names[1], '')
 
     def test_modify_rule(self):
         old_raw_rule = 'price = 10.01'
