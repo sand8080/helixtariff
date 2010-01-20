@@ -1,6 +1,6 @@
 import unittest
 
-from helixcore.server.exceptions import DataIntegrityError
+from helixcore.db.wrapper import ObjectAlreadyExists
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
@@ -33,7 +33,7 @@ class TariffTestCase(ServiceTestCase):
             self.name, self.in_archive, None
         )
         self.add_tariff(self.service_set_name, self.name, self.in_archive, None)
-        self.assertRaises(DataIntegrityError, self.add_tariff, self.service_set_name,
+        self.assertRaises(ObjectAlreadyExists, self.add_tariff, self.service_set_name,
             self.name, self.in_archive, None
         )
 

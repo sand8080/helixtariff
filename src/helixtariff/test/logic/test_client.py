@@ -1,7 +1,7 @@
 import unittest
 
-from helixcore.db.wrapper import EmptyResultSetError
-from helixcore.server.exceptions import DataIntegrityError, AuthError
+from helixcore.db.wrapper import EmptyResultSetError, ObjectAlreadyExists
+from helixcore.server.exceptions import AuthError
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
@@ -13,7 +13,7 @@ class ClientTestCase(ServiceTestCase):
 
     def test_add_client_invalid(self):
         self.add_client('john', 'milk and soda')
-        self.assertRaises(DataIntegrityError, self.add_client, 'john', 'milk and cola')
+        self.assertRaises(ObjectAlreadyExists, self.add_client, 'john', 'milk and cola')
 
     def test_modify_client(self):
         login_old = 'john'

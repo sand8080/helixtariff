@@ -1,10 +1,9 @@
 import unittest
 
-from helixcore.db.wrapper import EmptyResultSetError
-
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
-from helixtariff.error import ServiceSetNotEmpty, ServiceTypeUsed
+from helixtariff.error import ServiceSetNotEmpty, ServiceTypeUsed,\
+    ServiceSetNotFound
 
 
 class ServiceSetTestCase(ServiceTestCase):
@@ -16,9 +15,9 @@ class ServiceSetTestCase(ServiceTestCase):
         self.add_service_types(self.service_types_names)
         self.add_service_sets(self.service_sets, self.service_types_names)
 
-#    def test_add_service_sets(self):
-#        pass
-#
+    def test_add_service_sets(self):
+        pass
+
     def test_modify_service_set(self):
         name = self.service_sets[0]
         client = self.get_client_by_login(self.test_client_login)
@@ -105,7 +104,7 @@ class ServiceSetTestCase(ServiceTestCase):
             'name': name
         }
         handle_action('delete_service_set', data)
-        self.assertRaises(EmptyResultSetError, self.get_service_set_by_name, client_id, name)
+        self.assertRaises(ServiceSetNotFound, self.get_service_set_by_name, client_id, name)
         self.assertEqual([], self.get_service_set_rows(service_type))
 
     def test_delete_nonempty_service_set_failure(self):

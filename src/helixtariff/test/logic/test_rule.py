@@ -2,7 +2,6 @@
 import unittest
 from functools import partial
 
-from helixcore.server.exceptions import DataIntegrityError
 from helixcore.db.wrapper import ObjectAlreadyExists
 
 from helixtariff.error import RuleNotFound

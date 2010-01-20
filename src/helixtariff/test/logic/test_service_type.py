@@ -1,11 +1,10 @@
-from helixtariff.error import ServiceTypeUsed
 import unittest
 
-from helixcore.db.wrapper import EmptyResultSetError
 from helixcore.server.exceptions import AuthError
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
+from helixtariff.error import ServiceTypeUsed, ServiceTypeNotFound
 
 
 class ServiceTypeTestCase(ServiceTestCase):
@@ -46,7 +45,8 @@ class ServiceTypeTestCase(ServiceTestCase):
                 'name': self.service_type_name,
             }
         )
-        self.assertRaises(EmptyResultSetError, self.get_service_type_by_name, self.client.id, self.service_type_name)
+        self.assertRaises(ServiceTypeNotFound, self.get_service_type_by_name,
+            self.client.id, self.service_type_name)
 
     def test_delete_used_service_type(self):
         service_types_names = [self.service_type_name]
