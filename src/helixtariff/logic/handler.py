@@ -116,6 +116,26 @@ class Handler(object):
             service_types=[t.name for t in service_types]
         )
 
+    @transaction()
+    @authentificate
+    def view_service_types_detailed(self, data, curs=None):
+        c_id = data['client_id']
+        s_types = selector.get_service_types(curs, c_id)
+        st_info_idx = {}
+        for r in selector.get_service_set_rows_by_service_types(curs, s_types):
+            st_id = r.service_type_id
+            if st_id not in st_info_idx:
+                st_info_idx[st_id] = []
+            st_info_idx[st_id].append(r.service_set_id)
+        ss_names_idx = selector.get_service_sets_names_indexed_by_id(curs, c_id)
+        st_info = []
+        for t in s_types:
+            ss_names = sorted([ss_names_idx[ss_id] for ss_id in st_info_idx[t.id]])
+            st_info.append(
+                {'name': t.name, 'service_sets': ss_names}
+            )
+        return response_ok(service_types=st_info)
+
     # server_set
     def _set_service_types_to_service_set(self, curs, client_id, service_set, service_types_names):
         curs.execute(*mapping.Delete(ServiceSetRow.table, cond=Eq('service_set_id', service_set.id)).glue())

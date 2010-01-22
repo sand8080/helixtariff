@@ -78,6 +78,31 @@ class ServiceTypeTestCase(ServiceTestCase):
         self.assertRaises(AuthError, handle_action, 'view_service_types', {'login': 'fake',
             'password': self.test_client_password})
 
+    def test_view_service_types_detailed(self):
+        types = ['one', 'two', 'three']
+        self.add_service_types(types)
+        ss_struct = {
+            's0': types[1:],
+            's1': [],
+            's2': types,
+        }
+        st_struct = {}
+        for ss_name, st_names in ss_struct.items():
+            for t_name in st_names:
+                if t_name not in st_struct:
+                    st_struct[t_name] = set()
+                st_struct[t_name].add(ss_name)
+
+        for ss_name, st_names in ss_struct.items():
+            self.add_service_sets([ss_name], st_names)
+        response = handle_action('view_service_types_detailed', {'login': self.test_client_login,
+            'password': self.test_client_password})
+        self.assertEqual('ok', response['status'])
+        service_types_info = response['service_types']
+        for st_info in service_types_info:
+            st_name = st_info['name']
+            self.assertEqual(sorted(list(st_struct[st_name])), st_info['service_sets'])
+
 
 if __name__ == '__main__':
     unittest.main()

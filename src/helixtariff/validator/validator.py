@@ -60,6 +60,18 @@ VIEW_SERVICE_TYPES_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
+VIEW_SERVICE_TYPES_DETAILED = VIEW_SERVICE_TYPES
+
+VIEW_SERVICE_TYPES_DETAILED_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        service_types=[
+            {'name': Text(), 'service_sets': [Text()]}
+        ]
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 # --- service set ---
 ADD_SERVICE_SET = dict(
     {
@@ -112,7 +124,6 @@ VIEW_SERVICE_SETS_RESPONSE = AnyOf(
 )
 
 GET_SERVICE_SET_DETAILED = GET_SERVICE_SET
-
 SERVICE_SET_INFO_DETAILED = dict({'tariffs': [Text()]}, **SERVICE_SET_INFO)
 
 GET_SERVICE_SET_DETAILED_RESPONSE = AnyOf(
@@ -371,6 +382,9 @@ protocol = [
 
     ApiCall('view_service_types_request', Scheme(VIEW_SERVICE_TYPES)),
     ApiCall('view_service_types_response', Scheme(VIEW_SERVICE_TYPES_RESPONSE)),
+
+    ApiCall('view_service_types_detailed_request', Scheme(VIEW_SERVICE_TYPES_DETAILED)),
+    ApiCall('view_service_types_detailed_response', Scheme(VIEW_SERVICE_TYPES_DETAILED_RESPONSE)),
 
     # service set
     ApiCall('add_service_set_request', Scheme(ADD_SERVICE_SET)),

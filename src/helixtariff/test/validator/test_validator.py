@@ -56,6 +56,24 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_response('view_service_types', {'status': 'ok', 'service_types': ['one', 'two']})
         self.api.validate_response('view_service_types', {'status': 'error', 'category': 'test', 'message': 'happens'})
 
+    def test_view_service_types_detailed(self):
+        self.api.validate_request('view_service_types_detailed', {'login': 'l', 'password': 'p'})
+        self.api.validate_response('view_service_types_detailed',
+            {'status': 'error', 'category': 't', 'message': 'm'})
+        self.api.validate_response('view_service_types_detailed', {'status': 'ok',
+            'service_types': []})
+        self.api.validate_response('view_service_types_detailed', {'status': 'ok',
+            'service_types': [
+                {'name': 'n', 'service_sets': []},
+            ]
+        })
+        self.api.validate_response('view_service_types_detailed', {'status': 'ok',
+            'service_types': [
+                {'name': 'n', 'service_sets': []},
+                {'name': 'm', 'service_sets': ['s0', 's1']},
+            ]
+        })
+
     def test_modify_service_type_invalid(self):
         self.assertRaises(ValidationError, self.api.validate_request, 'modify_service_type', {'login': 'l', 'password': 'p', 'name': 'cheli0s'})
 

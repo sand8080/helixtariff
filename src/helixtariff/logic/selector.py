@@ -185,8 +185,14 @@ def get_tariffs_binded_with_service_sets(curs, client_id, service_sets_ids, for_
 def get_service_set_rows(curs, service_sets_ids, for_update=False):
     q = Select(ServiceSetRow.table, cond=In('service_set_id', service_sets_ids), for_update=for_update)
     curs.execute(*q.glue())
-    result = fetchall_dicts(curs)
-    return [ServiceSetRow(**d) for d in result]
+    return [ServiceSetRow(**d) for d in fetchall_dicts(curs)]
+
+
+def get_service_set_rows_by_service_types(curs, service_types, for_update=False):
+    st_ids = [t.id for t in service_types]
+    q = Select(ServiceSetRow.table, cond=In('service_set_id', st_ids), for_update=for_update)
+    curs.execute(*q.glue())
+    return [ServiceSetRow(**d) for d in fetchall_dicts(curs)]
 
 
 def get_service_types_ids(curs, service_sets_ids, for_update=False):
