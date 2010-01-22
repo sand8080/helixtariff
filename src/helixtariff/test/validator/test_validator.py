@@ -220,13 +220,13 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_response('get_price',
             {'status': 'error', 'category': 'test', 'message': 'happens'})
         self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': [],
-            'service_type': 's', 'price': None, 'context': {}})
+            'service_type': 's', 'price': None, 'price_calculation': 'price_undefined', 'context': {}})
         self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': [],
-            'service_type': 's', 'price': '10.09', 'context': {}})
+            'service_type': 's', 'price': '10.09', 'price_calculation': 'normal', 'context': {}})
         self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m'],
-            'service_type': 's', 'price': '10.09', 'context': {'period': 1}})
+            'service_type': 's', 'price': '10.09', 'price_calculation': 'service_type_disabled', 'context': {'period': 1}})
         self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m', 'n'],
-            'service_type': 's', 'price': '10.09', 'context': {'period': 1, 'customer_id': 'l'}})
+            'service_type': 's', 'price': '10.09', 'price_calculation': 'normal', 'context': {'period': 1, 'customer_id': 'l'}})
 
     def test_get_invalid(self):
         self.assertRaises(ValidationError, self.api.validate_request, 'get_price',
@@ -311,12 +311,13 @@ class ValidatorTestCase(RootTestCase):
             'prices': []})
         self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {'customer_id': 'c'},
             'prices': [
-                {'tariffs_chain': ['m', 'n'], 'service_type': 's', 'price': '10.16'},
+                {'tariffs_chain': ['m', 'n'], 'service_type': 's', 'price': '10.16', 'price_calculation': 'normal'},
             ]})
         self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {'customer_id': 'c'},
             'prices': [
-                {'tariffs_chain': ['m', 'n'], 'service_type': 's', 'price': '10.16'},
-                {'tariffs_chain': ['p'], 'service_type': 'l', 'price': '20.16'},
+                {'tariffs_chain': ['m', 'n'], 'service_type': 's', 'price': '10.16', 'price_calculation': 'normal'},
+                {'tariffs_chain': ['p'], 'service_type': 'l', 'price': '20.16',  'price_calculation': 'service_type_disabled'},
+                {'tariffs_chain': ['p'], 'service_type': 'l', 'price': None,  'price_calculation': 'price_undefined'},
             ]})
 
 

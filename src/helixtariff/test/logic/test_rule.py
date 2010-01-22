@@ -97,6 +97,36 @@ if context.get_balance(request.customer_id) > 500: price -= 30
         self.assertEqual(self.tariff_name, result['tariff'])
         self.assertEqual(expected_rules, result['rules'])
 
+    def test_view_not_all_defined_rules(self):
+        client = self.get_client_by_login(self.test_client_login)
+        data = {
+            'login': client.login,
+            'password': self.test_client_password,
+            'tariff': self.tariff_name,
+        }
+        response = handle_action('view_rules', data)
+        self.assertEqual('ok', response['status'])
+        self.assertEqual([], response['rules'])
+
+        expected_rules = []
+        for i, n in enumerate(self.service_types_names[1:]):
+            r = 'price = %03d.%02d' % (i, i)
+            expected_rules.append({
+                'service_type': n,
+                'rule': r,
+            })
+            self.add_rule(self.tariff_name, n, r)
+
+        data = {
+            'login': client.login,
+            'password': self.test_client_password,
+            'tariff': self.tariff_name,
+        }
+        response = handle_action('view_rules', data)
+        self.assertEqual('ok', response['status'])
+        self.assertEqual(self.tariff_name, response['tariff'])
+        self.assertEqual(expected_rules, response['rules'])
+
     def test_get_rule(self):
         client = self.get_client_by_login(self.test_client_login)
         data = {

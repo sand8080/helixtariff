@@ -253,6 +253,7 @@ VIEW_RULES_RESPONSE = AnyOf(
             'rules': [{
                 'service_type': Text(),
                 'rule': Text(),
+                'rule': Text(),
             }]
         }
     ),
@@ -270,6 +271,16 @@ GET_PRICE = dict(
     **AUTH_INFO
 )
 
+
+PRICE_CALC_NORMAL = 'normal'
+PRICE_CALC_SERVICE_TYPE_DISABLED = 'service_type_disabled'
+PRICE_CALC_PRICE_UNDEFINED = 'price_undefined'
+PRICE_CALCULATION = AnyOf(
+    PRICE_CALC_NORMAL,
+    PRICE_CALC_SERVICE_TYPE_DISABLED,
+    PRICE_CALC_PRICE_UNDEFINED,
+)
+
 GET_PRICE_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
@@ -278,6 +289,7 @@ GET_PRICE_RESPONSE = AnyOf(
             'tariffs_chain': [Text()],
             'service_type': Text(),
             'price': AnyOf(DecimalText(), None),
+            'price_calculation': PRICE_CALCULATION,
             'context': FlatDict(),
         }
     ),
@@ -301,7 +313,7 @@ VIEW_PRICES_RESPONSE = AnyOf(
             'prices': [{
                 'tariffs_chain': [Text()],
                 'service_type': Text(),
-#                'price_calculation': AnyOf('normal', 'service_type_disabled', 'price_undefined'),
+                'price_calculation': PRICE_CALCULATION,
                 'price': AnyOf(DecimalText(), None),
             }],
         }

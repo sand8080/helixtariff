@@ -13,8 +13,10 @@ from helixtariff.rulesengine.checker import RuleChecker
 from helixtariff.rulesengine import engine
 from helixtariff.rulesengine.interaction import RequestPrice
 from helixtariff.domain import security
-from helixtariff.error import TariffCycleError, ServiceTypeNotFound, RuleNotFound,\
-    ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed
+from helixtariff.error import TariffCycleError, ServiceTypeNotFound, \
+    ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed, ObjectNotFound
+from helixtariff.validator.validator import PRICE_CALC_NORMAL, \
+    PRICE_CALC_PRICE_UNDEFINED
 
 
 def authentificate(method):
@@ -459,71 +461,76 @@ class Handler(object):
             k = (t_id, service_type_id)
             if k in indexed_rules:
                 return indexed_rules[k]
-        raise EmptyResultSetError()
+        raise ObjectNotFound()
 
 
     @transaction()
     @authentificate
     def get_price(self, data, curs=None):
-        client_id = data['client_id']
-        tariff_name = data['tariff']
-        context = data['context'] if 'context' in data else {}
-        service_type_name = data['service_type']
+        c_id = data['client_id']
+        t_name = data['tariff']
+        ctx = data['context'] if 'context' in data else {}
+        st_name = data['service_type']
 
-        ts_chain = self._get_tariffs_chain(curs, client_id, tariff_name)
-        tariffs_ids, tariffs_names = map(list, zip(*ts_chain))
+        t_chain = self._get_tariffs_chain(curs, c_id, t_name)
+        t_ids, t_names = map(list, zip(*t_chain))
 
-        service_type = selector.get_service_type_by_name(curs, client_id, service_type_name)
-        indexed_rules = selector.get_rules_indexed_by_tariff_service_type_ids(curs, client_id,
-            tariffs_ids, [service_type.id])
+        st = selector.get_service_type_by_name(curs, c_id, st_name)
+        rules_idx = selector.get_rules_indexed_by_tariff_service_type_ids(curs, c_id, t_ids,
+            [st.id])
+        response = {
+            'tariff': t_name,
+            'service_type': st_name,
+            'context': ctx,
+        }
         try:
-            rule = self._find_nearest_rule(indexed_rules, tariffs_ids, service_type.id)
-        except EmptyResultSetError:
-            raise RuleNotFound("Rule for service type '%s' not found in tariffs: %s" %
-                (service_type_name, tariffs_names))
-        response = engine.process(RequestPrice(rule, context))
-
-        return response_ok(
-            tariff=tariff_name,
-            tariffs_chain=tariffs_names[:tariffs_ids.index(rule.tariff_id) + 1],
-            service_type=service_type_name,
-            price=response.price,
-            context=context
-        )
+            rule = self._find_nearest_rule(rules_idx, t_ids, st.id)
+            price_response = engine.process(RequestPrice(rule, ctx))
+            response['price'] = price_response.price
+            response['price_calculation'] = PRICE_CALC_NORMAL
+            response['tariffs_chain'] = self._tariffs_chain_names(rule.tariff_id, t_ids, t_names)
+        except ObjectNotFound:
+            response['price'] = None
+            response['price_calculation'] = PRICE_CALC_PRICE_UNDEFINED
+            response['tariffs_chain'] = t_names
+        return response_ok(**response)
 
     @transaction()
     @authentificate
     def view_prices(self, data, curs=None):
-        client_id = data['client_id']
-        tariff_name = data['tariff']
-        context = data['context'] if 'context' in data else {}
+        c_id = data['client_id']
+        t_name = data['tariff']
+        ctx = data['context'] if 'context' in data else {}
 
-        ts_chain = self._get_tariffs_chain(curs, client_id, tariff_name)
-        tariffs_ids, tariffs_names = map(list, zip(*ts_chain))
+        t_chain = self._get_tariffs_chain(curs, c_id, t_name)
+        t_ids, t_names = map(list, zip(*t_chain))
 
-        service_sets_ids = selector.get_service_sets_ids(curs, tariffs_ids)
-        service_types_ids = selector.get_service_types_ids(curs, service_sets_ids)
+        ss_ids = selector.get_service_sets_ids(curs, t_ids)
+        st_ids = selector.get_service_types_ids(curs, ss_ids)
 
-        indexed_rules = selector.get_rules_indexed_by_tariff_service_type_ids(curs, client_id,
-            tariffs_ids, service_types_ids)
+        rules_idx = selector.get_rules_indexed_by_tariff_service_type_ids(curs, c_id, t_ids, st_ids)
 
         prices = []
-        service_types_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
-        for st_id in service_types_ids:
+        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, c_id)
+        for st_id in st_ids:
             try:
-                rule = self._find_nearest_rule(indexed_rules, tariffs_ids, st_id)
-                response = engine.process(RequestPrice(rule, context))
-                prices.append({
-                    'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, tariffs_ids, tariffs_names),
-                    'service_type': service_types_names_idx[rule.service_type_id],
-                    'price': response.price,
-                })
-            except EmptyResultSetError:
-                raise RuleNotFound("Rule for service type '%s' not found in tariffs: %s" %
-                    (service_types_names_idx[st_id], tariffs_names))
-
+                rule = self._find_nearest_rule(rules_idx, t_ids, st_id)
+                p_info = {
+                    'service_type': st_names_idx[st_id],
+                    'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
+                    'price': engine.process(RequestPrice(rule, ctx)).price,
+                    'price_calculation': 'normal',
+                }
+            except ObjectNotFound:
+                p_info = {
+                    'service_type': st_names_idx[st_id],
+                    'tariffs_chain': t_names,
+                    'price': None,
+                    'price_calculation': 'price_undefined',
+                }
+            prices.append(p_info)
         return response_ok(
-            tariff=tariff_name,
-            context=context,
+            tariff=t_name,
+            context=ctx,
             prices=prices
         )

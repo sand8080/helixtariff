@@ -9,6 +9,7 @@ from helixtariff.logic.actions import handle_action
 from helixtariff.logic import selector
 
 from root_test import RootTestCase
+from helixtariff.error import ObjectNotFound
 
 
 class DbBasedTestCase(RootTestCase):
@@ -172,3 +173,15 @@ class ServiceTestCase(DbBasedTestCase):
         self.assertEqual(tariff.id, obj.tariff_id)
         self.assertEqual(service_type.id, obj.service_type_id)
         self.assertEqual(rule, obj.rule)
+
+    def delete_rule(self, tariff_name, service_type_name):
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': tariff_name,
+            'service_type': service_type_name,
+        }
+        handle_action('delete_rule', data)
+
+        client_id = self.get_root_client().id
+        self.assertRaises(ObjectNotFound, self.get_rule, client_id, tariff_name, service_type_name)

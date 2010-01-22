@@ -1,8 +1,9 @@
 import unittest
 
-from helixcore.db.wrapper import EmptyResultSetError, ObjectAlreadyExists
+from helixcore.db.wrapper import ObjectAlreadyExists
 from helixcore.server.exceptions import AuthError
 
+from helixtariff.error import ClientNotFound
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.logic.actions import handle_action
 
@@ -28,7 +29,7 @@ class ClientTestCase(ServiceTestCase):
             'new_login': login_new
         }
         handle_action('modify_client', data)
-        self.assertRaises(EmptyResultSetError, self.get_client_by_login, c_old.login)
+        self.assertRaises(ClientNotFound, self.get_client_by_login, c_old.login)
         c_new_0 = self.get_client_by_login(login_new)
         self.assertEqual(c_old.id, c_new_0.id)
         self.assertEqual(login_new, c_new_0.login)
@@ -41,7 +42,7 @@ class ClientTestCase(ServiceTestCase):
             'new_password': password_new
         }
         handle_action('modify_client', data)
-        self.assertRaises(EmptyResultSetError, self.get_client_by_login, c_new_0.login)
+        self.assertRaises(ClientNotFound, self.get_client_by_login, c_new_0.login)
         c_new_1 = self.get_client_by_login(c_old.login)
         self.assertEqual(c_old.id, c_new_1.id)
         self.assertEqual(c_old.login, c_new_1.login)
@@ -68,7 +69,7 @@ class ClientTestCase(ServiceTestCase):
         login = 'zimorodok'
         self.add_client(login, '')
         handle_action('delete_client', {'login': login, 'password': ''})
-        self.assertRaises(EmptyResultSetError, self.get_client_by_login, login)
+        self.assertRaises(ClientNotFound, self.get_client_by_login, login)
 
 
 if __name__ == '__main__':
