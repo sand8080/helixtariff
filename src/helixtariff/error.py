@@ -1,6 +1,3 @@
-from helixcore.db.wrapper import EmptyResultSetError
-
-
 class HelixtariffError(Exception):
     pass
 
@@ -18,15 +15,15 @@ class ObjectNotFound(HelixtariffError):
     pass
 
 
-class RuleNotFound(HelixtariffError):
+class RuleNotFound(ObjectNotFound):
     pass
 
 
-class ServiceTypeUsed(ObjectNotFound):
+class ServiceTypeUsed(HelixtariffError):
     pass
 
 
-class TariffUsed(ObjectNotFound):
+class TariffUsed(HelixtariffError):
     pass
 
 
@@ -35,7 +32,7 @@ class ServiceTypeNotFound(ObjectNotFound):
         super(ServiceTypeNotFound, self).__init__('''Service type '%s' not found''' % name)
 
 
-class ServiceSetNotEmpty(ObjectNotFound):
+class ServiceSetNotEmpty(HelixtariffError):
     def __init__(self, name):
         super(ServiceSetNotEmpty, self).__init__('''Service set '%s' contains service types''' % name)
 
@@ -45,6 +42,6 @@ class ServiceSetNotFound(ObjectNotFound):
         super(ServiceSetNotFound, self).__init__('''Service set '%s' not found''' % name)
 
 
-class ClientNotFound(EmptyResultSetError, HelixtariffError):
+class ClientNotFound(ObjectNotFound):
     def __init__(self, client_id):
         super(ClientNotFound, self).__init__('''Client '%s' not found.''' % client_id)
