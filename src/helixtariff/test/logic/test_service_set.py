@@ -129,6 +129,25 @@ class ServiceSetTestCase(ServiceTestCase):
         self.assertEqual(service_set_name, response['name'])
         self.assertEquals(sorted(self.service_types_names), sorted(response['service_types']))
 
+    def test_get_service_set_detailed(self):
+        ss_name = self.service_sets[0]
+        response = handle_action('get_service_set_detailed', {'login': self.test_client_login,
+            'password': self.test_client_password, 'name': ss_name,})
+        self.assertEqual('ok', response['status'])
+        self.assertEqual(ss_name, response['name'])
+        self.assertEquals(sorted(self.service_types_names), response['service_types'])
+        self.assertEquals([], response['tariffs'])
+
+        t_names = ['t1', 't0', 't3']
+        for n in t_names:
+            self.add_tariff(ss_name, n, False, None)
+        response = handle_action('get_service_set_detailed', {'login': self.test_client_login,
+            'password': self.test_client_password, 'name': ss_name,})
+        self.assertEqual('ok', response['status'])
+        self.assertEqual(ss_name, response['name'])
+        self.assertEquals(sorted(self.service_types_names), response['service_types'])
+        self.assertEquals(sorted(t_names), response['tariffs'])
+
     def test_view_service_sets(self):
         sets_struct = {
             self.service_sets[0]: sorted(self.service_types_names),
@@ -147,6 +166,28 @@ class ServiceSetTestCase(ServiceTestCase):
             n = i['name']
             if n in sets_struct:
                 self.assertEqual(sets_struct[n], i['service_types'])
+
+    def test_view_service_sets_detailed(self):
+        sets_struct = {
+            self.service_sets[0]: (sorted(self.service_types_names), 't0'),
+            self.service_sets[1]: ([], 't1'),
+            self.service_sets[2]: (sorted(self.service_types_names[2:]), 't2'),
+        }
+        for ss_name, (st_names, t_name) in sets_struct.items():
+            self.modify_service_set(ss_name, new_service_types=st_names)
+            self.add_tariff(ss_name, t_name, False, None)
+
+        response = handle_action('view_service_sets_detailed', {'login': self.test_client_login,
+            'password': self.test_client_password})
+        self.assertEqual('ok', response['status'])
+        service_sets_info = response['service_sets']
+        self.assertEqual(len(self.service_sets), len(service_sets_info))
+        for i in service_sets_info:
+            n = i['name']
+            if n in sets_struct:
+                st_names, t_name = sets_struct[n]
+                self.assertEqual(st_names, i['service_types'])
+                self.assertEqual([t_name], i['tariffs'])
 
     def test_view_empty_service_sets(self):
         login = 'test'

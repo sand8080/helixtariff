@@ -111,6 +111,29 @@ VIEW_SERVICE_SETS_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
+GET_SERVICE_SET_DETAILED = GET_SERVICE_SET
+
+SERVICE_SET_INFO_DETAILED = dict({'tariffs': [Text()]}, **SERVICE_SET_INFO)
+
+GET_SERVICE_SET_DETAILED_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **SERVICE_SET_INFO_DETAILED
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+VIEW_SERVICE_SETS_DETAILED = VIEW_SERVICE_SETS
+
+VIEW_SERVICE_SETS_DETAILED_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{'service_sets': [SERVICE_SET_INFO_DETAILED]}
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+
 # --- tariff ---
 ADD_TARIFF = dict(
     {
@@ -362,8 +385,14 @@ protocol = [
     ApiCall('get_service_set_request', Scheme(GET_SERVICE_SET)),
     ApiCall('get_service_set_response', Scheme(GET_SERVICE_SET_RESPONSE)),
 
+    ApiCall('get_service_set_detailed_request', Scheme(GET_SERVICE_SET_DETAILED)),
+    ApiCall('get_service_set_detailed_response', Scheme(GET_SERVICE_SET_DETAILED_RESPONSE)),
+
     ApiCall('view_service_sets_request', Scheme(VIEW_SERVICE_SETS)),
     ApiCall('view_service_sets_response', Scheme(VIEW_SERVICE_SETS_RESPONSE)),
+
+    ApiCall('view_service_sets_detailed_request', Scheme(VIEW_SERVICE_SETS_DETAILED)),
+    ApiCall('view_service_sets_detailed_response', Scheme(VIEW_SERVICE_SETS_DETAILED_RESPONSE)),
 
     # tariff
     ApiCall('add_tariff_request', Scheme(ADD_TARIFF)),

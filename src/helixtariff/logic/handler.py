@@ -227,12 +227,44 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    def get_service_set_detailed(self, data, curs=None):
+        c_id = data['client_id']
+        ss_name = data['name']
+        ss, s_types = self._get_service_set_info(curs, c_id, ss_name)
+        ts = selector.get_tariffs_binded_with_service_sets(curs, c_id, [ss.id])
+        return response_ok(
+            name=ss.name,
+            service_types=sorted([st.name for st in s_types]),
+            tariffs=sorted([t.name for t in ts])
+        )
+
+    @transaction()
+    @authentificate
     def view_service_sets(self, data, curs=None):
-        client_id = data['client_id']
-        service_sets_types = self._get_service_sets_types_dict(curs, client_id)
+        c_id = data['client_id']
+        ss_types = self._get_service_sets_types_dict(curs, c_id)
         result = []
-        for k in sorted(service_sets_types.keys()):
-            result.append({'name': k, 'service_types': sorted(service_sets_types[k])})
+        for n in sorted(ss_types.keys()):
+            result.append({'name': n, 'service_types': sorted(ss_types[n])})
+        return response_ok(service_sets=result)
+
+    @transaction()
+    @authentificate
+    def view_service_sets_detailed(self, data, curs=None):
+        c_id = data['client_id']
+        ss_names_idx = selector.get_service_sets_names_indexed_by_id(curs, c_id)
+        ss_ids_idx = dict([(v, k) for (k, v) in ss_names_idx.items()])
+        ss_with_types = self._get_service_sets_types_dict(curs, c_id)
+        ss_ids = [ss_ids_idx[n] for n in sorted(ss_with_types.keys())]
+        tariffs = selector.get_tariffs_binded_with_service_sets(curs, c_id, ss_ids)
+        result = []
+        for ss_id in ss_ids:
+            ss_name = ss_names_idx[ss_id]
+            result.append({
+                'name': ss_name,
+                'service_types': sorted(ss_with_types[ss_name]),
+                'tariffs': sorted([t.name for t in filter(lambda x: x.service_set_id == ss_id, tariffs)]),
+            })
         return response_ok(service_sets=result)
 
     # tariff

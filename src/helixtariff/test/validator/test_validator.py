@@ -83,6 +83,68 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_request('delete_service_set', {'login': 'l', 'password': 'p', 'name': 'basic'})
         self.validate_status_response('delete_service_set')
 
+    def test_get_service_set(self):
+        self.api.validate_request('get_service_set',
+            {'login': 'l', 'password': 'p', 'name': 't'})
+        self.api.validate_response('get_service_set',
+            {'status': 'error', 'category': 't', 'message': 'm'})
+        self.api.validate_response('get_service_set', {'status': 'ok', 'name': 'n', 'service_types': []})
+        self.api.validate_response('get_service_set', {'status': 'ok', 'name': 'n',
+            'service_types': ['n']})
+        self.api.validate_response('get_service_set', {'status': 'ok', 'name': 'n',
+            'service_types': ['n', 'm']})
+
+    def test_get_service_set_detailed(self):
+        self.api.validate_request('get_service_set_detailed',
+            {'login': 'l', 'password': 'p', 'name': 't'})
+        self.api.validate_response('get_service_set_detailed',
+            {'status': 'error', 'category': 't', 'message': 'm'})
+        self.api.validate_response('get_service_set_detailed', {'status': 'ok', 'name': 'n',
+            'service_types': [], 'tariffs': []})
+        self.api.validate_response('get_service_set_detailed', {'status': 'ok', 'name': 'n',
+            'service_types': ['n'], 'tariffs': []})
+        self.api.validate_response('get_service_set_detailed', {'status': 'ok', 'name': 'n',
+            'service_types': ['n', 'm'], 'tariffs': ['t0', 't1']})
+
+    def test_view_service_sets(self):
+        self.api.validate_request('view_service_sets',
+            {'login': 'l', 'password': 'p'})
+        self.api.validate_response('view_service_sets',
+            {'status': 'error', 'category': 'test', 'message': 'happens'})
+        self.api.validate_response('view_service_sets', {'status': 'ok', 'service_sets': []})
+        self.api.validate_response('view_service_sets', {'status': 'ok',
+            'service_sets': [
+                {'name': 'n', 'service_types': ['n']},
+            ]
+        })
+        self.api.validate_response('view_service_sets', {'status': 'ok',
+            'service_sets': [
+                {'name': 'n', 'service_types': ['n']},
+                {'name': 'm', 'service_types': ['n', 'm']},
+                {'name': 'l', 'service_types': []},
+            ]
+        })
+
+    def test_view_service_sets_detailed(self):
+        self.api.validate_request('view_service_sets_detailed',
+            {'login': 'l', 'password': 'p'})
+        self.api.validate_response('view_service_sets_detailed',
+            {'status': 'error', 'category': 'test', 'message': 'happens'})
+        self.api.validate_response('view_service_sets_detailed', {'status': 'ok',
+            'service_sets': []})
+        self.api.validate_response('view_service_sets_detailed', {'status': 'ok',
+            'service_sets': [
+                {'name': 'n', 'service_types': ['n'], 'tariffs': []},
+            ]
+        })
+        self.api.validate_response('view_service_sets_detailed', {'status': 'ok',
+            'service_sets': [
+                {'name': 'n', 'service_types': ['n'], 'tariffs': []},
+                {'name': 'm', 'service_types': ['n', 'm'], 'tariffs': ['t0']},
+                {'name': 'l', 'service_types': [], 'tariffs': ['t0', 't1']},
+            ]
+        })
+
     def test_add_tariff(self):
         self.api.validate_request(
             'add_tariff',
@@ -228,41 +290,11 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m', 'n'],
             'service_type': 's', 'price': '10.09', 'price_calculation': 'normal', 'context': {'period': 1, 'customer_id': 'l'}})
 
-    def test_get_invalid(self):
+    def test_get_price_invalid(self):
         self.assertRaises(ValidationError, self.api.validate_request, 'get_price',
             {'login': 'l', 'tariff_name': 't', 'service_type_name': 's',})
         self.assertRaises(ValidationError, self.api.validate_response, 'get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m', 'n'],
             'service_type': 's', 'price': 'ERROR_HERE', 'context': {'period': 1, 'customer_id': 'l'}})
-
-    def test_view_service_set(self):
-        self.api.validate_request('get_service_set',
-            {'login': 'l', 'password': 'p', 'name': 't'})
-        self.api.validate_response('get_service_set',
-            {'status': 'error', 'category': 'test', 'message': 'happens'})
-        self.api.validate_response('get_service_set', {'status': 'ok', 'name': 'n', 'service_types': []})
-        self.api.validate_response('get_service_set', {'status': 'ok', 'name': 'n',
-            'service_types': ['n']})
-        self.api.validate_response('get_service_set', {'status': 'ok', 'name': 'n',
-            'service_types': ['n', 'm']})
-
-    def test_view_service_sets(self):
-        self.api.validate_request('view_service_sets',
-            {'login': 'l', 'password': 'p'})
-        self.api.validate_response('view_service_sets',
-            {'status': 'error', 'category': 'test', 'message': 'happens'})
-        self.api.validate_response('view_service_sets', {'status': 'ok', 'service_sets': []})
-        self.api.validate_response('view_service_sets', {'status': 'ok',
-            'service_sets': [
-                {'name': 'n', 'service_types': ['n']},
-            ]
-        })
-        self.api.validate_response('view_service_sets', {'status': 'ok',
-            'service_sets': [
-                {'name': 'n', 'service_types': ['n']},
-                {'name': 'm', 'service_types': ['n', 'm']},
-                {'name': 'l', 'service_types': []},
-            ]
-        })
 
     def test_view_tariffs(self):
         self.api.validate_request('view_tariffs',
