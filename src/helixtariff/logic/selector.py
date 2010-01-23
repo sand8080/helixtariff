@@ -10,7 +10,7 @@ from helixtariff.error import ClientNotFound, TariffNotFound, RuleNotFound,\
     ServiceTypeNotFound, ServiceSetNotFound
 
 
-def get_service_type_by_name(curs, client_id, name, for_update=False):
+def get_service_type(curs, client_id, name, for_update=False):
     try:
         return mapping.get_obj_by_fields(curs, ServiceType,
             {'client_id': client_id, 'name': name}, for_update)
@@ -90,22 +90,14 @@ def get_child_tariffs(curs, tariff, for_update=False):
     return mapping.get_list(curs, Tariff, cond=And(cond_c_id, cond_pt_id), for_update=for_update)
 
 
-def get_rule(curs, client_id, tariff_name, service_type_name, for_update=False):
-    cond_client_id = Eq('client_id', client_id)
-    cond_tariff_name = Eq('name', tariff_name)
-    sel_tariff = Select(Tariff.table, columns='id', cond=And(cond_client_id, cond_tariff_name))
-
-    sel_service_type = _gen_sel_service_type(service_type_name, client_id)
-
-    cond_tariff_id = Eq('tariff_id', Scoped(sel_tariff))
-    cond_service_type_id = Eq('service_type_id', Scoped(sel_service_type))
-    cond_result = And(cond_client_id, cond_tariff_id)
-    cond_result = And(cond_result, cond_service_type_id)
+def get_rule(curs, tariff, service_type, rule_type, for_update=False):
     try:
+        cond_result = And(Eq('tariff_id', tariff.id), Eq('service_type_id', service_type.id))
+        cond_result = And(cond_result, Eq('type', rule_type))
         return mapping.get(curs, Rule, cond=cond_result, for_update=for_update)
     except EmptyResultSetError:
         raise RuleNotFound("Rule not found in tariff '%s' for service_type '%s'" %
-            (tariff_name, service_type_name))
+            (tariff.name, service_type.name))
 
 
 def _gen_sel_service_type(name, client_id):
@@ -114,10 +106,12 @@ def _gen_sel_service_type(name, client_id):
     return Select(ServiceType.table, columns='id', cond=And(cond_n, cond_c_id))
 
 
-def get_rules(curs, tariff, for_update=False):
+def get_rules(curs, tariff, rule_types, for_update=False):
     cond_c_id = Eq('client_id', tariff.client_id)
     cond_t_id = Eq('tariff_id', tariff.id)
-    return mapping.get_list(curs, Rule, cond=And(cond_c_id, cond_t_id), for_update=for_update)
+    cond_result = And(cond_c_id, cond_t_id)
+    cond_result = And(cond_result, In('type', rule_types))
+    return mapping.get_list(curs, Rule, cond=cond_result, for_update=for_update)
 
 
 def get_rules_for_service_types(curs, client_id, service_types_ids, for_update=False):

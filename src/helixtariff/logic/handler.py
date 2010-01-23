@@ -14,7 +14,8 @@ from helixtariff.rulesengine import engine
 from helixtariff.rulesengine.interaction import RequestPrice
 from helixtariff.domain import security
 from helixtariff.error import TariffCycleError, ServiceTypeNotFound, \
-    ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed, ObjectNotFound
+    ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed, ObjectNotFound,\
+    RuleNotFound
 from helixtariff.validator.validator import PRICE_CALC_NORMAL, \
     PRICE_CALC_PRICE_UNDEFINED
 
@@ -89,7 +90,7 @@ class Handler(object):
     @transaction()
     @authentificate
     def modify_service_type(self, data, curs=None):
-        loader = partial(selector.get_service_type_by_name, curs, data['client_id'], data['name'], for_update=True)
+        loader = partial(selector.get_service_type, curs, data['client_id'], data['name'], for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
@@ -98,7 +99,7 @@ class Handler(object):
     def delete_service_type(self, data, curs=None):
         c_id = data['client_id']
         st_name = data['name']
-        t = selector.get_service_type_by_name(curs, c_id, st_name, for_update=True)
+        t = selector.get_service_type(curs, c_id, st_name, for_update=True)
         ss_ids = selector.get_service_sets_ids_by_service_type(curs, t)
         if ss_ids:
             ss_names_idx = selector.get_service_sets_names_indexed_by_id(curs, c_id)
@@ -212,7 +213,7 @@ class Handler(object):
     def _process_service_set_row(self, curs, service_set, types_names, func):
         for n in types_names:
             try:
-                t = selector.get_service_type_by_name(curs, service_set.client_id, n)
+                t = selector.get_service_type(curs, service_set.client_id, n)
                 s = ServiceSetRow(**{'service_type_id': t.id, 'service_set_id': service_set.id})
                 func(curs, s)
             except EmptyResultSetError, _:
@@ -424,60 +425,110 @@ class Handler(object):
     # rule
     @transaction()
     @authentificate
-    def add_rule(self, data, curs=None):
-        RuleChecker().check(data['rule'])
-        tariff = selector.get_tariff(curs, data['client_id'], data['tariff'])
-        del data['tariff']
-        data['tariff_id'] = tariff.id
+    def save_draft_rule(self, data, curs=None):
+        c_id = data['client_id']
+        r_text = data['rule']
+        st_name = data['service_type']
+        enabled = data['enabled']
+        t_name = data['tariff']
 
-        service_type = selector.get_service_type_by_name(curs, data['client_id'], data['service_type'])
+        RuleChecker().check(r_text)
+        t = selector.get_tariff(curs, c_id, t_name)
+        st = selector.get_service_type(curs, c_id, st_name)
+
+        data['tariff_id'] = t.id
+        data['service_type_id'] = st.id
+        del data['tariff']
         del data['service_type']
-        data['service_type_id'] = service_type.id
-        mapping.insert(curs, Rule(**data))
+        try:
+            r = selector.get_rule(curs, t, st, Rule.TYPE_DRAFT, for_update=True)
+            r.enabled = enabled
+            r.rule = r_text
+            mapping.update(curs, r)
+        except RuleNotFound:
+            data['type'] = Rule.TYPE_DRAFT
+            mapping.insert(curs, Rule(**data))
         return response_ok()
 
     @transaction()
     @authentificate
-    def modify_rule(self, data, curs=None):
-        RuleChecker().check(data['new_rule'])
-        loader = partial(selector.get_rule, curs, data['client_id'], data['tariff'],
-            data['service_type'], True)
+    def make_draft_rules_actual(self, data, curs=None):
+        c_id = data['client_id']
+        t_name = data['tariff']
+        tariff = selector.get_tariff(curs, c_id, t_name)
+        all_rules = selector.get_rules(curs, tariff, [Rule.TYPE_DRAFT, Rule.TYPE_ACTUAL], for_update=True)
+        draft_rules = filter(lambda x: x.type == Rule.TYPE_DRAFT, all_rules)
+        draft_st_ids = [r.service_type_id for r in draft_rules]
+        deleting_rules = filter(lambda x: x.type == Rule.TYPE_ACTUAL and x.service_type_id in draft_st_ids, all_rules)
+        q_del = mapping.Delete(Rule.table, cond=In('id', [r.id for r in deleting_rules]))
+        curs.execute(*q_del.glue())
+        q_upd = mapping.Update(Rule.table, {'type': Rule.TYPE_ACTUAL}, cond=In('id', [r.id for r in draft_rules]))
+        curs.execute(*q_upd.glue())
+        return response_ok()
+
+    @transaction()
+    @authentificate
+    def modify_actual_rule(self, data, curs=None):
+        c_id = data['client_id']
+        t_name = data['tariff']
+        st_name = data['service_type']
+        tariff = selector.get_tariff(curs, c_id, t_name)
+        service_type = selector.get_service_type(curs, c_id, st_name)
+        loader = partial(selector.get_rule, curs, tariff, service_type, rule_type=Rule.TYPE_ACTUAL,
+            for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
     @transaction()
     @authentificate
-    def delete_rule(self, data, curs=None):
-        obj = selector.get_rule(curs, data['client_id'], data['tariff'], data['service_type'])
-        mapping.delete(curs, obj)
-        return response_ok()
-
-    @transaction()
-    @authentificate
     def get_rule(self, data, curs=None):
-        client_id = data['client_id']
-        tariff_name = data['tariff']
-        service_type_name = data['service_type']
-        rule = selector.get_rule(curs, client_id, tariff_name, service_type_name)
-        return response_ok(tariff=tariff_name, service_type=service_type_name, rule=rule.rule)
+        c_id = data['client_id']
+        t_name = data['tariff']
+        st_name = data['service_type']
+        rule_type = data['type']
+        tariff = selector.get_tariff(curs, c_id, t_name)
+        service_type = selector.get_service_type(curs, c_id, st_name)
+        rule = selector.get_rule(curs, tariff, service_type, rule_type)
+        return response_ok(tariff=tariff.name, service_type=service_type.name, rule=rule.rule,
+            type=rule.type, enabled=rule.enabled)
 
-    @transaction()
-    @authentificate
-    def view_rules(self, data, curs=None):
-        client_id = data['client_id']
-        tariff = selector.get_tariff(curs, client_id, data['tariff'])
-        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
-        rules = []
-        for r in selector.get_rules(curs, tariff):
-            rules.append({
-                'service_type': st_names_idx[r.service_type_id],
-                'rule': r.rule
-            })
-        return response_ok(tariff=tariff.name, rules=rules)
-
-    def _get_optional_field_value(self, data, field, default=None):
-        return data[field] if field in data else default,
-
+#    @transaction()
+#    @authentificate
+#    def add_rule(self, data, curs=None):
+#        RuleChecker().check(data['rule'])
+#        tariff = selector.get_tariff(curs, data['client_id'], data['tariff'])
+#        del data['tariff']
+#        data['tariff_id'] = tariff.id
+#
+#        service_type = selector.get_service_type(curs, data['client_id'], data['service_type'])
+#        del data['service_type']
+#        data['service_type_id'] = service_type.id
+#        mapping.insert(curs, Rule(**data))
+#        return response_ok()
+#
+#    @transaction()
+#    @authentificate
+#    def delete_rule(self, data, curs=None):
+#        obj = selector.get_rule(curs, data['client_id'], data['tariff'], data['service_type'])
+#        mapping.delete(curs, obj)
+#        return response_ok()
+#
+#    @transaction()
+#    @authentificate
+#    def view_rules(self, data, curs=None):
+#        client_id = data['client_id']
+#        tariff = selector.get_tariff(curs, client_id, data['tariff'])
+#        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
+#        rules = []
+#        for r in selector.get_rules(curs, tariff):
+#            rules.append({
+#                'service_type': st_names_idx[r.service_type_id],
+#                'rule': r.rule
+#            })
+#        return response_ok(tariff=tariff.name, rules=rules)
+#
+#    def _get_optional_field_value(self, data, field, default=None):
+#        return data[field] if field in data else default,
     # price
     def _calculate_tariffs_chain(self, tariff_id, tariffs_names_idx, parents_names_idx):
         '''
@@ -527,7 +578,7 @@ class Handler(object):
         t_chain = self._get_tariffs_chain(curs, c_id, t_name)
         t_ids, t_names = map(list, zip(*t_chain))
 
-        st = selector.get_service_type_by_name(curs, c_id, st_name)
+        st = selector.get_service_type(curs, c_id, st_name)
         rules_idx = selector.get_rules_indexed_by_tariff_service_type_ids(curs, c_id, t_ids,
             [st.id])
         response = {

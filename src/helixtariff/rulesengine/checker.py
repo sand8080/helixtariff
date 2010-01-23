@@ -17,7 +17,7 @@ class RuleChecker(object):
         ])
 
     def check(self, source):
-        g = generate_tokens(StringIO(source).readline)   # tokenize the string
+        g = generate_tokens(StringIO(source).readline)
         for toknum, tokval, tok_begin, _, line  in g:
             if toknum == NAME and tokval not in self.accepted_names:
                 raise RuleError('Illegal name %s at line %s: %s' % (tokval, tok_begin[0], line))

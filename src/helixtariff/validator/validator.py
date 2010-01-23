@@ -1,5 +1,6 @@
 from helixcore.server.api import ApiCall
 from helixcore.validol.validol import Scheme, Text, Optional, FlatDict, AnyOf, DecimalText
+from helixtariff.domain.objects import Rule
 
 
 NullableText = AnyOf(Text(), None)
@@ -228,71 +229,100 @@ VIEW_DETAILED_TARIFFS_RESPONSE = AnyOf(
 
 
 # --- rule ---
-ADD_RULE = dict(
+SAVE_DRAFT_RULE = dict(
     {
         'tariff': Text(),
         'service_type': Text(),
         'rule': Text(),
+        'enabled': bool,
     },
     **AUTH_INFO
 )
 
-MODIFY_RULE = dict(
+MAKE_DRAFT_RULES_ACTUAL = dict(
+    {'tariff': Text()},
+    **AUTH_INFO
+)
+
+MODIFY_ACTUAL_RULE = dict(
     {
         'tariff': Text(),
         'service_type': Text(),
-        'new_rule': Text(),
+        'new_enabled': bool,
     },
     **AUTH_INFO
 )
 
-DELETE_RULE = dict(
-    {
-        'tariff': Text(),
-        'service_type': Text(),
-    },
-    **AUTH_INFO
-)
+RULE_TYPES = AnyOf(Rule.TYPE_ACTUAL, Rule.TYPE_DRAFT)
 
 GET_RULE = dict(
     {
         'tariff': Text(),
         'service_type': Text(),
+        'type': RULE_TYPES
     },
     **AUTH_INFO
 )
 
-GET_RULES_RESPONSE = AnyOf(
+GET_RULE_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **{
             'tariff': Text(),
             'service_type': Text(),
             'rule': Text(),
+            'type': RULE_TYPES,
+            'enabled': bool,
         }
     ),
     RESPONSE_STATUS_ERROR
 )
 
-VIEW_RULES = dict(
-    {'tariff': Text()},
-    **AUTH_INFO
-)
-
-VIEW_RULES_RESPONSE = AnyOf(
-    dict(
-        RESPONSE_STATUS_OK,
-        **{
-            'tariff': Text(),
-            'rules': [{
-                'service_type': Text(),
-                'rule': Text(),
-                'rule': Text(),
-            }]
-        }
-    ),
-    RESPONSE_STATUS_ERROR
-)
+#ADD_RULE = dict(
+#    {
+#        'tariff': Text(),
+#        'service_type': Text(),
+#        'rule': Text(),
+#    },
+#    **AUTH_INFO
+#)
+#
+#MODIFY_RULE = dict(
+#    {
+#        'tariff': Text(),
+#        'service_type': Text(),
+#        'new_rule': Text(),
+#    },
+#    **AUTH_INFO
+#)
+#
+#DELETE_RULE = dict(
+#    {
+#        'tariff': Text(),
+#        'service_type': Text(),
+#    },
+#    **AUTH_INFO
+#)
+#
+#VIEW_RULES = dict(
+#    {'tariff': Text()},
+#    **AUTH_INFO
+#)
+#
+#VIEW_RULES_RESPONSE = AnyOf(
+#    dict(
+#        RESPONSE_STATUS_OK,
+#        **{
+#            'tariff': Text(),
+#            'rules': [{
+#                'service_type': Text(),
+#                'rule': Text(),
+#                'rule': Text(),
+#            }]
+#        }
+#    ),
+#    RESPONSE_STATUS_ERROR
+#)
 
 
 # --- price ---
@@ -431,20 +461,29 @@ protocol = [
     ApiCall('view_detailed_tariffs_response', Scheme(VIEW_DETAILED_TARIFFS_RESPONSE)),
 
     # rule
-    ApiCall('add_rule_request', Scheme(ADD_RULE)),
-    ApiCall('add_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('save_draft_rule_request', Scheme(SAVE_DRAFT_RULE)),
+    ApiCall('save_draft_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('modify_rule_request', Scheme(MODIFY_RULE)),
-    ApiCall('modify_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('make_draft_rules_actual_request', Scheme(MAKE_DRAFT_RULES_ACTUAL)),
+    ApiCall('make_draft_rules_actual_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('delete_rule_request', Scheme(DELETE_RULE)),
-    ApiCall('delete_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('modify_actual_rule_request', Scheme(MODIFY_ACTUAL_RULE)),
+    ApiCall('modify_actual_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     ApiCall('get_rule_request', Scheme(GET_RULE)),
-    ApiCall('get_rule_response', Scheme(GET_RULES_RESPONSE)),
+    ApiCall('get_rule_response', Scheme(GET_RULE_RESPONSE)),
 
-    ApiCall('view_rules_request', Scheme(VIEW_RULES)),
-    ApiCall('view_rules_response', Scheme(VIEW_RULES_RESPONSE)),
+#    ApiCall('add_rule_request', Scheme(ADD_RULE)),
+#    ApiCall('add_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+#
+#    ApiCall('modify_rule_request', Scheme(MODIFY_RULE)),
+#    ApiCall('modify_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+#
+#    ApiCall('delete_rule_request', Scheme(DELETE_RULE)),
+#    ApiCall('delete_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+#
+#    ApiCall('view_rules_request', Scheme(VIEW_RULES)),
+#    ApiCall('view_rules_response', Scheme(VIEW_RULES_RESPONSE)),
 
     # price
     ApiCall('get_price_request', Scheme(GET_PRICE)),

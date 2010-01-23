@@ -14,7 +14,7 @@ class ClientTestCase(ServiceTestCase):
 
     def test_add_client_invalid(self):
         self.add_client('john', 'milk and soda')
-        self.assertRaises(ObjectAlreadyExists, self.add_client, 'john', 'milk and cola')
+        self.assertRaises(ObjectAlreadyExists, self.add_client, 'john', 'milk')
 
     def test_modify_client(self):
         login_old = 'john'

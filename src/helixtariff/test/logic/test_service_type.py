@@ -20,7 +20,7 @@ class ServiceTypeTestCase(ServiceTestCase):
     def test_modify_service_type(self):
         self.add_service_types([self.service_type_name])
         old_name = self.service_type_name
-        t_old = self.get_service_type_by_name(self.client.id, old_name)
+        t_old = self.get_service_type(self.client.id, old_name)
 
         new_name = 'new' + old_name
         data = {
@@ -31,7 +31,7 @@ class ServiceTypeTestCase(ServiceTestCase):
         }
         handle_action('modify_service_type', data)
 
-        t_new = self.get_service_type_by_name(self.client.id, new_name)
+        t_new = self.get_service_type(self.client.id, new_name)
         self.assertEqual(t_old.id, t_new.id)
         self.assertEquals(t_new.name, new_name)
 
@@ -45,7 +45,7 @@ class ServiceTypeTestCase(ServiceTestCase):
                 'name': self.service_type_name,
             }
         )
-        self.assertRaises(ServiceTypeNotFound, self.get_service_type_by_name,
+        self.assertRaises(ServiceTypeNotFound, self.get_service_type,
             self.client.id, self.service_type_name)
 
     def test_delete_used_service_type(self):

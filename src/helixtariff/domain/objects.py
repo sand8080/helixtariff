@@ -27,5 +27,8 @@ class Tariff(Mapped):
 
 
 class Rule(Mapped):
-    __slots__ = ['id', 'client_id', 'tariff_id', 'service_type_id', 'rule']
+    __slots__ = ['id', 'client_id', 'type', 'enabled', 'tariff_id', 'service_type_id', 'rule']
     table = 'rule'
+    TYPE_DRAFT = 'draft'
+    TYPE_ACTUAL = 'actual'
+

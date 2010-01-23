@@ -1,6 +1,9 @@
+import cjson
+
 import helixtariff.test.test_environment #IGNORE:W0611 @UnusedImport
 
 from helixcore.install import install
+from helixcore.server.api import Api
 
 from helixtariff.conf.db import get_connection, transaction
 from helixtariff.conf.settings import patch_table_name
@@ -9,7 +12,9 @@ from helixtariff.logic.actions import handle_action
 from helixtariff.logic import selector
 
 from root_test import RootTestCase
-from helixtariff.error import ObjectNotFound
+from helixtariff.domain.objects import Rule
+from helixtariff.validator.validator import protocol
+#from helixtariff.error import ObjectNotFound
 
 
 class DbBasedTestCase(RootTestCase):
@@ -61,8 +66,8 @@ class ServiceTestCase(DbBasedTestCase):
             self.assertEqual(sorted(service_types_names), sorted(st_names))
 
     @transaction()
-    def get_service_type_by_name(self, client_id, name, curs=None):
-        return selector.get_service_type_by_name(curs, client_id, name)
+    def get_service_type(self, client_id, name, curs=None):
+        return selector.get_service_type(curs, client_id, name)
 
     def add_service_types(self, service_types):
         for t in service_types:
@@ -70,7 +75,7 @@ class ServiceTestCase(DbBasedTestCase):
                 'add_service_type',
                 {'login': self.test_client_login, 'password': self.test_client_password, 'name': t}
             )
-            obj = self.get_service_type_by_name(self.get_root_client().id, t)
+            obj = self.get_service_type(self.get_root_client().id, t)
             self.assertTrue(obj.id > 0)
             self.assertEquals(obj.name, t)
 
@@ -148,40 +153,65 @@ class ServiceTestCase(DbBasedTestCase):
         self.assertEqual(parent_tariff_id, t.parent_id)
 
     @transaction()
-    def get_rule(self, client_id, tariff_name, service_type_name, curs=None):
-        return selector.get_rule(curs, client_id, tariff_name, service_type_name)
+    def get_rule(self, tariff, service_type, rule_type, curs=None):
+        return selector.get_rule(curs, tariff, service_type, rule_type)
 
-    def add_rule(self, tariff_name, service_type_name, rule):
+    def save_draft_rule(self, tariff_name, service_type_name, rule, enabled):
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
             'tariff': tariff_name,
             'service_type': service_type_name,
             'rule': rule,
+            'enabled': enabled,
         }
-        handle_action('add_rule', data)
+        self.handle_action('save_draft_rule', data)
 
-        client_id = self.get_root_client().id
-        obj = self.get_rule(client_id, tariff_name, service_type_name)
+        c_id = self.get_client_by_login(self.test_client_login).id
+        tariff = self.get_tariff(c_id, tariff_name)
+        service_type = self.get_service_type(c_id, service_type_name)
+        rule_type = 'draft'
+        obj = self.get_rule(tariff, service_type, rule_type)
 
-        service_type = self.get_service_type_by_name(client_id, service_type_name)
         self.assertEqual(service_type_name, service_type.name)
-
-        tariff = self.get_tariff(client_id, tariff_name)
         self.assertEqual(tariff_name, tariff.name)
-
         self.assertEqual(tariff.id, obj.tariff_id)
         self.assertEqual(service_type.id, obj.service_type_id)
         self.assertEqual(rule, obj.rule)
+        self.assertEqual(rule_type, obj.type)
+        self.assertEqual(enabled, obj.enabled)
 
-    def delete_rule(self, tariff_name, service_type_name):
+    @transaction()
+    def get_rules(self, tariff, rule_types, curs=None):
+        return selector.get_rules(curs, tariff, rule_types)
+
+    def make_draft_rules_actual(self, tariff_name):
+        client_id = self.get_client_by_login(self.test_client_login).id
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
             'tariff': tariff_name,
-            'service_type': service_type_name,
         }
-        handle_action('delete_rule', data)
+        self.handle_action('make_draft_rules_actual', data)
+        tariff = self.get_tariff(client_id, tariff_name)
+        self.assertEqual([], self.get_rules(tariff, [Rule.TYPE_DRAFT]))
 
-        client_id = self.get_root_client().id
-        self.assertRaises(ObjectNotFound, self.get_rule, client_id, tariff_name, service_type_name)
+#    def delete_rule(self, tariff_name, service_type_name):
+#        data = {
+#            'login': self.test_client_login,
+#            'password': self.test_client_password,
+#            'tariff': tariff_name,
+#            'service_type': service_type_name,
+#        }
+#        handle_action('delete_rule', data)
+#
+#        client_id = self.get_root_client().id
+#        self.assertRaises(ObjectNotFound, self.get_rule, client_id, tariff_name, service_type_name)
+
+    def handle_action(self, action, data):
+        api = Api(protocol)
+        request = dict(data, action=action)
+        action_name, data = api.handle_request(cjson.encode(request))
+        response = handle_action(action_name, dict(data))
+        api.handle_response(action_name, dict(response))
+        return response
