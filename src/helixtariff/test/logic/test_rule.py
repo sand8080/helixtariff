@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
+from random import randint
 from functools import partial
-
-from helixcore.db.wrapper import ObjectAlreadyExists
 
 from helixtariff.domain.objects import Rule
 from helixtariff.error import RuleNotFound, TariffNotFound, ServiceTypeNotFound
@@ -97,7 +96,6 @@ class RuleTestCase(ServiceTestCase):
         self.assertEqual(False, new_rule.enabled)
 
     def test_get_rule(self):
-        c_id = self.get_client_by_login(self.test_client_login).id
         st_name = self.st_names[0]
         data = {
             'login': self.test_client_login,
@@ -167,102 +165,71 @@ class RuleTestCase(ServiceTestCase):
         self.assertEqual(Rule.TYPE_ACTUAL, response['type'])
         self.assertEqual(enabled, response['enabled'])
 
+    def test_view_rules(self):
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': self.t_name,
+        }
+        response = handle_action('view_rules', data)
+        self.assertEqual('ok', response['status'])
+        self.assertEqual([], response['rules'])
 
-#    def test_modify_rule(self):
-#        old_raw_rule = 'price = 10.01'
-#        self.add_rule(self.tariff_name, self.service_types_names[0], old_raw_rule)
-#        rule_loader = partial(self.get_rule, self.get_root_client().id, self.tariff_name, self.service_types_names[0])
-#        old_rule_obj = rule_loader()
-#
-#        new_raw_rule = old_raw_rule + ' + 9.01'
-#        data = {
-#            'login': self.test_client_login,
-#            'password': self.test_client_password,
-#            'tariff': self.tariff_name,
-#            'service_type': self.service_types_names[0],
-#            'new_rule': new_raw_rule
-#        }
-#
-#        handle_action('modify_rule', data)
-#        new_rule_obj = rule_loader()
-#        self.assertEqual(old_rule_obj.id, new_rule_obj.id)
-#        self.assertEqual(old_rule_obj.tariff_id, new_rule_obj.tariff_id)
-#        self.assertEqual(old_rule_obj.service_type_id, new_rule_obj.service_type_id)
-#        self.assertEqual(new_raw_rule, new_rule_obj.rule)
-#
-#    def test_delete_rule(self):
-#        self.add_rule(self.tariff_name, self.service_types_names[0], '')
-#        data = {
-#            'login': self.test_client_login,
-#            'password': self.test_client_password,
-#            'tariff': self.tariff_name,
-#            'service_type': self.service_types_names[0]
-#        }
-#        handle_action('delete_rule', data)
-#        self.assertRaises(RuleNotFound, self.get_rule, self.get_root_client().id,
-#            self.tariff_name, self.service_types_names[0])
-#
-#    def test_view_rules(self):
-#        client = self.get_client_by_login(self.test_client_login)
-#        data = {
-#            'login': client.login,
-#            'password': self.test_client_password,
-#            'tariff': self.tariff_name,
-#        }
-#        result = handle_action('view_rules', data)
-#        self.assertEqual('ok', result['status'])
-#        self.assertEqual([], result['rules'])
-#
-#        expected_rules = []
-#        for i, n in enumerate(self.service_types_names):
-#            r = 'price = %03d.%02d' % (i, i)
-#            expected_rules.append({
-#                'service_type': n,
-#                'rule': r,
-#            })
-#            self.add_rule(self.tariff_name, n, r)
-#
-#        data = {
-#            'login': client.login,
-#            'password': self.test_client_password,
-#            'tariff': self.tariff_name,
-#        }
-#        result = handle_action('view_rules', data)
-#
-#        self.assertEqual('ok', result['status'])
-#        self.assertEqual(self.tariff_name, result['tariff'])
-#        self.assertEqual(expected_rules, result['rules'])
-#
-#    def test_view_not_all_defined_rules(self):
-#        client = self.get_client_by_login(self.test_client_login)
-#        data = {
-#            'login': client.login,
-#            'password': self.test_client_password,
-#            'tariff': self.tariff_name,
-#        }
-#        response = handle_action('view_rules', data)
-#        self.assertEqual('ok', response['status'])
-#        self.assertEqual([], response['rules'])
-#
-#        expected_rules = []
-#        for i, n in enumerate(self.service_types_names[1:]):
-#            r = 'price = %03d.%02d' % (i, i)
-#            expected_rules.append({
-#                'service_type': n,
-#                'rule': r,
-#            })
-#            self.add_rule(self.tariff_name, n, r)
-#
-#        data = {
-#            'login': client.login,
-#            'password': self.test_client_password,
-#            'tariff': self.tariff_name,
-#        }
-#        response = handle_action('view_rules', data)
-#        self.assertEqual('ok', response['status'])
-#        self.assertEqual(self.tariff_name, response['tariff'])
-#        self.assertEqual(expected_rules, response['rules'])
-#
+        expected_r_info = []
+        for i, n in enumerate(self.st_names):
+            r = 'price = %03d.%02d' % (i, i)
+            enabled = randint(0, 10) % 2 == 0
+            expected_r_info.append({
+                'service_type': n,
+                'rule': r,
+                'type': Rule.TYPE_ACTUAL,
+                'enabled': enabled,
+            })
+            self.save_draft_rule(self.t_name, n, r, enabled)
+        self.make_draft_rules_actual(self.t_name)
+
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': self.t_name,
+        }
+        response = handle_action('view_rules', data)
+        self.assertEqual('ok', response['status'])
+        self.assertEqual(self.t_name, response['tariff'])
+        self.assertEqual(expected_r_info, response['rules'])
+
+    def test_view_not_all_defined_rules(self):
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': self.t_name,
+        }
+        response = handle_action('view_rules', data)
+        self.assertEqual('ok', response['status'])
+        self.assertEqual([], response['rules'])
+
+        expected_r_info = []
+        for i, n in enumerate(self.st_names[1:]):
+            r = 'price = %03d.%02d' % (i, i)
+            enabled = randint(0, 10) % 2 == 0
+            expected_r_info.append({
+                'service_type': n,
+                'rule': r,
+                'type': Rule.TYPE_ACTUAL,
+                'enabled': enabled,
+            })
+            self.save_draft_rule(self.t_name, n, r, enabled)
+        self.make_draft_rules_actual(self.t_name)
+
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': self.t_name,
+        }
+        response = handle_action('view_rules', data)
+        self.assertEqual('ok', response['status'])
+        self.assertEqual(self.t_name, response['tariff'])
+        self.assertEqual(expected_r_info, response['rules'])
 
 
 if __name__ == '__main__':

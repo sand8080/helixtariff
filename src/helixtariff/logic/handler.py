@@ -492,6 +492,23 @@ class Handler(object):
         return response_ok(tariff=tariff.name, service_type=service_type.name, rule=rule.rule,
             type=rule.type, enabled=rule.enabled)
 
+    @transaction()
+    @authentificate
+    def view_rules(self, data, curs=None):
+        c_id = data['client_id']
+        t_name = data['tariff']
+        tariff = selector.get_tariff(curs, c_id, t_name)
+        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, c_id)
+        rules = []
+        for rule in selector.get_rules(curs, tariff, [Rule.TYPE_ACTUAL, Rule.TYPE_DRAFT]):
+            rules.append({
+                'service_type': st_names_idx[rule.service_type_id],
+                'rule': rule.rule,
+                'type': rule.type,
+                'enabled': rule.enabled,
+            })
+        return response_ok(tariff=tariff.name, rules=rules)
+
 #    @transaction()
 #    @authentificate
 #    def add_rule(self, data, curs=None):
@@ -512,20 +529,6 @@ class Handler(object):
 #        obj = selector.get_rule(curs, data['client_id'], data['tariff'], data['service_type'])
 #        mapping.delete(curs, obj)
 #        return response_ok()
-#
-#    @transaction()
-#    @authentificate
-#    def view_rules(self, data, curs=None):
-#        client_id = data['client_id']
-#        tariff = selector.get_tariff(curs, client_id, data['tariff'])
-#        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
-#        rules = []
-#        for r in selector.get_rules(curs, tariff):
-#            rules.append({
-#                'service_type': st_names_idx[r.service_type_id],
-#                'rule': r.rule
-#            })
-#        return response_ok(tariff=tariff.name, rules=rules)
 #
 #    def _get_optional_field_value(self, data, field, default=None):
 #        return data[field] if field in data else default,
