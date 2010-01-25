@@ -16,7 +16,7 @@ def make_api_call(f_name):
 
 for func_name in ['ping', 'add_client', 'add_service_type', 'add_service_set', 'add_to_service_set',
     'get_service_set', 'view_service_sets', 'add_tariff', 'get_tariff_detailed', 'view_tariffs',
-    'view_detailed_tariffs', 'add_rule', 'get_price', 'view_prices', 'view_service_types',
-    'view_rules',
+    'view_detailed_tariffs', 'save_draft_rule', 'make_draft_rules_actual', 'get_price',
+    'view_prices', 'view_service_types', 'view_rules',
     'incorect_error_message']:
     setattr(Client, func_name, make_api_call(func_name))

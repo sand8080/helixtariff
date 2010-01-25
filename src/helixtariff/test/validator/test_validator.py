@@ -6,7 +6,8 @@ from helixcore.test.root_test import RootTestCase
 from helixcore.server.exceptions import ValidationError
 from helixcore.server.api import Api
 
-from helixtariff.validator.validator import protocol
+from helixtariff.validator.validator import protocol, PRICE_CALC_NORMAL,\
+    PRICE_CALC_PRICE_UNDEFINED, PRICE_CALC_RULE_DISABLED
 
 
 class ValidatorTestCase(RootTestCase):
@@ -285,20 +286,47 @@ class ValidatorTestCase(RootTestCase):
 
         self.api.validate_response('get_price',
             {'status': 'error', 'category': 'test', 'message': 'happens'})
-        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': [],
-            'service_type': 's', 'price': None, 'price_calculation': 'price_undefined', 'context': {}})
-        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': [],
-            'service_type': 's', 'price': '10.09', 'price_calculation': 'normal', 'context': {}})
-        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m'],
-            'service_type': 's', 'price': '10.09', 'price_calculation': 'service_type_disabled', 'context': {'period': 1}})
-        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m', 'n'],
-            'service_type': 's', 'price': '10.09', 'price_calculation': 'normal', 'context': {'period': 1, 'customer_id': 'l'}})
+        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'service_type': 's',
+            'tariffs_chain': [], 'price': None, 'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
+            'draft_tariffs_chain': ['m'], 'draft_price': None, 'draft_price_calculation': PRICE_CALC_PRICE_UNDEFINED,
+            'context': {}})
+        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'service_type': 's',
+            'tariffs_chain': [], 'price': '1', 'price_calculation': PRICE_CALC_NORMAL,
+            'draft_tariffs_chain': ['m'], 'draft_price': None, 'draft_price_calculation': PRICE_CALC_PRICE_UNDEFINED,
+            'context': {}})
+        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'service_type': 's',
+            'tariffs_chain': [], 'price': '1', 'price_calculation': PRICE_CALC_NORMAL,
+            'draft_tariffs_chain': ['m'], 'draft_price': '11', 'draft_price_calculation': PRICE_CALC_NORMAL,
+            'context': {}})
+        self.api.validate_response('get_price', {'status': 'ok', 'tariff': 'n', 'service_type': 's',
+            'tariffs_chain': [], 'price': '1', 'price_calculation': PRICE_CALC_NORMAL,
+            'draft_tariffs_chain': ['m'], 'draft_price': None, 'draft_price_calculation': PRICE_CALC_RULE_DISABLED,
+            'context': {}})
 
-    def test_get_price_invalid(self):
-        self.assertRaises(ValidationError, self.api.validate_request, 'get_price',
-            {'login': 'l', 'tariff_name': 't', 'service_type_name': 's',})
-        self.assertRaises(ValidationError, self.api.validate_response, 'get_price', {'status': 'ok', 'tariff': 'n', 'tariffs_chain': ['m', 'n'],
-            'service_type': 's', 'price': 'ERROR_HERE', 'context': {'period': 1, 'customer_id': 'l'}})
+    def test_view_prices(self):
+        self.api.validate_request('view_prices',
+            {'login': 'l', 'password': 'p', 'tariff': 't'})
+        self.api.validate_response('view_prices',
+            {'status': 'error', 'category': 't', 'message': 'm'})
+        self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {},
+            'prices': []})
+        self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {'customer_id': 'c'},
+            'prices': []})
+        self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {'customer_id': 'c'},
+            'prices': [
+                {'service_type': 's',
+                    'tariffs_chain': [], 'price': '1', 'price_calculation': PRICE_CALC_NORMAL,
+                    'draft_tariffs_chain': ['m'], 'draft_price': None, 'draft_price_calculation': PRICE_CALC_RULE_DISABLED},
+            ]})
+        self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {'customer_id': 'c'},
+            'prices': [
+                {'service_type': 's',
+                    'tariffs_chain': [], 'price': '1', 'price_calculation': PRICE_CALC_NORMAL,
+                    'draft_tariffs_chain': ['m'], 'draft_price': None, 'draft_price_calculation': PRICE_CALC_RULE_DISABLED},
+                {'service_type': 's',
+                    'tariffs_chain': [], 'price': None, 'price_calculation': PRICE_CALC_RULE_DISABLED,
+                    'draft_tariffs_chain': ['m'], 'draft_price': '1', 'draft_price_calculation': PRICE_CALC_NORMAL},
+            ]})
 
     def test_view_tariffs(self):
         self.api.validate_request('view_tariffs',
@@ -335,26 +363,6 @@ class ValidatorTestCase(RootTestCase):
                 {'name': 'n', 'service_set': 's', 'tariffs_chain': ['n', 't'], 'in_archive': True, 'service_types': []},
             ]
         })
-
-    def test_view_prices(self):
-        self.api.validate_request('view_prices',
-            {'login': 'l', 'password': 'p', 'tariff': 't'})
-        self.api.validate_response('view_prices',
-            {'status': 'error', 'category': 't', 'message': 'm'})
-        self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {},
-            'prices': []})
-        self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {'customer_id': 'c'},
-            'prices': []})
-        self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {'customer_id': 'c'},
-            'prices': [
-                {'tariffs_chain': ['m', 'n'], 'service_type': 's', 'price': '10.16', 'price_calculation': 'normal'},
-            ]})
-        self.api.validate_response('view_prices', {'status': 'ok', 'tariff': 't', 'context': {'customer_id': 'c'},
-            'prices': [
-                {'tariffs_chain': ['m', 'n'], 'service_type': 's', 'price': '10.16', 'price_calculation': 'normal'},
-                {'tariffs_chain': ['p'], 'service_type': 'l', 'price': '20.16',  'price_calculation': 'service_type_disabled'},
-                {'tariffs_chain': ['p'], 'service_type': 'l', 'price': None,  'price_calculation': 'price_undefined'},
-            ]})
 
 
 if __name__ == '__main__':

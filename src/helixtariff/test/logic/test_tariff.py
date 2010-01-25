@@ -136,30 +136,32 @@ class TariffTestCase(ServiceTestCase):
         self.assertRaises(TariffUsed, handle_action, 'delete_tariff', data)
 
     def test_delete_tariff(self):
-        parent_name = 'parent'
-        self.add_tariff(self.service_set_name, parent_name, self.in_archive, None)
-        child_name = 'child'
-        self.add_tariff(self.service_set_name, child_name, self.in_archive, parent_name)
+        p_name = 'parent'
+        self.add_tariff(self.service_set_name, p_name, self.in_archive, None)
+        ch_name = 'child'
+        self.add_tariff(self.service_set_name, ch_name, self.in_archive, p_name)
 
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'name': child_name,
+            'name': ch_name,
         }
-        handle_action('delete_tariff', data)
-        self.assertRaises(TariffNotFound, self.get_tariff, self.root_client_id, child_name)
+        self.handle_action('delete_tariff', data)
+
+        c_id = self.get_client_by_login(self.test_client_login).id
+        self.assertRaises(TariffNotFound, self.get_tariff, c_id, ch_name)
 
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'name': parent_name,
+            'name': p_name,
         }
-        handle_action('delete_tariff', data)
-        self.assertRaises(TariffNotFound, self.get_tariff, self.root_client_id, parent_name)
+        self.handle_action('delete_tariff', data)
+        self.assertRaises(TariffNotFound, self.get_tariff, c_id, p_name)
 
     def test_delete_tariff_with_rules(self):
         self.add_tariff(self.service_set_name, self.name, self.in_archive, None)
-        self.add_rule(self.name, self.service_types_names[0], 'price = 1.0')
+        self.save_draft_rule(self.name, self.service_types_names[0], 'price = 1.0', True)
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,

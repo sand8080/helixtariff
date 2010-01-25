@@ -9,289 +9,257 @@ from helixtariff.validator.validator import PRICE_CALC_NORMAL, \
 
 
 class PriceTestCase(ServiceTestCase):
-    service_type_name = 'register ru'
-    service_set_name = 'automatic'
-    tariff_name = 'moon light'
-    price = '100.13'
+    st_name = 'register ru'
+    ss_name = 'automatic'
+    t_name = 'moon light'
+    p_text = '100.13'
+    enabled = True
 
     def setUp(self):
         super(PriceTestCase, self).setUp()
-        self.add_service_types([self.service_type_name])
-        self.add_service_sets([self.service_set_name], [self.service_type_name])
-        self.add_tariff(self.service_set_name, self.tariff_name, False, None)
-        self.add_rule(self.tariff_name, self.service_type_name, 'price = %s' % self.price)
+        self.add_service_types([self.st_name])
+        self.add_service_sets([self.ss_name], [self.st_name])
+        self.add_tariff(self.ss_name, self.t_name, False, None)
+
+    def _cast(self, list_of_dicts, list_of_f, caster):
+        result = list(list_of_dicts)
+        for d in result:
+            for f in list_of_f:
+                if d[f] is None:
+                    continue
+                d[f] = caster(d[f])
+        return result
 
     def test_get_price(self):
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'tariff': self.tariff_name,
-            'service_type': self.service_type_name
+            'tariff': self.t_name,
+            'service_type': self.st_name,
         }
-        handle_action('delete_rule', data)
-        data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
-            'tariff': self.tariff_name,
-            'service_type': self.service_type_name,
-        }
-        response = handle_action('get_price', data)
+        response = self.handle_action('get_price', data)
         self.assertEqual('ok', response['status'])
-        self.assertEqual(self.tariff_name, response['tariff'])
-        self.assertEqual(self.service_type_name, response['service_type'])
-        self.assertEqual([self.tariff_name], response['tariffs_chain'])
+        self.assertEqual(self.t_name, response['tariff'])
+        self.assertEqual(self.st_name, response['service_type'])
+        self.assertEqual([self.t_name], response['tariffs_chain'])
         self.assertEqual(None, response['price'])
         self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, response['price_calculation'])
+        self.assertEqual([self.t_name], response['draft_tariffs_chain'])
+        self.assertEqual(None, response['draft_price'])
+        self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, response['draft_price_calculation'])
 
-        data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
-            'tariff': self.tariff_name + 'fake',
-            'service_type': self.service_type_name,
-        }
+        data = { 'login': self.test_client_login, 'password': self.test_client_password,
+            'tariff': self.t_name + 'fake', 'service_type': self.st_name}
         self.assertRaises(TariffNotFound, handle_action, 'get_price', data)
 
-        data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
-            'tariff': self.tariff_name,
-            'service_type': self.service_type_name + 'fake',
-        }
+        data = {'login': self.test_client_login, 'password': self.test_client_password,
+            'tariff': self.t_name, 'service_type': self.st_name + 'fake'}
         self.assertRaises(ServiceTypeNotFound, handle_action, 'get_price', data)
 
     def test_get_price_inherited(self):
+        ch_t_name = 'child tariff'
+        ch_t_price_text = '7.08'
+        self.add_tariff(self.ss_name, ch_t_name, False, self.t_name)
+        self.save_draft_rule(ch_t_name, self.st_name, 'price = %s' % ch_t_price_text, True)
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'tariff': self.tariff_name,
-            'service_type': self.service_type_name,
+            'tariff': ch_t_name,
+            'service_type': self.st_name,
         }
-        response = handle_action('get_price', data)
+        response = self.handle_action('get_price', data)
         self.assertEqual('ok', response['status'])
-        self.assertEqual(self.tariff_name, response['tariff'])
-        self.assertEqual(self.service_type_name, response['service_type'])
-        self.assertEqual([self.tariff_name], response['tariffs_chain'])
-        self.assertEqual(Decimal(self.price), Decimal(response['price']))
-        self.assertEqual(PRICE_CALC_NORMAL, response['price_calculation'])
-
-        child_tariff = 'child tariff'
-        child_price = '7.08'
-        self.add_tariff(self.service_set_name, child_tariff, False, self.tariff_name)
-        self.add_rule(child_tariff, self.service_type_name, 'price = %s' % child_price)
-        data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
-            'tariff': child_tariff,
-            'service_type': self.service_type_name,
-        }
-        response = handle_action('get_price', data)
-        self.assertEqual('ok', response['status'])
-        self.assertEqual(child_tariff, response['tariff'])
-        self.assertEqual(self.service_type_name, response['service_type'])
-        self.assertEqual([child_tariff], response['tariffs_chain'])
-        self.assertEqual(Decimal(child_price), Decimal(response['price']))
-        self.assertEqual(PRICE_CALC_NORMAL, response['price_calculation'])
-
-        self.delete_rule(self.tariff_name, self.service_type_name)
-        self.delete_rule(child_tariff, self.service_type_name)
-        data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
-            'tariff': child_tariff,
-            'service_type': self.service_type_name,
-        }
-        response = handle_action('get_price', data)
-        self.assertEqual('ok', response['status'])
-        self.assertEqual(child_tariff, response['tariff'])
-        self.assertEqual(self.service_type_name, response['service_type'])
-        self.assertEqual([child_tariff, self.tariff_name], response['tariffs_chain'])
+        self.assertEqual(ch_t_name, response['tariff'])
+        self.assertEqual(self.st_name, response['service_type'])
+        self.assertEqual([ch_t_name, self.t_name], response['tariffs_chain'])
         self.assertEqual(None, response['price'])
         self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, response['price_calculation'])
+        self.assertEqual([ch_t_name], response['draft_tariffs_chain'])
+        self.assertEqual(Decimal(ch_t_price_text), Decimal(response['draft_price']))
+        self.assertEqual(PRICE_CALC_NORMAL, response['draft_price_calculation'])
+
+        self.make_draft_rules_actual(ch_t_name)
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': ch_t_name,
+            'service_type': self.st_name,
+        }
+        response = self.handle_action('get_price', data)
+        self.assertEqual('ok', response['status'])
+        self.assertEqual(ch_t_name, response['tariff'])
+        self.assertEqual(self.st_name, response['service_type'])
+        self.assertEqual([ch_t_name], response['tariffs_chain'])
+        self.assertEqual(Decimal(ch_t_price_text), Decimal(response['price']))
+        self.assertEqual(PRICE_CALC_NORMAL, response['price_calculation'])
+        self.assertEqual([ch_t_name, self.t_name], response['draft_tariffs_chain'])
+        self.assertEqual(None, response['draft_price'])
+        self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, response['draft_price_calculation'])
 
     def test_view_prices(self):
+        self.save_draft_rule(self.t_name, self.st_name, 'price = %s' % self.p_text, True)
+
         expected_prices = [{
-            'service_type': self.service_type_name,
-            'price': self.price,
-            'price_calculation': PRICE_CALC_NORMAL,
-            'tariffs_chain': [self.tariff_name],
+            'service_type': self.st_name,
+            'price': None,
+            'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
+            'tariffs_chain': [self.t_name],
+            'draft_price': self.p_text,
+            'draft_price_calculation': PRICE_CALC_NORMAL,
+            'draft_tariffs_chain': [self.t_name],
         }]
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'tariff': self.tariff_name,
+            'tariff': self.t_name,
         }
-        response = handle_action('view_prices', data)
+        response = self.handle_action('view_prices', data)
         self.assertEqual('ok', response['status'])
-        self.assertEqual(self.tariff_name, response['tariff'])
+        self.assertEqual(self.t_name, response['tariff'])
         self.assertEqual({}, response['context'])
         actual_prices = response['prices']
         self.assertEqual(len(expected_prices), len(actual_prices))
         self.assertEqual(
-            self._cast(expected_prices, 'price', Decimal),
-            self._cast(actual_prices, 'price', Decimal)
+            self._cast(expected_prices, ['price', 'draft_price'], Decimal),
+            self._cast(actual_prices, ['price', 'draft_price'], Decimal)
         )
 
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'tariff': self.tariff_name,
+            'tariff': self.t_name,
             'context': {'customer_id': 'c', 'period': 3},
         }
-        response = handle_action('view_prices', data)
+        response = self.handle_action('view_prices', data)
         self.assertEqual('ok', response['status'])
-        self.assertEqual(self.tariff_name, response['tariff'])
+        self.assertEqual(self.t_name, response['tariff'])
         self.assertEqual(data['context'], response['context'])
         actual_prices = response['prices']
         self.assertEqual(len(expected_prices), len(actual_prices))
         self.assertEqual(
-            self._cast(expected_prices, 'price', Decimal),
-            self._cast(actual_prices, 'price', Decimal)
+            self._cast(expected_prices, ['price', 'draft_price'], Decimal),
+            self._cast(actual_prices, ['price', 'draft_price'], Decimal)
         )
 
-    def _cast(self, list_of_dicts, f, caster):
-        result = list(list_of_dicts)
-        for d in result:
-            if d[f] is None:
-                continue
-            d[f] = caster(d[f])
-        return result
-
     def test_child_tariff_view_prices(self):
-        added_service_types = ['child service 0', 'child service 1']
-        added_prices = ['10.11', '67.90']
-        self.add_service_types(added_service_types)
-        self.modify_service_set(self.service_set_name,
-            new_service_types=[self.service_type_name] + added_service_types)
-        child_tariff = 'child tariff'
-        self.add_tariff(self.service_set_name, child_tariff, False, self.tariff_name)
+        added_st_names = ['child service 0', 'child service 1']
+        added_p_texts = ['10.11', '67.90']
+        self.add_service_types(added_st_names)
+        self.modify_service_set(self.ss_name,
+            new_service_types=[self.st_name] + added_st_names)
+        ch_t_name = 'child tariff'
+        self.add_tariff(self.ss_name, ch_t_name, False, self.t_name)
 
+        self.save_draft_rule(self.t_name, self.st_name, 'price = %s' % self.p_text, True)
         expected_prices = [{
-            'service_type': self.service_type_name,
-            'price': self.price,
-            'price_calculation': PRICE_CALC_NORMAL,
-            'tariffs_chain': [child_tariff, self.tariff_name],
+            'service_type': self.st_name,
+            'price': None,
+            'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
+            'tariffs_chain': [ch_t_name, self.t_name],
+            'draft_price': self.p_text,
+            'draft_price_calculation': PRICE_CALC_NORMAL,
+            'draft_tariffs_chain': [ch_t_name, self.t_name],
         }]
-        for i, t in enumerate(added_service_types):
-            self.add_rule(child_tariff, t, 'price = %s' % added_prices[i])
+        for i, st_name in enumerate(added_st_names):
+            self.save_draft_rule(ch_t_name, st_name, 'price = %s' % added_p_texts[i], True)
             expected_prices.append({
-                'service_type': t,
-                'price': added_prices[i],
-                'price_calculation': PRICE_CALC_NORMAL,
-                'tariffs_chain': [child_tariff],
+                'service_type': st_name,
+                'price': None,
+                'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
+                'tariffs_chain': [ch_t_name, self.t_name],
+                'draft_price': added_p_texts[i],
+                'draft_price_calculation': PRICE_CALC_NORMAL,
+                'draft_tariffs_chain': [ch_t_name],
             })
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'tariff': child_tariff,
+            'tariff': ch_t_name,
         }
-        response = handle_action('view_prices', data)
+        response = self.handle_action('view_prices', data)
         self.assertEqual('ok', response['status'])
-        self.assertEqual(child_tariff, response['tariff'])
+        self.assertEqual(ch_t_name, response['tariff'])
         self.assertEqual({}, response['context'])
         actual_prices = response['prices']
         self.assertEqual(len(expected_prices), len(actual_prices))
         self.assertEqual(
-            self._cast(expected_prices, 'price', Decimal),
-            self._cast(actual_prices, 'price', Decimal)
-        )
-
-        self.delete_rule(child_tariff, added_service_types[0])
-        self.delete_rule(child_tariff, added_service_types[1])
-        self.add_rule(child_tariff, added_service_types[0], '''price = 1.0 if request.customer_id == 'lucky' else 11.0''')
-        expected_prices = [
-            {
-                'service_type': self.service_type_name,
-                'price': self.price,
-                'price_calculation': PRICE_CALC_NORMAL,
-                'tariffs_chain': [child_tariff, self.tariff_name],
-            },
-            {
-                'service_type': added_service_types[0],
-                'price': '1.0',
-                'price_calculation': PRICE_CALC_NORMAL,
-                'tariffs_chain': [child_tariff],
-            },
-            {
-                'service_type': added_service_types[1],
-                'price': None,
-                'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
-                'tariffs_chain': [child_tariff, self.tariff_name],
-            },
-        ]
-
-        data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
-            'tariff': child_tariff,
-            'context': {'customer_id': 'lucky'},
-        }
-        response = handle_action('view_prices', data)
-        self.assertEqual('ok', response['status'])
-        self.assertEqual(child_tariff, response['tariff'])
-        self.assertEqual(data['context'], response['context'])
-        actual_prices = response['prices']
-        self.assertEqual(len(expected_prices), len(actual_prices))
-        self.assertEqual(
-            self._cast(expected_prices, 'price', Decimal),
-            self._cast(actual_prices, 'price', Decimal)
+            self._cast(expected_prices, ['price', 'draft_price'], Decimal),
+            self._cast(actual_prices, ['price', 'draft_price'], Decimal)
         )
 
     def test_view_prices_inherited(self):
+        self.save_draft_rule(self.t_name, self.st_name, 'price = %s' % self.p_text, True)
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'tariff': self.tariff_name,
+            'tariff': self.t_name,
         }
-        response = handle_action('view_prices', data)
+        response = self.handle_action('view_prices', data)
         self.assertEqual('ok', response['status'])
-        self.assertEqual(self.tariff_name, response['tariff'])
+        self.assertEqual(self.t_name, response['tariff'])
         self.assertEqual({}, response['context'])
 
         expected_prices = [{
-            'service_type': self.service_type_name,
-            'price': self.price,
-            'price_calculation': PRICE_CALC_NORMAL,
-            'tariffs_chain': [self.tariff_name],
+            'service_type': self.st_name,
+            'price': None,
+            'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
+            'tariffs_chain': [self.t_name],
+            'service_type': self.st_name,
+            'draft_price': self.p_text,
+            'draft_price_calculation': PRICE_CALC_NORMAL,
+            'draft_tariffs_chain': [self.t_name],
         }]
-        self.assertEqual(expected_prices, response['prices'])
+        actual_prices = response['prices']
+        self.assertEqual(
+            self._cast(expected_prices, ['price', 'draft_price'], Decimal),
+            self._cast(actual_prices, ['price', 'draft_price'], Decimal)
+        )
 
-        child_service_type = 'child service 0'
-        child_service_price = '13.13'
-        child_service_set = 'child service set'
-        child_tariff = 'child tariff'
-        self.add_service_types([child_service_type])
-        self.add_service_sets([child_service_set], [child_service_type])
-        self.add_tariff(child_service_set, child_tariff, False, self.tariff_name)
-        self.add_rule(child_tariff, child_service_type, 'price = %s' % child_service_price)
+        ch_st_name = 'child service 0'
+        ch_p_text = '13.13'
+        ch_ss_name = 'child service set'
+        ch_t_name = 'child tariff'
+        self.add_service_types([ch_st_name])
+        self.add_service_sets([ch_ss_name], [ch_st_name])
+        self.add_tariff(ch_ss_name, ch_t_name, False, self.t_name)
+        self.save_draft_rule(ch_t_name, ch_st_name, 'price = %s' % ch_p_text, True)
 
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'tariff': child_tariff,
+            'tariff': ch_t_name,
         }
-        response = handle_action('view_prices', data)
+        response = self.handle_action('view_prices', data)
         self.assertEqual('ok', response['status'])
-        self.assertEqual(child_tariff, response['tariff'])
+        self.assertEqual(ch_t_name, response['tariff'])
         self.assertEqual({}, response['context'])
 
         expected_prices = [
             {
-                'service_type': self.service_type_name,
-                'price': self.price,
-                'tariffs_chain': [child_tariff, self.tariff_name],
+                'service_type': self.st_name,
+                'price': None,
+                'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
+                'tariffs_chain': [ch_t_name, self.t_name],
+                'draft_price': self.p_text,
+                'draft_price_calculation': PRICE_CALC_NORMAL,
+                'draft_tariffs_chain': [ch_t_name, self.t_name],
             },
             {
-                'service_type': child_service_type,
-                'price': child_service_price,
-                'tariffs_chain': [child_tariff],
+                'service_type': ch_st_name,
+                'price': None,
+                'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
+                'tariffs_chain': [ch_t_name, self.t_name],
+                'draft_price': ch_p_text,
+                'draft_price_calculation': PRICE_CALC_NORMAL,
+                'draft_tariffs_chain': [ch_t_name],
             },
         ]
-        self.assertEqual(len(expected_prices), len(response['prices']))
-        for i, expected in enumerate(expected_prices):
-            actual = response['prices'][i]
-            self.assertEqual(expected['service_type'], actual['service_type'])
-            self.assertEqual(expected['tariffs_chain'], actual['tariffs_chain'])
-            self.assertEqual(Decimal(expected['price']), Decimal(actual['price']))
+        actual_prices = response['prices']
+        self.assertEqual(len(expected_prices), len(actual_prices))
+        self.assertEqual(
+            self._cast(expected_prices, ['price', 'draft_price'], Decimal),
+            self._cast(actual_prices, ['price', 'draft_price'], Decimal)
+        )
 
     def test_view_tariff_prices_without_rules(self):
         st_names = ['serv0', 'serv1']
@@ -305,13 +273,15 @@ class PriceTestCase(ServiceTestCase):
             'password': self.test_client_password,
             'tariff': t_name,
         }
-        response = handle_action('view_prices', data)
+        response = self.handle_action('view_prices', data)
         self.assertEqual('ok', response['status'])
         prices = response['prices']
         self.assertEqual(len(st_names), len(prices))
         for p_info in prices:
             self.assertEqual(None, p_info['price'])
             self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, p_info['price_calculation'])
+            self.assertEqual(None, p_info['draft_price'])
+            self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, p_info['draft_price_calculation'])
 
 
 if __name__ == '__main__':

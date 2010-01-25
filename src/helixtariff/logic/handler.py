@@ -17,7 +17,7 @@ from helixtariff.error import TariffCycleError, ServiceTypeNotFound, \
     ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed, ObjectNotFound,\
     RuleNotFound
 from helixtariff.validator.validator import PRICE_CALC_NORMAL, \
-    PRICE_CALC_PRICE_UNDEFINED
+    PRICE_CALC_PRICE_UNDEFINED, PRICE_CALC_RULE_DISABLED
 
 
 def authentificate(method):
@@ -355,7 +355,7 @@ class Handler(object):
         childs = selector.get_child_tariffs(curs, t)
         if childs:
             raise TariffUsed('''Tariff '%s' is parent of %s''' % (t.name, [t.name for t in childs]))
-        rules = selector.get_rules(curs, t)
+        rules = selector.get_rules(curs, t, [Rule.TYPE_ACTUAL, Rule.TYPE_DRAFT])
         if rules:
             st_names_idx = selector.get_service_sets_names_indexed_by_id(curs, c_id)
             raise TariffUsed('''In tariff '%s' defined rules for services %s''' %
@@ -559,16 +559,38 @@ class Handler(object):
             selector.get_tariffs_parent_ids_indexed_by_id(curs, client_id)
         )
 
-    def _find_nearest_rule(self, indexed_rules, tariffs_ids, service_type_id):
+    def _find_nearest_rules_pair(self, indexed_rules, tariffs_ids, service_type_id):
         '''
-        Finds first rule implementation in tariffs listed in tariffs_ids.
+        Finds first rules implementation in tariffs listed in tariffs_ids.
+        @return: (actual_rule, drart_rule)
         '''
-        for t_id in tariffs_ids:
-            k = (t_id, service_type_id)
-            if k in indexed_rules:
-                return indexed_rules[k]
-        raise ObjectNotFound()
+        def find_rule(rule_type):
+            for t_id in tariffs_ids:
+                k = (t_id, service_type_id, rule_type)
+                if k in indexed_rules:
+                    return indexed_rules[k]
+            return None
+        return  find_rule(Rule.TYPE_ACTUAL), find_rule(Rule.TYPE_DRAFT)
 
+    def _get_price_info(self, rule, ctx, t_ids, t_names):
+        if rule is None:
+            return {
+                'price': None,
+                'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
+                'tariffs_chain': t_names,
+            }
+        if rule.enabled:
+            return {
+                'price': engine.process(RequestPrice(rule, ctx)).price,
+                'price_calculation': PRICE_CALC_NORMAL,
+                'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
+            }
+        else:
+            return {
+                'price': None,
+                'price_calculation': PRICE_CALC_RULE_DISABLED,
+                'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
+            }
 
     @transaction()
     @authentificate
@@ -584,21 +606,20 @@ class Handler(object):
         st = selector.get_service_type(curs, c_id, st_name)
         rules_idx = selector.get_rules_indexed_by_tariff_service_type_ids(curs, c_id, t_ids,
             [st.id])
-        response = {
-            'tariff': t_name,
-            'service_type': st_name,
-            'context': ctx,
-        }
-        try:
-            rule = self._find_nearest_rule(rules_idx, t_ids, st.id)
-            price_response = engine.process(RequestPrice(rule, ctx))
-            response['price'] = price_response.price
-            response['price_calculation'] = PRICE_CALC_NORMAL
-            response['tariffs_chain'] = self._tariffs_chain_names(rule.tariff_id, t_ids, t_names)
-        except ObjectNotFound:
-            response['price'] = None
-            response['price_calculation'] = PRICE_CALC_PRICE_UNDEFINED
-            response['tariffs_chain'] = t_names
+        response = {}
+        response['tariff'] = t_name
+        response['service_type'] = st_name
+        response['context'] = ctx
+
+        actual_rule, draft_rule = self._find_nearest_rules_pair(rules_idx, t_ids, st.id)
+
+        actual_r_info = self._get_price_info(actual_rule, ctx, t_ids, t_names)
+        response.update(actual_r_info)
+
+        draft_r_info = self._get_price_info(draft_rule, ctx, t_ids, t_names).items()
+        draft_r_info = dict([('draft_%s' % k, v) for (k, v) in draft_r_info])
+        response.update(draft_r_info)
+
         return response_ok(**response)
 
     @transaction()
@@ -615,28 +636,24 @@ class Handler(object):
         st_ids = selector.get_service_types_ids(curs, ss_ids)
 
         rules_idx = selector.get_rules_indexed_by_tariff_service_type_ids(curs, c_id, t_ids, st_ids)
-
-        prices = []
         st_names_idx = selector.get_service_types_names_indexed_by_id(curs, c_id)
+
+        response = {}
+        response['tariff'] = t_name
+        response['context'] = ctx
+        response['prices'] = []
+
+        prices = response['prices']
         for st_id in st_ids:
-            try:
-                rule = self._find_nearest_rule(rules_idx, t_ids, st_id)
-                p_info = {
-                    'service_type': st_names_idx[st_id],
-                    'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
-                    'price': engine.process(RequestPrice(rule, ctx)).price,
-                    'price_calculation': 'normal',
-                }
-            except ObjectNotFound:
-                p_info = {
-                    'service_type': st_names_idx[st_id],
-                    'tariffs_chain': t_names,
-                    'price': None,
-                    'price_calculation': 'price_undefined',
-                }
+            p_info = {'service_type': st_names_idx[st_id]}
+            actual_rule, draft_rule = self._find_nearest_rules_pair(rules_idx, t_ids, st_id)
+
+            actual_r_info = self._get_price_info(actual_rule, ctx, t_ids, t_names)
+            p_info.update(actual_r_info)
+
+            draft_r_info = self._get_price_info(draft_rule, ctx, t_ids, t_names).items()
+            draft_r_info = dict([('draft_%s' % k, v) for (k, v) in draft_r_info])
+            p_info.update(draft_r_info)
+
             prices.append(p_info)
-        return response_ok(
-            tariff=t_name,
-            context=ctx,
-            prices=prices
-        )
+        return response_ok(**response)

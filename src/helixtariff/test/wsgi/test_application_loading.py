@@ -120,10 +120,12 @@ class ApplicationTestCase(DbBasedTestCase):
             for service_type_name in tariff_detailed_data['service_types']:
                 print '*',
                 rule = 'price = %s' % (Decimal(random.randint(2000, 9000)) / 100)
-                self.cli.add_rule(login=self.cli.login, password=self.cli.password, #IGNORE:E1101
-                    tariff=tariff_name, service_type=service_type_name, rule=rule)
+                self.cli.save_draft_rule(login=self.cli.login, password=self.cli.password, #IGNORE:E1101
+                    tariff=tariff_name, service_type=service_type_name, rule=rule, enabled=True)
             print
             print 'Prices added for tariff %s' % tariff_name
+            self.cli.make_draft_rules_actual(login=self.cli.login, password=self.cli.password, #IGNORE:E1101
+                tariff=tariff_name)
         print 'Tariffs added'
 
         self.view_tariffs(repeats=1)

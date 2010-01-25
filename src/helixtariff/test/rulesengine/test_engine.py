@@ -2,30 +2,34 @@ from decimal import Decimal
 import unittest
 
 from helixtariff.test.db_based_test import ServiceTestCase
-
+from helixtariff.domain.objects import Rule
 from helixtariff.rulesengine import engine
 from helixtariff.rulesengine.interaction import RequestPrice, PriceProcessingError
 
 
 class EngineTestCase(ServiceTestCase):
-    service_set_name = 'automatic'
-    service_types_names = ['registration ru', 'prolongation ru', 'registration com', 'prolongation com']
-    tariff_name = 'basic tariff'
+    ss_name = 'automatic'
+    st_names = ['registration ru', 'prolongation ru', 'registration com', 'prolongation com']
+    t_name = 'basic tariff'
 
     def setUp(self):
         super(EngineTestCase, self).setUp()
-        self.add_service_types(self.service_types_names)
-        self.add_service_sets([self.service_set_name], self.service_types_names)
-        self.add_tariff(self.service_set_name, self.tariff_name, False, None)
+        self.add_service_types(self.st_names)
+        self.add_service_sets([self.ss_name], self.st_names)
+        self.add_tariff(self.ss_name, self.t_name, False, None)
 
     def test_request_price_not_modified(self):
-        self.add_rule(self.tariff_name, self.service_types_names[0], '')
-        rule = self.get_rule(self.get_root_client().id, self.tariff_name, self.service_types_names[0])
+        st_name = self.st_names[0]
+        self.save_draft_rule(self.t_name, st_name, '', True)
+        c_id = self.get_client_by_login(self.test_client_login).id
+        tariff = self.get_tariff(c_id, self.t_name)
+        service_type = self.get_service_type(c_id, st_name)
+        rule = self.get_rule(tariff, service_type, Rule.TYPE_DRAFT)
         request = RequestPrice(rule)
         self.assertRaises(PriceProcessingError, engine.process, request)
 
     def test_request_price(self):
-        raw_rule = '''
+        r_text = '''
 request.check_period(min_period=1, max_period=3)
 price = 15.019
 
@@ -35,10 +39,13 @@ if request.customer_id == 'lucky':
 if request.period > 1:
     price += 10.00 * (request.period - 1)
 '''
-        client_id = self.get_root_client().id
-        st_name = self.service_types_names[0]
-        self.add_rule(self.tariff_name, st_name, raw_rule)
-        rule = self.get_rule(client_id, self.tariff_name, st_name)
+        c_id = self.get_client_by_login(self.test_client_login).id
+        st_name = self.st_names[0]
+        self.save_draft_rule(self.t_name, st_name, r_text, True)
+        tariff = self.get_tariff(c_id, self.t_name)
+        service_type = self.get_service_type(c_id, st_name)
+        rule = self.get_rule(tariff, service_type, Rule.TYPE_DRAFT)
+
         response = engine.process(RequestPrice(rule, context={'period': 1}))
         self.assertEqual(Decimal('15.019'), Decimal(response.price))
 

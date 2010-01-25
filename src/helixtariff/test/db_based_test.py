@@ -56,7 +56,7 @@ class ServiceTestCase(DbBasedTestCase):
     def add_service_sets(self, service_sets_names, service_types_names):
         client = self.get_client_by_login(self.test_client_login)
         for s in service_sets_names:
-            handle_action('add_service_set', {'login': self.test_client_login, 'password': self.test_client_password,
+            self.handle_action('add_service_set', {'login': self.test_client_login, 'password': self.test_client_password,
                 'name': s, 'service_types': service_types_names}
             )
             service_set = self.get_service_set_by_name(client.id, s)
@@ -71,7 +71,7 @@ class ServiceTestCase(DbBasedTestCase):
 
     def add_service_types(self, service_types):
         for t in service_types:
-            handle_action(
+            self.handle_action(
                 'add_service_type',
                 {'login': self.test_client_login, 'password': self.test_client_password, 'name': t}
             )
@@ -94,7 +94,7 @@ class ServiceTestCase(DbBasedTestCase):
             data['new_name'] = new_name
         if new_service_types is not None:
             data['new_service_types'] = new_service_types
-        handle_action('modify_service_set', data)
+        self.handle_action('modify_service_set', data)
 
         n = new_name if new_name else name
         service_set = self.get_service_set_by_name(client.id, n)
@@ -124,7 +124,7 @@ class ServiceTestCase(DbBasedTestCase):
             'in_archive': in_archive,
             'parent_tariff': parent_tariff_name
         }
-        handle_action('add_tariff', data)
+        self.handle_action('add_tariff', data)
         t = self.get_tariff(client_id, name)
         parent_id = None if parent_tariff_name is None else self.get_tariff(client_id, parent_tariff_name).id
         service_set = self.get_service_set_by_name(client_id, servise_set_name)
@@ -143,7 +143,7 @@ class ServiceTestCase(DbBasedTestCase):
             'name': name,
             'new_parent_tariff': new_parent_tariff
         }
-        handle_action('modify_tariff', data)
+        self.handle_action('modify_tariff', data)
         t = self.get_tariff(client_id, name)
         if new_parent_tariff is None:
             parent_tariff_id = None
@@ -195,18 +195,6 @@ class ServiceTestCase(DbBasedTestCase):
         self.handle_action('make_draft_rules_actual', data)
         tariff = self.get_tariff(client_id, tariff_name)
         self.assertEqual([], self.get_rules(tariff, [Rule.TYPE_DRAFT]))
-
-#    def delete_rule(self, tariff_name, service_type_name):
-#        data = {
-#            'login': self.test_client_login,
-#            'password': self.test_client_password,
-#            'tariff': tariff_name,
-#            'service_type': service_type_name,
-#        }
-#        handle_action('delete_rule', data)
-#
-#        client_id = self.get_root_client().id
-#        self.assertRaises(ObjectNotFound, self.get_rule, client_id, tariff_name, service_type_name)
 
     def handle_action(self, action, data):
         api = Api(protocol)

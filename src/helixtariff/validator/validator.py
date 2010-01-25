@@ -306,27 +306,37 @@ GET_PRICE = dict(
     **AUTH_INFO
 )
 
-
 PRICE_CALC_NORMAL = 'normal'
 PRICE_CALC_SERVICE_TYPE_DISABLED = 'service_type_disabled'
 PRICE_CALC_PRICE_UNDEFINED = 'price_undefined'
+PRICE_CALC_RULE_DISABLED = 'rule_disabled'
 PRICE_CALCULATION = AnyOf(
     PRICE_CALC_NORMAL,
     PRICE_CALC_SERVICE_TYPE_DISABLED,
     PRICE_CALC_PRICE_UNDEFINED,
+    PRICE_CALC_RULE_DISABLED,
 )
+
+PRICE_INFO= {
+    'service_type': Text(),
+    'tariffs_chain': [Text()],
+    'price': AnyOf(DecimalText(), None),
+    'price_calculation': PRICE_CALCULATION,
+    'draft_tariffs_chain': [Text()],
+    'draft_price': AnyOf(DecimalText(), None),
+    'draft_price_calculation': PRICE_CALCULATION,
+}
 
 GET_PRICE_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
-        **{
-            'tariff': Text(),
-            'tariffs_chain': [Text()],
-            'service_type': Text(),
-            'price': AnyOf(DecimalText(), None),
-            'price_calculation': PRICE_CALCULATION,
-            'context': FlatDict(),
-        }
+        **dict(
+            {
+                'tariff': Text(),
+                'context': FlatDict(),
+            },
+            **PRICE_INFO
+        )
     ),
     RESPONSE_STATUS_ERROR
 )
@@ -345,18 +355,14 @@ VIEW_PRICES_RESPONSE = AnyOf(
         **{
             'tariff': Text(),
             'context': FlatDict(),
-            'prices': [{
-                'tariffs_chain': [Text()],
-                'service_type': Text(),
-                'price_calculation': PRICE_CALCULATION,
-                'price': AnyOf(DecimalText(), None),
-            }],
+            'prices': [PRICE_INFO],
         }
     ),
     RESPONSE_STATUS_ERROR
 )
 
 
+# -- protocol --
 protocol = [
     ApiCall('ping_request', Scheme(PING)),
     ApiCall('ping_response', Scheme(RESPONSE_STATUS_ONLY)),

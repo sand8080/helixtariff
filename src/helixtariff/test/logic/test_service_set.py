@@ -30,7 +30,7 @@ class ServiceSetTestCase(ServiceTestCase):
             'name': name,
             'new_name': new_name
         }
-        handle_action('modify_service_set', data)
+        self.handle_action('modify_service_set', data)
 
         s_new = self.get_service_set_by_name(client.id, new_name)
         self.assertEqual(s_old.id, s_new.id)
@@ -43,7 +43,7 @@ class ServiceSetTestCase(ServiceTestCase):
             'name': new_name,
             'new_service_types': new_service_types_names
         }
-        handle_action('modify_service_set', data)
+        self.handle_action('modify_service_set', data)
 
         s_new = self.get_service_set_by_name(client.id, new_name)
         self.assertEqual(s_old.id, s_new.id)
@@ -54,20 +54,20 @@ class ServiceSetTestCase(ServiceTestCase):
         self.assertEqual(len(actual_service_types_names), len(self.get_service_set_rows(service_set)))
 
     def test_modify_service_set_with_binded_rules(self):
-        service_set_name = self.service_sets[0]
-        service_type_name = self.service_types_names[0]
-        tariff_name = 't0'
-        self.add_tariff(service_set_name, tariff_name, False, None)
-        self.add_rule(tariff_name, service_type_name, 'price = 2.01')
+        ss_name = self.service_sets[0]
+        st_name = self.service_types_names[0]
+        t_name = 't0'
+        self.add_tariff(ss_name, t_name, False, None)
+        self.save_draft_rule(t_name, st_name, 'price = 2.01', True)
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'name': service_set_name,
+            'name': ss_name,
             'new_service_types': self.service_types_names[1:]
         }
         self.assertRaises(ServiceTypeUsed, handle_action, 'modify_service_set', data)
 
-        another_service_set_name = 'another %s' % service_set_name
+        another_service_set_name = 'another %s' % ss_name
         self.add_service_sets([another_service_set_name], self.service_types_names)
         data = {
             'login': self.test_client_login,
@@ -75,7 +75,7 @@ class ServiceSetTestCase(ServiceTestCase):
             'name': another_service_set_name,
             'new_service_types': self.service_types_names[1:]
         }
-        response = handle_action('modify_service_set', data)
+        response = self.handle_action('modify_service_set', data)
         self.assertEqual('ok', response['status'])
 
     def test_delete_service_set(self):
@@ -96,14 +96,14 @@ class ServiceSetTestCase(ServiceTestCase):
             'name': name,
             'new_service_types': []
         }
-        handle_action('modify_service_set', data)
+        self.handle_action('modify_service_set', data)
 
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
             'name': name
         }
-        handle_action('delete_service_set', data)
+        self.handle_action('delete_service_set', data)
         self.assertRaises(ServiceSetNotFound, self.get_service_set_by_name, client_id, name)
         self.assertEqual([], self.get_service_set_rows(service_type))
 
@@ -123,7 +123,7 @@ class ServiceSetTestCase(ServiceTestCase):
     def test_get_service_set(self):
         service_set_name = self.service_sets[0]
         self.modify_service_set(service_set_name, new_service_types=self.service_types_names)
-        response = handle_action('get_service_set', {'login': self.test_client_login,
+        response = self.handle_action('get_service_set', {'login': self.test_client_login,
             'password': self.test_client_password, 'name': service_set_name,})
         self.assertEqual('ok', response['status'])
         self.assertEqual(service_set_name, response['name'])
@@ -131,7 +131,7 @@ class ServiceSetTestCase(ServiceTestCase):
 
     def test_get_service_set_detailed(self):
         ss_name = self.service_sets[0]
-        response = handle_action('get_service_set_detailed', {'login': self.test_client_login,
+        response = self.handle_action('get_service_set_detailed', {'login': self.test_client_login,
             'password': self.test_client_password, 'name': ss_name,})
         self.assertEqual('ok', response['status'])
         self.assertEqual(ss_name, response['name'])
@@ -141,7 +141,7 @@ class ServiceSetTestCase(ServiceTestCase):
         t_names = ['t1', 't0', 't3']
         for n in t_names:
             self.add_tariff(ss_name, n, False, None)
-        response = handle_action('get_service_set_detailed', {'login': self.test_client_login,
+        response = self.handle_action('get_service_set_detailed', {'login': self.test_client_login,
             'password': self.test_client_password, 'name': ss_name,})
         self.assertEqual('ok', response['status'])
         self.assertEqual(ss_name, response['name'])
@@ -157,7 +157,7 @@ class ServiceSetTestCase(ServiceTestCase):
         for s, t in sets_struct.items():
             self.modify_service_set(s, new_service_types=t)
 
-        response = handle_action('view_service_sets', {'login': self.test_client_login,
+        response = self.handle_action('view_service_sets', {'login': self.test_client_login,
             'password': self.test_client_password,})
         self.assertEqual('ok', response['status'])
         service_sets_info = response['service_sets']
@@ -177,7 +177,7 @@ class ServiceSetTestCase(ServiceTestCase):
             self.modify_service_set(ss_name, new_service_types=st_names)
             self.add_tariff(ss_name, t_name, False, None)
 
-        response = handle_action('view_service_sets_detailed', {'login': self.test_client_login,
+        response = self.handle_action('view_service_sets_detailed', {'login': self.test_client_login,
             'password': self.test_client_password})
         self.assertEqual('ok', response['status'])
         service_sets_info = response['service_sets']
@@ -193,7 +193,7 @@ class ServiceSetTestCase(ServiceTestCase):
         login = 'test'
         password = 'qazwsx'
         self.add_client(login, password)
-        response = handle_action('view_service_sets', {'login': login, 'password': password})
+        response = self.handle_action('view_service_sets', {'login': login, 'password': password})
         self.assertEqual('ok', response['status'])
         self.assertEqual([], response['service_sets'])
 

@@ -121,6 +121,9 @@ def get_rules_for_service_types(curs, client_id, service_types_ids, for_update=F
 
 
 def get_rules_indexed_by_tariff_service_type_ids(curs, client_id, tariffs_ids, service_types_ids, for_update=False):
+    '''
+    @return: {(tariff_id, service_type_id, type): rule}
+    '''
     cond_names = In('id', service_types_ids)
     cond_client_id = Eq('client_id', client_id)
     sel_st_id = Select(ServiceType.table, columns='id', cond=And(cond_names, cond_client_id))
@@ -131,7 +134,7 @@ def get_rules_indexed_by_tariff_service_type_ids(curs, client_id, tariffs_ids, s
     rules = mapping.get_list(curs, Rule, cond=And(cond_tariffs_ids, cond_st_name), for_update=for_update)
     indexed_rules = {}
     for r in rules:
-        indexed_rules[(r.tariff_id, r.service_type_id)] = r
+        indexed_rules[(r.tariff_id, r.service_type_id, r.type)] = r
     return indexed_rules
 
 
