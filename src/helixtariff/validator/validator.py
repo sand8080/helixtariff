@@ -176,6 +176,7 @@ DELETE_TARIFF = dict(
 TARIFF_INFO = {
     'name': Text(),
     'service_set': Text(),
+    'parent_tariff': NullableText,
     'tariffs_chain': [Text()],
     'in_archive': bool,
 }

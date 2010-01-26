@@ -14,8 +14,7 @@ from helixtariff.rulesengine import engine
 from helixtariff.rulesengine.interaction import RequestPrice
 from helixtariff.domain import security
 from helixtariff.error import TariffCycleError, ServiceTypeNotFound, \
-    ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed, ObjectNotFound,\
-    RuleNotFound
+    ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed, RuleNotFound
 from helixtariff.validator.validator import PRICE_CALC_NORMAL, \
     PRICE_CALC_PRICE_UNDEFINED, PRICE_CALC_RULE_DISABLED
 
@@ -363,21 +362,27 @@ class Handler(object):
         mapping.delete(curs, t)
         return response_ok()
 
-    def _get_tariffs_data(self, curs, client_id, tariffs):
-        service_sets_names = selector.get_service_sets_names_indexed_by_id(curs, client_id)
-        tariffs_names_idx = selector.get_tariffs_names_indexed_by_id(curs, client_id)
-        parents_names_idx = selector.get_tariffs_parent_ids_indexed_by_id(curs, client_id)
+    def _get_tariffs_data(self, curs, c_id, tariffs):
+        ss_names = selector.get_service_sets_names_indexed_by_id(curs, c_id)
+        t_names_idx = selector.get_tariffs_names_indexed_by_id(curs, c_id)
+        pt_ids_idx = selector.get_tariffs_parent_ids_indexed_by_id(curs, c_id)
 
         result = []
-        for t in tariffs:
-            ts_chain = self._calculate_tariffs_chain(t.id, tariffs_names_idx, parents_names_idx)
-            _, tariffs_names = map(list, zip(*ts_chain))
+        for tariff in tariffs:
+            t_chain = self._calculate_tariffs_chain(tariff.id, t_names_idx, pt_ids_idx)
+            _, t_names = map(list, zip(*t_chain))
+            try:
+                pt_name = t_names[1]
+            except IndexError:
+                pt_name = None
+
             result.append(
                 {
-                    'name': t.name,
-                    'service_set': service_sets_names.get(t.service_set_id),
-                    'tariffs_chain': tariffs_names,
-                    'in_archive': t.in_archive,
+                    'name': tariff.name,
+                    'service_set': ss_names.get(tariff.service_set_id),
+                    'tariffs_chain': t_names,
+                    'parent_tariff': pt_name,
+                    'in_archive': tariff.in_archive,
                 }
             )
         return result
