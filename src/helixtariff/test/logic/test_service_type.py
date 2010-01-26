@@ -29,7 +29,7 @@ class ServiceTypeTestCase(ServiceTestCase):
             'name': old_name,
             'new_name': new_name
         }
-        handle_action('modify_service_type', data)
+        self.handle_action('modify_service_type', data)
 
         t_new = self.get_service_type(self.client.id, new_name)
         self.assertEqual(t_old.id, t_new.id)
@@ -60,21 +60,35 @@ class ServiceTypeTestCase(ServiceTestCase):
         }
         self.assertRaises(ServiceTypeUsed, handle_action, 'delete_service_type', data)
 
-    def test_get_empty_service_types(self):
-        response = handle_action('view_service_types', {'login': self.test_client_login,
+    def test_view_empty_service_types(self):
+        response = self.handle_action('view_service_types', {'login': self.test_client_login,
             'password': self.test_client_password})
         self.assertTrue('service_types' in response)
         self.assertEqual([], response['service_types'])
 
+    def test_view_empty_service_types_detailed(self):
+        response = self.handle_action('view_service_types_detailed', {'login': self.test_client_login,
+            'password': self.test_client_password})
+        self.assertTrue('service_types' in response)
+        self.assertEqual([], response['service_types'])
+
+    def test_view_service_types_detailed_without_service_set(self):
+        self.add_service_types([self.service_type_name])
+        response = self.handle_action('view_service_types_detailed', {'login': self.test_client_login,
+            'password': self.test_client_password})
+        expected_st_info = [{'service_sets': [], 'name': self.service_type_name}]
+        self.assertTrue('service_types' in response)
+        self.assertEqual(expected_st_info, response['service_types'])
+
     def test_view_service_types(self):
         types = ['one', 'two', 'three']
         self.add_service_types(types)
-        response = handle_action('view_service_types', {'login': self.test_client_login,
+        response = self.handle_action('view_service_types', {'login': self.test_client_login,
             'password': self.test_client_password})
         self.assertTrue('service_types' in response)
         self.assertEqual(types, response['service_types'])
 
-    def test_get_service_types_invalid(self):
+    def test_view_service_types_invalid(self):
         self.assertRaises(AuthError, handle_action, 'view_service_types', {'login': 'fake',
             'password': self.test_client_password})
 
@@ -95,7 +109,7 @@ class ServiceTypeTestCase(ServiceTestCase):
 
         for ss_name, st_names in ss_struct.items():
             self.add_service_sets([ss_name], st_names)
-        response = handle_action('view_service_types_detailed', {'login': self.test_client_login,
+        response = self.handle_action('view_service_types_detailed', {'login': self.test_client_login,
             'password': self.test_client_password})
         self.assertEqual('ok', response['status'])
         service_types_info = response['service_types']

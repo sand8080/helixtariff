@@ -14,6 +14,7 @@ RESPONSE_STATUS_ERROR = {
     'status': 'error',
     'category': Text(),
     'message': Text(),
+#    'details': [FlatDict],
 }
 
 RESPONSE_STATUS_ONLY = AnyOf(RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
