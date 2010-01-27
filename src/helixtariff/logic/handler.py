@@ -420,7 +420,7 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def view_detailed_tariffs(self, data, curs=None):
+    def view_tariffs_detailed(self, data, curs=None):
         client_id = data['client_id']
         tariffs = mapping.get_list(curs, Tariff, cond=Eq('client_id', client_id))
         service_sets_types = self._get_service_sets_types_dict(curs, client_id)

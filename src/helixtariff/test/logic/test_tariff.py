@@ -278,12 +278,12 @@ class TariffTestCase(ServiceTestCase):
             actual_t_info[1]
         )
 
-    def test_view_detailed_tariffs(self):
+    def test_view_tariffs_detailed(self):
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
         }
-        result = self.handle_action('view_detailed_tariffs', data)
+        result = self.handle_action('view_tariffs_detailed', data)
         self.assertTrue('tariffs' in result)
         self.assertEqual([], result['tariffs'])
 
@@ -295,7 +295,7 @@ class TariffTestCase(ServiceTestCase):
             'login': self.test_client_login,
             'password': self.test_client_password,
         }
-        result = handle_action('view_detailed_tariffs', data)
+        result = self.handle_action('view_tariffs_detailed', data)
 
         c_id = self.get_client_by_login(self.test_client_login).id
         service_types = self.get_service_types_by_service_set_name(c_id, self.ss_name)

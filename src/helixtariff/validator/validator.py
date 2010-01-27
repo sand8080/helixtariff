@@ -14,7 +14,7 @@ RESPONSE_STATUS_ERROR = {
     'status': 'error',
     'category': Text(),
     'message': Text(),
-#    'details': [FlatDict],
+    'details': [FlatDict()],
 }
 
 RESPONSE_STATUS_ONLY = AnyOf(RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
@@ -436,8 +436,8 @@ protocol = [
     ApiCall('view_tariffs_request', Scheme(VIEW_TARIFFS)),
     ApiCall('view_tariffs_response', Scheme(VIEW_TARIFFS_RESPONSE)),
 
-    ApiCall('view_detailed_tariffs_request', Scheme(VIEW_DETAILED_TARIFFS)),
-    ApiCall('view_detailed_tariffs_response', Scheme(VIEW_DETAILED_TARIFFS_RESPONSE)),
+    ApiCall('view_tariffs_detailed_request', Scheme(VIEW_DETAILED_TARIFFS)),
+    ApiCall('view_tariffs_detailed_response', Scheme(VIEW_DETAILED_TARIFFS_RESPONSE)),
 
     # rule
     ApiCall('save_draft_rule_request', Scheme(SAVE_DRAFT_RULE)),
