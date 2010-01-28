@@ -1,4 +1,4 @@
-from tokenize import generate_tokens, NAME
+from tokenize import generate_tokens, NAME, OP
 from StringIO import StringIO
 
 from helixtariff.error import HelixtariffError
@@ -15,9 +15,16 @@ class RuleChecker(object):
             'context', 'get_balance',
             'request', 'customer_id', 'period', 'check_period', 'min_period', 'max_period',
         ])
+        self.accepted_ops = set([
+            '=', '+=', '-=',
+            '+', '-', '*', '/', '%',
+            '==', '>', '<', '<=', '>=', '!=', '<>',
+        ])
 
     def check(self, source):
         g = generate_tokens(StringIO(source).readline)
         for toknum, tokval, tok_begin, _, line  in g:
             if toknum == NAME and tokval not in self.accepted_names:
-                raise RuleError('Illegal name %s at line %s: %s' % (tokval, tok_begin[0], line))
+                raise RuleError("Illegal name '%s' at line %s: %s" % (tokval, tok_begin[0], line))
+            if toknum == OP and tokval not in self.accepted_ops:
+                raise RuleError("Illegal operator '%s' at line %s: %s" % (tokval, tok_begin[0], line))
