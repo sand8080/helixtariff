@@ -151,13 +151,13 @@ class ApplicationTestCase(DbBasedTestCase):
 
         pool.wait_all()
 
-#    def test_ping_ok(self):
-#        self.check_status_ok(self.cli.ping()) #IGNORE:E1101
-#
-#    def test_invalid_request(self):
-#        response = self.cli.request({'action': 'fakeaction'})
-#        self.assertEqual('error', response['status'])
-#        self.assertEqual('validation', response['category'])
+    def test_ping_ok(self):
+        self.check_status_ok(self.cli.ping()) #IGNORE:E1101
+
+    def test_invalid_request(self):
+        response = self.cli.request({'action': 'fakeaction'})
+        self.assertEqual('error', response['status'])
+        self.assertEqual('validation', response['category'])
 
 
 if __name__ == '__main__':
