@@ -62,7 +62,6 @@ def get_service_types_by_service_set(curs, client_id, name, for_update=False):
     return mapping.get_list(curs, ServiceType, cond_type_in, order_by='id', for_update=for_update)
 
 
-
 def get_service_types(curs, client_id, for_update=False):
     return mapping.get_list(curs, ServiceType, cond=Eq('client_id', client_id), for_update=for_update)
 

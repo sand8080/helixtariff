@@ -45,8 +45,8 @@ class ApplicationTestCase(DbBasedTestCase):
         return self.cli.view_tariffs(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
 
     @profile
-    def view_detailed_tariffs(self, repeats=1): #IGNORE:W0613
-        return self.cli.view_detailed_tariffs(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
+    def view_tariffs_detailed(self, repeats=1): #IGNORE:W0613
+        return self.cli.view_tariffs_detailed(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
 
     @profile
     def get_price(self, tariffs_detailed, repeats=1): #IGNORE:W0613
@@ -130,8 +130,8 @@ class ApplicationTestCase(DbBasedTestCase):
 
         self.view_tariffs(repeats=1)
         self.view_tariffs(repeats=50)
-        self.view_detailed_tariffs(repeats=1)
-        self.view_detailed_tariffs(repeats=10)
+        self.view_tariffs_detailed(repeats=1)
+        self.view_tariffs_detailed(repeats=10)
         self.get_tariff_detailed(tariffs_names, repeats=1)
         self.get_tariff_detailed(tariffs_names, repeats=50)
         self.get_price(self.load_detailed_tariff_data(tariffs_names), repeats=1)
@@ -151,13 +151,13 @@ class ApplicationTestCase(DbBasedTestCase):
 
         pool.wait_all()
 
-    def test_ping_ok(self):
-        self.check_status_ok(self.cli.ping()) #IGNORE:E1101
-
-    def test_invalid_request(self):
-        response = self.cli.request({'action': 'fakeaction'})
-        self.assertEqual('error', response['status'])
-        self.assertEqual('validation', response['category'])
+#    def test_ping_ok(self):
+#        self.check_status_ok(self.cli.ping()) #IGNORE:E1101
+#
+#    def test_invalid_request(self):
+#        response = self.cli.request({'action': 'fakeaction'})
+#        self.assertEqual('error', response['status'])
+#        self.assertEqual('validation', response['category'])
 
 
 if __name__ == '__main__':

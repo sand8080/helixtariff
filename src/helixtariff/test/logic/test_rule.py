@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
+from helixcore.server.errors import RequestProcessingError
 import unittest
 from random import randint
 from functools import partial
 
 from helixtariff.domain.objects import Rule
-from helixtariff.error import RuleNotFound, TariffNotFound, ServiceTypeNotFound
+from helixtariff.error import RuleNotFound
 from helixtariff.test.db_based_test import ServiceTestCase
-from helixtariff.logic.actions import handle_action
 
 
 class RuleTestCase(ServiceTestCase):
@@ -19,6 +19,24 @@ class RuleTestCase(ServiceTestCase):
         self.add_service_types(self.st_names)
         self.add_service_sets([self.ss_name], self.st_names)
         self.add_tariff(self.ss_name, self.t_name, False, None)
+
+    def test_save_draft_rule_for_foreign_service_set(self):
+        p_st_names = ['one', 'two']
+        p_ss_name = 'parent set'
+        p_t_name = 'parent'
+        self.add_service_types(p_st_names)
+        self.add_service_sets([p_ss_name], p_st_names)
+        self.add_tariff(p_ss_name, p_t_name, False, None)
+
+        ch_st_names = ['three']
+        ch_ss_name = 'service set'
+        ch_t_name = 'child'
+        self.add_service_types(ch_st_names)
+        self.add_service_sets([ch_ss_name], ch_st_names)
+        self.add_tariff(ch_ss_name, ch_t_name, False, p_t_name)
+
+        self.assertRaises(RequestProcessingError, self.save_draft_rule,
+            ch_t_name, p_st_names[0], 'price = 8.00', True)
 
     def test_save_draft_rule(self):
         c_id = self.get_client_by_login(self.test_client_login).id
@@ -42,6 +60,21 @@ class RuleTestCase(ServiceTestCase):
         self.assertEqual(tariff.id, rule.tariff_id)
         self.assertEqual(r_text, rule.rule)
         self.assertEqual(enabled, rule.enabled)
+
+        self.assertRaises(RequestProcessingError, self.save_draft_rule,
+            tariff.name, service_type.name, 'import', True)
+
+        self.assertRaises(RequestProcessingError, self.save_draft_rule,
+            tariff.name, service_type.name, 'price = 9 ** 7', True)
+
+        self.assertRaises(RequestProcessingError, self.save_draft_rule,
+            tariff.name, service_type.name, '', True)
+
+        self.assertRaises(RequestProcessingError, self.save_draft_rule,
+            tariff.name, 'fake', 'pirce = 9', True)
+
+        self.assertRaises(RequestProcessingError, self.save_draft_rule,
+            'fake', service_type.name, 'pirce = 9', True)
 
     def test_make_draft_rules_actual(self):
         c_id = self.get_client_by_login(self.test_client_login).id
@@ -71,10 +104,22 @@ class RuleTestCase(ServiceTestCase):
         self.assertEqual(r_text, rule.rule)
         self.assertEqual(enabled, rule.enabled)
 
+        r_text = "price = 'lala'"
+        st_name = st_names[0]
+        enabled = True
+        self.save_draft_rule(self.t_name, st_name, r_text, enabled)
+        service_type = self.get_service_type(c_id, st_name)
+        rule = rule_loader(service_type, Rule.TYPE_DRAFT)
+        self.assertEqual(service_type.id, rule.service_type_id)
+        self.assertEqual(r_text, rule.rule)
+        self.assertEqual(enabled, rule.enabled)
+
+        self.assertRaises(RequestProcessingError, self.make_draft_rules_actual,'fake')
+
     def test_modify_actual_rule(self):
         c_id = self.get_client_by_login(self.test_client_login).id
         st_name = self.st_names[0]
-        self.save_draft_rule(self.t_name, st_name, '', True)
+        self.save_draft_rule(self.t_name, st_name, 'price = 1.0', True)
         self.make_draft_rules_actual(self.t_name)
         tariff = self.get_tariff(c_id, self.t_name)
         service_type = self.get_service_type(c_id, st_name)
@@ -95,6 +140,24 @@ class RuleTestCase(ServiceTestCase):
         self.assertEqual(old_rule.rule, new_rule.rule)
         self.assertEqual(False, new_rule.enabled)
 
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': 'fake',
+            'service_type': st_name,
+            'new_enabled': False,
+        }
+        self.assertRaises(RequestProcessingError, self.handle_action, 'modify_actual_rule', data)
+
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': self.t_name,
+            'service_type': 'fake',
+            'new_enabled': False,
+        }
+        self.assertRaises(RequestProcessingError, self.handle_action, 'modify_actual_rule', data)
+
     def test_get_rule(self):
         st_name = self.st_names[0]
         data = {
@@ -104,7 +167,7 @@ class RuleTestCase(ServiceTestCase):
             'service_type': st_name,
             'type': Rule.TYPE_DRAFT,
         }
-        self.assertRaises(TariffNotFound, handle_action, 'get_rule', data)
+        self.assertRaises(RequestProcessingError, self.handle_action, 'get_rule', data)
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
@@ -112,7 +175,7 @@ class RuleTestCase(ServiceTestCase):
             'service_type': 'fake %s' % st_name,
             'type': Rule.TYPE_DRAFT,
         }
-        self.assertRaises(ServiceTypeNotFound, handle_action, 'get_rule', data)
+        self.assertRaises(RequestProcessingError, self.handle_action, 'get_rule', data)
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
@@ -120,7 +183,7 @@ class RuleTestCase(ServiceTestCase):
             'service_type': st_name,
             'type': Rule.TYPE_DRAFT,
         }
-        self.assertRaises(RuleNotFound, handle_action, 'get_rule', data)
+        self.assertRaises(RequestProcessingError, self.handle_action, 'get_rule', data)
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
@@ -128,7 +191,7 @@ class RuleTestCase(ServiceTestCase):
             'service_type': st_name,
             'type': Rule.TYPE_ACTUAL,
         }
-        self.assertRaises(RuleNotFound, handle_action, 'get_rule', data)
+        self.assertRaises(RequestProcessingError, self.handle_action, 'get_rule', data)
 
         r_text = 'price = 3.01'
         enabled = True
@@ -171,7 +234,7 @@ class RuleTestCase(ServiceTestCase):
             'password': self.test_client_password,
             'tariff': self.t_name,
         }
-        response = handle_action('view_rules', data)
+        response = self.handle_action('view_rules', data)
         self.assertEqual('ok', response['status'])
         self.assertEqual([], response['rules'])
 
@@ -193,10 +256,17 @@ class RuleTestCase(ServiceTestCase):
             'password': self.test_client_password,
             'tariff': self.t_name,
         }
-        response = handle_action('view_rules', data)
+        response = self.handle_action('view_rules', data)
         self.assertEqual('ok', response['status'])
         self.assertEqual(self.t_name, response['tariff'])
         self.assertEqual(expected_r_info, response['rules'])
+
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': 'fake',
+        }
+        self.assertRaises(RequestProcessingError, self.handle_action, 'view_rules', data)
 
     def test_view_not_all_defined_rules(self):
         data = {
@@ -204,7 +274,7 @@ class RuleTestCase(ServiceTestCase):
             'password': self.test_client_password,
             'tariff': self.t_name,
         }
-        response = handle_action('view_rules', data)
+        response = self.handle_action('view_rules', data)
         self.assertEqual('ok', response['status'])
         self.assertEqual([], response['rules'])
 
@@ -226,7 +296,7 @@ class RuleTestCase(ServiceTestCase):
             'password': self.test_client_password,
             'tariff': self.t_name,
         }
-        response = handle_action('view_rules', data)
+        response = self.handle_action('view_rules', data)
         self.assertEqual('ok', response['status'])
         self.assertEqual(self.t_name, response['tariff'])
         self.assertEqual(expected_r_info, response['rules'])

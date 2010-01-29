@@ -3,22 +3,39 @@ from functools import partial
 import helixcore.mapping.actions as mapping
 from helixcore.db.sql import Eq, In, And
 from helixcore.server.response import response_ok
-from helixcore.db.wrapper import EmptyResultSetError
+from helixcore.db.wrapper import EmptyResultSetError, ObjectAlreadyExists
+from helixcore.server.errors import RequestProcessingError
+from helixcore.server.exceptions import AuthError
 
 from helixtariff.conf.db import transaction
 from helixtariff.domain.objects import Client, ServiceType, \
     ServiceSet, ServiceSetRow, Tariff, Rule
 from helixtariff.logic import selector
-from helixtariff.rulesengine.checker import RuleChecker
+from helixtariff.rulesengine.checker import RuleChecker, RuleError
 from helixtariff.rulesengine import engine
-from helixtariff.rulesengine.interaction import RequestPrice
+from helixtariff.rulesengine.interaction import RequestPrice,\
+    PriceProcessingError
 from helixtariff.domain import security
 from helixtariff.error import TariffCycleError, ServiceTypeNotFound, \
-    ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed, RuleNotFound
+    ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed, RuleNotFound,\
+    ServiceSetNotFound, TariffNotFound, ServiceTypeNotInServiceSet
 from helixtariff.validator.validator import PRICE_CALC_NORMAL, \
     PRICE_CALC_PRICE_UNDEFINED, PRICE_CALC_RULE_DISABLED
 
 
+def detalize_error(err_cls, category, f_name):
+    def decorator(func):
+        def decorated(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except err_cls, e:
+                raise RequestProcessingError(category, e.message,
+                    details=[{'field': f_name, 'message': e.message}])
+        return decorated
+    return decorator
+
+
+@detalize_error(AuthError, RequestProcessingError.Category.auth, 'login')
 def authentificate(method):
     def decroated(self, data, curs):
         data['client_id'] = self.get_client_id(curs, data)
@@ -57,6 +74,7 @@ class Handler(object):
             mapping.update(curs, obj)
 
     # client
+    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'login')
     @transaction()
     def add_client(self, data, curs=None):
         data['password'] = security.encrypt_password(data['password'])
@@ -82,12 +100,14 @@ class Handler(object):
     # server_type
     @transaction()
     @authentificate
+    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'name')
     def add_service_type(self, data, curs=None):
         mapping.insert(curs, ServiceType(**data))
         return response_ok()
 
     @transaction()
     @authentificate
+    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.auth, 'name')
     def modify_service_type(self, data, curs=None):
         loader = partial(selector.get_service_type, curs, data['client_id'], data['name'], for_update=True)
         self.update_obj(curs, data, loader)
@@ -95,6 +115,8 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.auth, 'name')
+    @detalize_error(ServiceTypeUsed, RequestProcessingError.Category.auth, 'name')
     def delete_service_type(self, data, curs=None):
         c_id = data['client_id']
         st_name = data['name']
@@ -141,15 +163,21 @@ class Handler(object):
 
     def _set_service_types_to_service_set(self, curs, client_id, service_set, service_types_names):
         curs.execute(*mapping.Delete(ServiceSetRow.table, cond=Eq('service_set_id', service_set.id)).glue())
-        service_types_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
-        service_types_ids_idx = dict([(v, k) for (k, v) in service_types_names_idx.items()])
-        ids_to_set = [service_types_ids_idx[n] for n in service_types_names]
+        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
+        st_ids_idx = dict([(v, k) for (k, v) in st_names_idx.items()])
+
+        not_found_st_names = filter(lambda x: x not in st_ids_idx, service_types_names)
+        if not_found_st_names:
+            raise ServiceTypeNotFound(', '.join(not_found_st_names))
+
+        ids_to_set = [st_ids_idx[n] for n in service_types_names]
 
         for t_id in ids_to_set:
             mapping.insert(curs, ServiceSetRow(service_set_id=service_set.id, service_type_id=t_id))
 
     @transaction()
     @authentificate
+    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'name')
     def add_service_set(self, data, curs=None):
         service_types_names = data['service_types']
         del data['service_types']
@@ -180,6 +208,8 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.auth, 'name')
+    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_integrity, 'service_types')
     def modify_service_set(self, data, curs=None):
         client_id = data['client_id']
         service_set = selector.get_service_set_by_name(curs, data['client_id'],
@@ -198,6 +228,7 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.auth, 'name')
     def delete_service_set(self, data, curs=None):
         client_id = data['client_id']
         service_set = selector.get_service_set_by_name(curs, client_id, data['name'], for_update=True)
@@ -292,6 +323,9 @@ class Handler(object):
     # tariff
     @transaction()
     @authentificate
+    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'name')
+    @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.data_integrity, 'service_set')
+    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_integrity, 'parent_tariff')
     def add_tariff(self, data, curs=None):
         service_set = selector.get_service_set_by_name(curs, data['client_id'], data['service_set'])
         del data['service_set']
@@ -311,8 +345,15 @@ class Handler(object):
             return None
         tariffs_names_idx = selector.get_tariffs_names_indexed_by_id(curs, client_id)
         tariffs_ids_idx = dict([(v, k) for (k, v) in tariffs_names_idx.iteritems()])
+
+        if tariff_name not in tariffs_ids_idx:
+            raise TariffNotFound(tariff_name)
         tariff_id = tariffs_ids_idx[tariff_name]
+
+        if new_parent_name not in tariffs_ids_idx:
+            raise TariffNotFound(new_parent_name)
         new_parent_id = tariffs_ids_idx[new_parent_name]
+
         parents_ids_idx = selector.get_tariffs_parent_ids_indexed_by_id(curs, client_id)
         parents_ids_idx[tariff_id] = new_parent_id
         self._calculate_tariffs_chain(
@@ -324,14 +365,20 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_integrity, 'name')
+    @detalize_error(TariffCycleError, RequestProcessingError.Category.data_integrity, 'parent_tariff')
+    @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.data_integrity, 'service_set')
     def modify_tariff(self, data, curs=None):
         c_id = data['client_id']
         t_name = data['name']
         t = selector.get_tariff(curs, c_id, t_name, for_update=True)
         if 'new_parent_tariff' in data:
             new_p_name = data['new_parent_tariff']
-            data['new_parent_id'] = self._get_new_parent_id(curs, c_id,
-                t_name, new_p_name)
+            try:
+                data['new_parent_id'] = self._get_new_parent_id(curs, c_id, t_name, new_p_name)
+            except TariffNotFound, e:
+                raise RequestProcessingError(RequestProcessingError.Category.data_integrity,
+                    e.message, details={'parent_tariff': e.message})
             del data['new_parent_tariff']
         if 'new_service_set' in data:
             new_ss = selector.get_service_set_by_name(curs, c_id, data['new_service_set'])
@@ -347,8 +394,10 @@ class Handler(object):
         self.update_obj(curs, data, loader)
         return response_ok()
 
+
     @transaction()
     @authentificate
+    @detalize_error(TariffUsed, RequestProcessingError.Category.data_integrity, 'name')
     def delete_tariff(self, data, curs=None):
         c_id = data['client_id']
         t_name = data['name']
@@ -430,8 +479,17 @@ class Handler(object):
         return response_ok(tariffs=tariffs_data)
 
     # rule
+    def _check_service_type_in_service_set(self, curs, service_type, service_set):
+        if service_type.id not in selector.get_service_types_ids(curs, [service_set.id]):
+            raise ServiceTypeNotInServiceSet(service_type.name, service_set.name)
+
     @transaction()
     @authentificate
+    @detalize_error(RuleError, RequestProcessingError.Category.data_invalid, 'rule')
+    @detalize_error(PriceProcessingError, RequestProcessingError.Category.data_invalid, 'rule')
+    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
+    @detalize_error(ServiceTypeNotInServiceSet, RequestProcessingError.Category.data_invalid, 'service_type')
+    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
     def save_draft_rule(self, data, curs=None):
         c_id = data['client_id']
         r_text = data['rule']
@@ -439,19 +497,22 @@ class Handler(object):
         enabled = data['enabled']
         t_name = data['tariff']
 
-        RuleChecker().check(r_text)
-        t = selector.get_tariff(curs, c_id, t_name)
-        st = selector.get_service_type(curs, c_id, st_name)
+        tariff = selector.get_tariff(curs, c_id, t_name)
+        service_set = selector.get_service_set(curs, tariff.service_set_id)
+        service_type = selector.get_service_type(curs, c_id, st_name)
 
-        data['tariff_id'] = t.id
-        data['service_type_id'] = st.id
+        self._check_service_type_in_service_set(curs, service_type, service_set)
+        RuleChecker().check(r_text)
+
+        data['tariff_id'] = tariff.id
+        data['service_type_id'] = service_type.id
         del data['tariff']
         del data['service_type']
         try:
-            r = selector.get_rule(curs, t, st, Rule.TYPE_DRAFT, for_update=True)
-            r.enabled = enabled
-            r.rule = r_text
-            mapping.update(curs, r)
+            rule = selector.get_rule(curs, tariff, service_type, Rule.TYPE_DRAFT, for_update=True)
+            rule.enabled = enabled
+            rule.rule = r_text
+            mapping.update(curs, rule)
         except RuleNotFound:
             data['type'] = Rule.TYPE_DRAFT
             mapping.insert(curs, Rule(**data))
@@ -459,6 +520,7 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
     def make_draft_rules_actual(self, data, curs=None):
         c_id = data['client_id']
         t_name = data['tariff']
@@ -475,6 +537,8 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
+    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
     def modify_actual_rule(self, data, curs=None):
         c_id = data['client_id']
         t_name = data['tariff']
@@ -488,6 +552,9 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
+    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
+    @detalize_error(RuleNotFound, RequestProcessingError.Category.data_invalid, 'type')
     def get_rule(self, data, curs=None):
         c_id = data['client_id']
         t_name = data['tariff']
@@ -501,6 +568,7 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
     def view_rules(self, data, curs=None):
         c_id = data['client_id']
         t_name = data['tariff']
@@ -516,29 +584,6 @@ class Handler(object):
             })
         return response_ok(tariff=tariff.name, rules=rules)
 
-#    @transaction()
-#    @authentificate
-#    def add_rule(self, data, curs=None):
-#        RuleChecker().check(data['rule'])
-#        tariff = selector.get_tariff(curs, data['client_id'], data['tariff'])
-#        del data['tariff']
-#        data['tariff_id'] = tariff.id
-#
-#        service_type = selector.get_service_type(curs, data['client_id'], data['service_type'])
-#        del data['service_type']
-#        data['service_type_id'] = service_type.id
-#        mapping.insert(curs, Rule(**data))
-#        return response_ok()
-#
-#    @transaction()
-#    @authentificate
-#    def delete_rule(self, data, curs=None):
-#        obj = selector.get_rule(curs, data['client_id'], data['tariff'], data['service_type'])
-#        mapping.delete(curs, obj)
-#        return response_ok()
-#
-#    def _get_optional_field_value(self, data, field, default=None):
-#        return data[field] if field in data else default,
     # price
     def _calculate_tariffs_chain(self, tariff_id, tariffs_names_idx, parents_names_idx):
         '''
@@ -586,25 +631,35 @@ class Handler(object):
                 'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
                 'tariffs_chain': t_names,
             }
-        if rule.enabled:
-            return {
-                'price': engine.process(RequestPrice(rule, ctx)).price,
-                'price_calculation': PRICE_CALC_NORMAL,
-                'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
-            }
-        else:
+        elif not rule.enabled:
             return {
                 'price': None,
                 'price_calculation': PRICE_CALC_RULE_DISABLED,
                 'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
             }
 
+        try:
+            return {
+                'price': engine.process(RequestPrice(rule, ctx)).price,
+                'price_calculation': PRICE_CALC_NORMAL,
+                'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
+            }
+        except PriceProcessingError:
+            return {
+                'price': None,
+                'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
+                'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
+            }
+
+
     @transaction()
     @authentificate
+    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
+    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
     def get_price(self, data, curs=None):
         c_id = data['client_id']
         t_name = data['tariff']
-        ctx = data['context'] if 'context' in data else {}
+        ctx = data.get('context', {})
         st_name = data['service_type']
 
         t_chain = self._get_tariffs_chain(curs, c_id, t_name)
@@ -631,10 +686,11 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
     def view_prices(self, data, curs=None):
         c_id = data['client_id']
         t_name = data['tariff']
-        ctx = data['context'] if 'context' in data else {}
+        ctx = data.get('context', {})
 
         t_chain = self._get_tariffs_chain(curs, c_id, t_name)
         t_ids, t_names = map(list, zip(*t_chain))

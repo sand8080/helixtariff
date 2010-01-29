@@ -220,8 +220,8 @@ VIEW_TARIFFS_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-VIEW_DETAILED_TARIFFS = VIEW_TARIFFS
-VIEW_DETAILED_TARIFFS_RESPONSE = AnyOf(
+VIEW_TARIFFS_DETAILED = VIEW_TARIFFS
+VIEW_TARIFFS_DETAILED_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **{'tariffs': [DETAILED_TARIFF_INFO]}
@@ -436,8 +436,8 @@ protocol = [
     ApiCall('view_tariffs_request', Scheme(VIEW_TARIFFS)),
     ApiCall('view_tariffs_response', Scheme(VIEW_TARIFFS_RESPONSE)),
 
-    ApiCall('view_tariffs_detailed_request', Scheme(VIEW_DETAILED_TARIFFS)),
-    ApiCall('view_tariffs_detailed_response', Scheme(VIEW_DETAILED_TARIFFS_RESPONSE)),
+    ApiCall('view_tariffs_detailed_request', Scheme(VIEW_TARIFFS_DETAILED)),
+    ApiCall('view_tariffs_detailed_response', Scheme(VIEW_TARIFFS_DETAILED_RESPONSE)),
 
     # rule
     ApiCall('save_draft_rule_request', Scheme(SAVE_DRAFT_RULE)),

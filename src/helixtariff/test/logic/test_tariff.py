@@ -1,11 +1,8 @@
+from helixcore.server.errors import RequestProcessingError
 import unittest
 
-from helixcore.db.wrapper import ObjectAlreadyExists
-
 from helixtariff.test.db_based_test import ServiceTestCase
-from helixtariff.logic.actions import handle_action
-from helixtariff.error import TariffNotFound, TariffCycleError,\
-    ServiceSetNotFound, TariffUsed
+from helixtariff.error import TariffNotFound
 
 
 class TariffTestCase(ServiceTestCase):
@@ -28,14 +25,14 @@ class TariffTestCase(ServiceTestCase):
         t = self.get_tariff(self.root_client_id, self.t_name)
         self.add_tariff(self.ss_name, 'child of %s' % self.t_name, self.in_archive, t.name)
 
-    def test_add_tariff_failure(self):
-        self.assertRaises(ServiceSetNotFound, self.add_tariff, self.ss_name + 'fake',
-            self.t_name, self.in_archive, None
-        )
-        self.add_tariff(self.ss_name, self.t_name, self.in_archive, None)
-        self.assertRaises(ObjectAlreadyExists, self.add_tariff, self.ss_name,
-            self.t_name, self.in_archive, None
-        )
+        self.assertRaises(RequestProcessingError, self.add_tariff, self.ss_name + 'fake',
+            self.t_name, self.in_archive, None)
+        self.assertRaises(RequestProcessingError, self.add_tariff, self.ss_name,
+            self.t_name, self.in_archive, None)
+        self.assertRaises(RequestProcessingError, self.add_tariff, self.ss_name,
+            self.t_name, self.in_archive, self.t_name)
+        self.assertRaises(RequestProcessingError, self.add_tariff, self.ss_name,
+            'tt', self.in_archive, 'tt')
 
     def test_tariffs_cycle(self):
         tariff_0 = 'tariff 0'
@@ -44,10 +41,10 @@ class TariffTestCase(ServiceTestCase):
         self.add_tariff(self.ss_name, tariff_1, False, tariff_0)
         tariff_2 = 'tariff 2'
         self.add_tariff(self.ss_name, tariff_2, False, tariff_0)
-        self.assertRaises(TariffCycleError, self.modify_tariff, tariff_0, tariff_2)
+        self.assertRaises(RequestProcessingError, self.modify_tariff, tariff_0, tariff_2)
 
     def test_modify_tariff(self):
-        self.test_add_tariff()
+        self.add_tariff(self.ss_name, self.t_name, self.in_archive, None)
         new_name = 'new' + self.t_name
         data = {
             'login': self.test_client_login,
@@ -62,11 +59,34 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(self.root_client_id, t.client_id)
         self.assertEqual(not self.in_archive, t.in_archive)
 
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': 'fake_%s' % self.t_name,
+        }
+        self.assertRaises(RequestProcessingError, self.handle_action, 'modify_tariff', data)
+
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': new_name,
+            'new_service_set': 'fake',
+        }
+        self.assertRaises(RequestProcessingError, self.handle_action, 'modify_tariff', data)
+
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': new_name,
+            'new_parent_tariff': 'fake',
+        }
+        self.assertRaises(RequestProcessingError, self.handle_action, 'modify_tariff', data)
+
     def test_modify_tariff_service_set_without_rules(self):
         self.add_tariff(self.ss_name, self.t_name, False, None)
         new_ss_name = 'new_%s' % self.ss_name
         self.add_service_sets([new_ss_name], self.st_names[2:])
-        client_id = self.get_root_client().id
+        c_id = self.get_root_client().id
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
@@ -75,9 +95,9 @@ class TariffTestCase(ServiceTestCase):
         }
         self.handle_action('modify_tariff', data)
         t = self.get_tariff(self.root_client_id, self.t_name)
-        new_service_set = self.get_service_set_by_name(client_id, new_ss_name)
+        new_service_set = self.get_service_set_by_name(c_id, new_ss_name)
         self.assertEqual(self.t_name, t.name)
-        self.assertEqual(client_id, t.client_id)
+        self.assertEqual(c_id, t.client_id)
         self.assertEqual(new_service_set.id, t.service_set_id)
 
     def test_modify_parent_tariff(self):
@@ -133,7 +153,7 @@ class TariffTestCase(ServiceTestCase):
             'password': self.test_client_password,
             'name': self.t_name,
         }
-        self.assertRaises(TariffUsed, handle_action, 'delete_tariff', data)
+        self.assertRaises(RequestProcessingError, self.handle_action, 'delete_tariff', data)
 
     def test_delete_tariff(self):
         p_name = 'parent'
@@ -167,7 +187,7 @@ class TariffTestCase(ServiceTestCase):
             'password': self.test_client_password,
             'name': self.t_name,
         }
-        self.assertRaises(TariffUsed, handle_action, 'delete_tariff', data)
+        self.assertRaises(RequestProcessingError, self.handle_action, 'delete_tariff', data)
 
     def test_get_tariff(self):
         pt_name = 'parent'
@@ -246,6 +266,7 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(False, response['in_archive'])
         self.assertEqual([t_name, p_name], response['tariffs_chain'])
         self.assertEqual(p_name, response['parent_tariff'])
+
     def test_view_tariffs(self):
         data = {
             'login': self.test_client_login,

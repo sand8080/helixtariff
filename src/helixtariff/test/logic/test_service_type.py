@@ -1,25 +1,26 @@
 import unittest
 
+from helixcore.server.errors import RequestProcessingError
 from helixcore.server.exceptions import AuthError
 
 from helixtariff.test.db_based_test import ServiceTestCase
-from helixtariff.logic.actions import handle_action
-from helixtariff.error import ServiceTypeUsed, ServiceTypeNotFound
+from helixtariff.error import ServiceTypeNotFound
 
 
 class ServiceTypeTestCase(ServiceTestCase):
-    service_type_name = 'registration ru'
+    st_name = 'registration ru'
 
     def setUp(self):
         super(ServiceTypeTestCase, self).setUp()
         self.client = self.get_root_client()
 
     def test_add_service_type(self):
-        self.add_service_types([self.service_type_name])
+        self.add_service_types([self.st_name])
+        self.assertRaises(RequestProcessingError, self.add_service_types, [self.st_name])
 
     def test_modify_service_type(self):
-        self.add_service_types([self.service_type_name])
-        old_name = self.service_type_name
+        self.add_service_types([self.st_name])
+        old_name = self.st_name
         t_old = self.get_service_type(self.client.id, old_name)
 
         new_name = 'new' + old_name
@@ -36,29 +37,36 @@ class ServiceTypeTestCase(ServiceTestCase):
         self.assertEquals(t_new.name, new_name)
 
     def test_delete_service_type(self):
-        self.add_service_types([self.service_type_name])
-        handle_action(
+        self.add_service_types([self.st_name])
+        self.handle_action(
             'delete_service_type',
             {
                 'login': self.test_client_login,
                 'password': self.test_client_password,
-                'name': self.service_type_name,
+                'name': self.st_name,
             }
         )
         self.assertRaises(ServiceTypeNotFound, self.get_service_type,
-            self.client.id, self.service_type_name)
+            self.client.id, self.st_name)
 
-    def test_delete_used_service_type(self):
-        service_types_names = [self.service_type_name]
-        self.add_service_types(service_types_names)
-        service_sets_names = ['s0']
-        self.add_service_sets(service_sets_names, service_types_names)
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
-            'name': self.service_type_name,
+            'name': self.st_name,
         }
-        self.assertRaises(ServiceTypeUsed, handle_action, 'delete_service_type', data)
+        self.assertRaises(RequestProcessingError, self.handle_action, 'delete_service_type', data)
+
+    def test_delete_used_service_type(self):
+        st_names = [self.st_name]
+        self.add_service_types(st_names)
+        ss_names = ['s0']
+        self.add_service_sets(ss_names, st_names)
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': self.st_name,
+        }
+        self.assertRaises(RequestProcessingError, self.handle_action, 'delete_service_type', data)
 
     def test_view_empty_service_types(self):
         response = self.handle_action('view_service_types', {'login': self.test_client_login,
@@ -73,10 +81,10 @@ class ServiceTypeTestCase(ServiceTestCase):
         self.assertEqual([], response['service_types'])
 
     def test_view_service_types_detailed_without_service_set(self):
-        self.add_service_types([self.service_type_name])
+        self.add_service_types([self.st_name])
         response = self.handle_action('view_service_types_detailed', {'login': self.test_client_login,
             'password': self.test_client_password})
-        expected_st_info = [{'service_sets': [], 'name': self.service_type_name}]
+        expected_st_info = [{'service_sets': [], 'name': self.st_name}]
         self.assertTrue('service_types' in response)
         self.assertEqual(expected_st_info, response['service_types'])
 
@@ -89,7 +97,7 @@ class ServiceTypeTestCase(ServiceTestCase):
         self.assertEqual(types, response['service_types'])
 
     def test_view_service_types_invalid(self):
-        self.assertRaises(AuthError, handle_action, 'view_service_types', {'login': 'fake',
+        self.assertRaises(AuthError, self.handle_action, 'view_service_types', {'login': 'fake',
             'password': self.test_client_password})
 
     def test_view_service_types_detailed(self):

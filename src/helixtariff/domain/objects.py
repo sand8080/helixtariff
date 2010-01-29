@@ -5,6 +5,8 @@ class Client(Mapped):
     __slots__ = ['id', 'login', 'password']
     table = 'client'
 
+    def __repr__(self, except_attrs=()):
+        return super(Client, self).__repr__(except_attrs=except_attrs + ('password',))
 
 class ServiceType(Mapped):
     __slots__ = ['id', 'client_id', 'name']

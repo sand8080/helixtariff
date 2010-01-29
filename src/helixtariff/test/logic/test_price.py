@@ -1,11 +1,9 @@
+from helixcore.server.errors import RequestProcessingError
 import unittest
 from decimal import Decimal
 
 from helixtariff.test.db_based_test import ServiceTestCase
-from helixtariff.logic.actions import handle_action
-from helixtariff.error import TariffNotFound, ServiceTypeNotFound
-from helixtariff.validator.validator import PRICE_CALC_NORMAL, \
-    PRICE_CALC_PRICE_UNDEFINED
+from helixtariff.validator.validator import PRICE_CALC_NORMAL, PRICE_CALC_PRICE_UNDEFINED
 
 
 class PriceTestCase(ServiceTestCase):
@@ -50,11 +48,11 @@ class PriceTestCase(ServiceTestCase):
 
         data = { 'login': self.test_client_login, 'password': self.test_client_password,
             'tariff': self.t_name + 'fake', 'service_type': self.st_name}
-        self.assertRaises(TariffNotFound, handle_action, 'get_price', data)
+        self.assertRaises(RequestProcessingError, self.handle_action, 'get_price', data)
 
         data = {'login': self.test_client_login, 'password': self.test_client_password,
             'tariff': self.t_name, 'service_type': self.st_name + 'fake'}
-        self.assertRaises(ServiceTypeNotFound, handle_action, 'get_price', data)
+        self.assertRaises(RequestProcessingError, self.handle_action, 'get_price', data)
 
     def test_get_price_inherited(self):
         ch_t_name = 'child tariff'
@@ -140,6 +138,12 @@ class PriceTestCase(ServiceTestCase):
             self._cast(expected_prices, ['price', 'draft_price'], Decimal),
             self._cast(actual_prices, ['price', 'draft_price'], Decimal)
         )
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': 'fake',
+        }
+        self.assertRaises(RequestProcessingError, self.handle_action, 'view_prices', data)
 
     def test_child_tariff_view_prices(self):
         added_st_names = ['child service 0', 'child service 1']
@@ -282,6 +286,51 @@ class PriceTestCase(ServiceTestCase):
             self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, p_info['price_calculation'])
             self.assertEqual(None, p_info['draft_price'])
             self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, p_info['draft_price_calculation'])
+
+    def test_view_prices_rules_unprocessed_price(self):
+        st_names = ['serv0']
+        ss_name = 'set'
+        t_name = 't'
+        self.add_service_types(st_names)
+        self.add_service_sets([ss_name], st_names)
+        self.add_tariff(ss_name, t_name, False, None)
+        self.save_draft_rule(t_name, st_names[0], 'price = None', True)
+
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': t_name,
+        }
+        response = self.handle_action('view_prices', data)
+        self.assertEqual('ok', response['status'])
+        p_info = response['prices'][0]
+        self.assertEqual(None, p_info['draft_price'])
+        self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, p_info['draft_price_calculation'])
+
+        self.save_draft_rule(t_name, st_names[0], "price = 'lala'", True)
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': t_name,
+        }
+        response = self.handle_action('view_prices', data)
+        self.assertEqual('ok', response['status'])
+        p_info = response['prices'][0]
+        self.assertEqual(None, p_info['draft_price'])
+        self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, p_info['draft_price_calculation'])
+
+        price = '0.0'
+        self.save_draft_rule(t_name, st_names[0], 'price = %s' % price, True)
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': t_name,
+        }
+        response = self.handle_action('view_prices', data)
+        self.assertEqual('ok', response['status'])
+        p_info = response['prices'][0]
+        self.assertEqual(Decimal(price), Decimal(p_info['draft_price']))
+        self.assertEqual(PRICE_CALC_NORMAL, p_info['draft_price_calculation'])
 
 
 if __name__ == '__main__':
