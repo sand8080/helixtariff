@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 
 class PriceProcessingError(Exception):
@@ -8,13 +8,13 @@ class PriceProcessingError(Exception):
 class RequestPrice(object):
     def __init__(self, rule, context=None):
         self.rule = rule
-        self.context = context if context is not None else {}
+        self.context = {} if context is None else context
 
     def check_period(self, min_period=1, max_period=1):
         period = self.context.get('period')
         if period is None or period < min_period or period > max_period:
             raise PriceProcessingError('In rule %s period %s out of bounds: [%s, %s]' %
-                (self.rule.id, period, min_period, max_period))
+                (self.rule, period, min_period, max_period))
 
     @property
     def customer_id(self):
@@ -33,5 +33,5 @@ class ResponsePrice(object):
             str_price = '%s' % price
             Decimal(str_price)
             self.price = str_price
-        except TypeError, e:
+        except (TypeError, InvalidOperation), e:
             raise PriceProcessingError(e)
