@@ -34,3 +34,7 @@ class Rule(Mapped):
     TYPE_DRAFT = 'draft'
     TYPE_ACTUAL = 'actual'
 
+
+class ActionLog(Mapped):
+    __slots__ = ['id', 'client_id', 'source', 'action', 'request_date', 'request', 'response']
+    table = 'action_log'

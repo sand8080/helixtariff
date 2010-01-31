@@ -11,6 +11,7 @@ from helixtariff.test.logic.test_service_set import ServiceSetTestCase #IGNORE:W
 from helixtariff.test.logic.test_tariff import TariffTestCase #IGNORE:W0611 @UnusedImport
 from helixtariff.test.logic.test_rule import RuleTestCase #IGNORE:W0611 @UnusedImport
 from helixtariff.test.logic.test_price import PriceTestCase #IGNORE:W0611 @UnusedImport
+from helixtariff.test.logic.test_action_log import ActionLogTestCase #IGNORE:W0611 @UnusedImport
 
 from helixtariff.test.rulesengine.test_engine import EngineTestCase #IGNORE:W0611 @UnusedImport
 from helixtariff.test.rulesengine.test_checker import RuleChecker #IGNORE:W0611 @UnusedImport

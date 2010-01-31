@@ -47,10 +47,10 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_request(a_name, {'login': 'log', 'password': 'pi'})
         self.validate_status_response(a_name)
 
-    def test_delete_client(self):
-        a_name = 'delete_client'
-        self.api.validate_request(a_name, {'login': 'log', 'password': 'pi'})
-        self.validate_status_response(a_name)
+#    def test_delete_client(self):
+#        a_name = 'delete_client'
+#        self.api.validate_request(a_name, {'login': 'log', 'password': 'pi'})
+#        self.validate_status_response(a_name)
 
     def test_add_service_type(self):
         a_name = 'add_service_type'

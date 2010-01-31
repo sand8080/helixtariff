@@ -203,3 +203,7 @@ class ServiceTestCase(DbBasedTestCase):
         response = handle_action(action_name, dict(data))
         api.handle_response(action_name, dict(response))
         return response
+
+    @transaction()
+    def get_action_logs(self, client, filter_params, curs=None):
+        return selector.get_action_log(curs, client, filter_params)

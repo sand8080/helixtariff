@@ -63,11 +63,11 @@ class ClientTestCase(ServiceTestCase):
         data = {'login': login_old, 'password': password + ' ', 'new_login': 'silver'}
         self.assertRaises(RequestProcessingError, self.handle_action, 'modify_client', data)
 
-    def test_delete_client(self):
-        login = 'zimorodok'
-        self.add_client(login, '')
-        self.handle_action('delete_client', {'login': login, 'password': ''})
-        self.assertRaises(ClientNotFound, self.get_client_by_login, login)
+#    def test_delete_client(self):
+#        login = 'zimorodok'
+#        self.add_client(login, '')
+#        self.handle_action('delete_client', {'login': login, 'password': ''})
+#        self.assertRaises(ClientNotFound, self.get_client_by_login, login)
 
 
 if __name__ == '__main__':

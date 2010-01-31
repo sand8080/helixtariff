@@ -35,7 +35,7 @@ MODIFY_CLIENT = dict(
     **AUTH_INFO
 )
 
-DELETE_CLIENT = AUTH_INFO
+#DELETE_CLIENT = AUTH_INFO
 
 # --- service type ---
 SERVICE_TYPE = dict(
@@ -376,8 +376,8 @@ protocol = [
     ApiCall('modify_client_request', Scheme(MODIFY_CLIENT)),
     ApiCall('modify_client_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('delete_client_request', Scheme(DELETE_CLIENT)),
-    ApiCall('delete_client_response', Scheme(RESPONSE_STATUS_ONLY)),
+#    ApiCall('delete_client_request', Scheme(DELETE_CLIENT)),
+#    ApiCall('delete_client_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     # service type
     ApiCall('add_service_type_request', Scheme(ADD_SERVICE_TYPE)),

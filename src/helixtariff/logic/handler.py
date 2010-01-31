@@ -8,19 +8,19 @@ from helixcore.server.errors import RequestProcessingError
 from helixcore.server.exceptions import AuthError
 
 from helixtariff.conf.db import transaction
-from helixtariff.domain.objects import Client, ServiceType, \
-    ServiceSet, ServiceSetRow, Tariff, Rule
+from helixtariff.domain.objects import (Client, ServiceType,
+    ServiceSet, ServiceSetRow, Tariff, Rule)
 from helixtariff.logic import selector
 from helixtariff.rulesengine.checker import RuleChecker, RuleError
 from helixtariff.rulesengine import engine
-from helixtariff.rulesengine.interaction import RequestPrice,\
-    PriceProcessingError
+from helixtariff.rulesengine.interaction import (RequestPrice,
+    PriceProcessingError)
 from helixtariff.domain import security
-from helixtariff.error import TariffCycleError, ServiceTypeNotFound, \
-    ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed, RuleNotFound,\
-    ServiceSetNotFound, TariffNotFound, ServiceTypeNotInServiceSet
-from helixtariff.validator.validator import PRICE_CALC_NORMAL, \
-    PRICE_CALC_PRICE_UNDEFINED, PRICE_CALC_RULE_DISABLED
+from helixtariff.error import (TariffCycleError, ServiceTypeNotFound,
+    ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed, RuleNotFound,
+    ServiceSetNotFound, TariffNotFound, ServiceTypeNotInServiceSet)
+from helixtariff.validator.validator import (PRICE_CALC_NORMAL,
+    PRICE_CALC_PRICE_UNDEFINED, PRICE_CALC_RULE_DISABLED)
 
 
 def detalize_error(err_cls, category, f_name):
@@ -90,12 +90,12 @@ class Handler(object):
         self.update_obj(curs, data, loader)
         return response_ok()
 
-    @transaction()
-    @authentificate
-    def delete_client(self, data, curs=None):
-        obj = selector.get_client(curs, data['client_id'])
-        mapping.delete(curs, obj)
-        return response_ok()
+#    @transaction()
+#    @authentificate
+#    def delete_client(self, data, curs=None):
+#        obj = selector.get_client(curs, data['client_id'])
+#        mapping.delete(curs, obj)
+#        return response_ok()
 
     # server_type
     @transaction()

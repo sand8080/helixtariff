@@ -4,7 +4,7 @@ from helixcore.server.exceptions import AuthError
 from helixcore.db.wrapper import EmptyResultSetError, fetchall_dicts
 
 from helixtariff.domain.objects import ServiceType, \
-    ServiceSet, ServiceSetRow, Tariff, Rule, Client
+    ServiceSet, ServiceSetRow, Tariff, Rule, Client, ActionLog
 from helixtariff.domain import security
 from helixtariff.error import ClientNotFound, TariffNotFound, RuleNotFound,\
     ServiceTypeNotFound, ServiceSetNotFound
@@ -204,3 +204,19 @@ def get_service_sets_ids(curs, tariffs_ids, for_update=False):
     curs.execute(*q.glue())
     result = fetchall_dicts(curs)
     return [d['service_set_id'] for d in result]
+
+
+def get_action_log(curs, client, filter_params, for_update=False):
+    cond = Eq('client_id', client.id)
+
+    def add_filtering_cond(p_name, c):
+        if p_name in filter_params:
+            return And(cond, c(p_name, filter_params[p_name]))
+        else:
+            return cond
+
+    cond = add_filtering_cond('action', Eq)
+
+    limit = filter_params.get('limit', None)
+    offset = filter_params.get('offset', 0)
+    return mapping.get_list(curs, ActionLog, cond=cond, limit=limit, offset=offset, for_update=for_update)
