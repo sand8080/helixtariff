@@ -1,5 +1,7 @@
 import unittest
 
+from helixtariff.test.test_environment import start_server
+
 from helixtariff.test.validator.test_validator import ValidatorTestCase #IGNORE:W0611 @UnusedImport
 
 from helixtariff.test.wsgi.test_application_loading import ApplicationTestCase #IGNORE:W0611 @UnusedImport
@@ -18,4 +20,5 @@ from helixtariff.test.rulesengine.test_checker import RuleChecker #IGNORE:W0611 
 
 
 if __name__ == '__main__':
+    start_server()
     unittest.main()

@@ -1,5 +1,5 @@
 # coding=utf-8
-from eventlet import api, util, coros
+from eventlet import util, coros
 from decimal import Decimal
 util.wrap_socket_with_coroutine_socket()
 
@@ -11,11 +11,9 @@ from helixcore.test.util import random_word, select_random, profile
 
 from helixtariff.test.db_based_test import DbBasedTestCase
 from helixtariff.conf import settings
+from helixtariff.test.test_environment import start_server
 from helixtariff.test.wsgi.client import Client
-from helixtariff.wsgi.server import Server
 
-
-api.spawn(Server.run)
 
 
 class ApplicationTestCase(DbBasedTestCase):
@@ -161,4 +159,5 @@ class ApplicationTestCase(DbBasedTestCase):
 
 
 if __name__ == '__main__':
+    start_server()
     unittest.main()

@@ -1,17 +1,12 @@
 # coding=utf-8
-from eventlet import api, util
-util.wrap_socket_with_coroutine_socket()
-
 import unittest
 import datetime
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.conf import settings
+from helixtariff.test.test_environment import start_server
+
 from helixtariff.test.wsgi.client import Client
-from helixtariff.wsgi.server import Server
-
-
-api.spawn(Server.run)
 
 
 class ActionLogTestCase(ServiceTestCase):
@@ -87,4 +82,5 @@ class ActionLogTestCase(ServiceTestCase):
 
 
 if __name__ == '__main__':
+    start_server()
     unittest.main()
