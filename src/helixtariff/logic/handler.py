@@ -18,7 +18,8 @@ from helixtariff.rulesengine.interaction import (RequestPrice,
 from helixtariff.domain import security
 from helixtariff.error import (TariffCycleError, ServiceTypeNotFound,
     ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed, RuleNotFound,
-    ServiceSetNotFound, TariffNotFound, ServiceTypeNotInServiceSet)
+    ServiceSetNotFound, TariffNotFound, ServiceTypeNotInServiceSet,
+    ServiceSetUsed)
 from helixtariff.validator.validator import (PRICE_CALC_NORMAL,
     PRICE_CALC_PRICE_UNDEFINED, PRICE_CALC_RULE_DISABLED)
 
@@ -41,6 +42,7 @@ def authentificate(method):
         data['client_id'] = self.get_client_id(curs, data)
         del data['login']
         del data['password']
+        data.pop('source', None)
         return method(self, data, curs)
     return decroated
 
@@ -78,6 +80,7 @@ class Handler(object):
     @transaction()
     def add_client(self, data, curs=None):
         data['password'] = security.encrypt_password(data['password'])
+        data.pop('source', None)
         mapping.insert(curs, Client(**data))
         return response_ok()
 
@@ -89,13 +92,6 @@ class Handler(object):
         loader = partial(selector.get_client, curs, data['client_id'], for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
-
-#    @transaction()
-#    @authentificate
-#    def delete_client(self, data, curs=None):
-#        obj = selector.get_client(curs, data['client_id'])
-#        mapping.delete(curs, obj)
-#        return response_ok()
 
     # server_type
     @transaction()
@@ -229,11 +225,16 @@ class Handler(object):
     @transaction()
     @authentificate
     @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.auth, 'name')
+    @detalize_error(ServiceSetUsed, RequestProcessingError.Category.auth, 'name')
     def delete_service_set(self, data, curs=None):
-        client_id = data['client_id']
-        service_set = selector.get_service_set_by_name(curs, client_id, data['name'], for_update=True)
+        c_id = data['client_id']
+        ss_name = data['name']
+        service_set = selector.get_service_set_by_name(curs, c_id, ss_name, for_update=True)
         if selector.get_service_set_rows(curs, [service_set.id]):
             raise ServiceSetNotEmpty(service_set.name)
+        used_in_tariffs = selector.get_tariffs_binded_with_service_sets(curs, c_id, [service_set.id])
+        if used_in_tariffs:
+            raise ServiceSetUsed(used_in_tariffs)
         mapping.delete(curs, service_set)
         return response_ok()
 

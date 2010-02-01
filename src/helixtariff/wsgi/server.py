@@ -20,12 +20,16 @@ class HelixtariffApplication(Application):
         super(HelixtariffApplication, self).__init__(h, p, l, (
             'add_client', 'modify_client', 'delete_client',
             'add_service_type', 'modify_service_type', 'delete_service_type',
+            'add_service_set', 'modify_service_set', 'delete_service_set',
+            'add_tariff', 'modify_tariff', 'delete_tariff',
+            'save_draft_rule', 'make_draft_rules_actual', 'modify_actual_rule',
         ))
 
     @transaction()
     def track_api_call(self, s_req, s_resp, authorized_data, curs=None): #IGNORE:W0221
         super(HelixtariffApplication, self).track_api_call(s_req, s_resp, authorized_data)
         action_name = authorized_data['action']
+        c_id = None
         if action_name in self.unauthorized_trackable:
             try:
                 login = authorized_data['login']

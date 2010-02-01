@@ -48,6 +48,11 @@ class ServiceSetNotFound(ObjectNotFound):
         super(ServiceSetNotFound, self).__init__("Service set '%s' not found" % name)
 
 
+class ServiceSetUsed(HelixtariffError):
+    def __init__(self, tariffs):
+        super(ServiceSetUsed, self).__init__("Service set used in tariffs '%s'" % tariffs)
+
+
 class ClientNotFound(ObjectNotFound):
     def __init__(self, client_id):
         super(ClientNotFound, self).__init__("Client '%s' not found" % client_id)

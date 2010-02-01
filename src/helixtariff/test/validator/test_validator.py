@@ -34,7 +34,7 @@ class ValidatorTestCase(RootTestCase):
 
     def test_add_client(self):
         a_name = 'add_client'
-        self.api.validate_request(a_name, {'login': 'admin', 'password': 'crypted twice'})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'source': 's'})
         self.validate_status_response(a_name)
         self.assertRaises(ValidationError, self.api.validate_request, a_name, {'login': 'admin'})
         self.assertRaises(ValidationError, self.api.validate_request, a_name, {'password': 'admin'})
@@ -46,11 +46,6 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_request(a_name, {'login': 'log', 'password': 'pi', 'new_login': 'new_log', 'new_password': 'pw'})
         self.api.validate_request(a_name, {'login': 'log', 'password': 'pi'})
         self.validate_status_response(a_name)
-
-#    def test_delete_client(self):
-#        a_name = 'delete_client'
-#        self.api.validate_request(a_name, {'login': 'log', 'password': 'pi'})
-#        self.validate_status_response(a_name)
 
     def test_add_service_type(self):
         a_name = 'add_service_type'

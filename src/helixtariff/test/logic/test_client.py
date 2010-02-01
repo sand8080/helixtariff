@@ -24,7 +24,8 @@ class ClientTestCase(ServiceTestCase):
         data = {
             'login': login_old,
             'password': password_old,
-            'new_login': login_new
+            'new_login': login_new,
+            'source': 'panel',
         }
         self.handle_action('modify_client', data)
         self.assertRaises(ClientNotFound, self.get_client_by_login, c_old.login)
