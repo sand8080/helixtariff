@@ -196,14 +196,16 @@ def get_service_types_ids(curs, service_sets_ids, for_update=False):
         for_update=for_update)
     curs.execute(*q.glue())
     result = fetchall_dicts(curs)
-    return [d['service_type_id'] for d in result]
+    ids = set([d['service_type_id'] for d in result])
+    return list(ids)
 
 
 def get_service_sets_ids(curs, tariffs_ids, for_update=False):
     q = Select(Tariff.table, columns='service_set_id', cond=In('id', tariffs_ids), for_update=for_update)
     curs.execute(*q.glue())
     result = fetchall_dicts(curs)
-    return [d['service_set_id'] for d in result]
+    ids = set([d['service_set_id'] for d in result])
+    return list(ids)
 
 
 def get_action_log(curs, client, filter_params, for_update=False):

@@ -332,6 +332,29 @@ class PriceTestCase(ServiceTestCase):
         self.assertEqual(Decimal(price), Decimal(p_info['draft_price']))
         self.assertEqual(PRICE_CALC_NORMAL, p_info['draft_price_calculation'])
 
+    def test_service_type_duplication(self):
+        st_names = ['a', 'b', 'c', 'd']
+        self.add_service_types(st_names)
+        p_ss_name = 'pss'
+        self.add_service_sets([p_ss_name], st_names[:3])
+        p_t_name = 'p'
+        self.add_tariff(p_ss_name, p_t_name, False, None)
+
+        ch_ss_name = 'chss'
+        self.add_service_sets([ch_ss_name], st_names[1:])
+        ch_t_name = 'ch'
+        self.add_tariff(ch_ss_name, ch_t_name, False, p_t_name)
+
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': ch_t_name,
+        }
+        response = self.handle_action('view_prices', data)
+        self.assertEqual('ok', response['status'])
+        prices = response['prices']
+        self.assertEqual(len(st_names), len(prices))
+
 
 if __name__ == '__main__':
     unittest.main()
