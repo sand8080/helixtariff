@@ -1,8 +1,9 @@
 from helixcore.server.errors import RequestProcessingError
+from helixtariff.domain.objects import Rule
 import unittest
 
 from helixtariff.test.db_based_test import ServiceTestCase
-from helixtariff.error import TariffNotFound
+from helixtariff.error import TariffNotFound, RuleNotFound
 
 
 class TariffTestCase(ServiceTestCase):
@@ -179,15 +180,55 @@ class TariffTestCase(ServiceTestCase):
         self.handle_action('delete_tariff', data)
         self.assertRaises(TariffNotFound, self.get_tariff, c_id, p_name)
 
-    def test_delete_tariff_with_rules(self):
+    def test_delete_tariff_with_disabled_rules(self):
         self.add_tariff(self.ss_name, self.t_name, self.in_archive, None)
-        self.save_draft_rule(self.t_name, self.st_names[0], 'price = 1.0', True)
+        st_name = self.st_names[0]
+        self.save_draft_rule(self.t_name, st_name, 'price = 1.0', True)
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,
             'name': self.t_name,
         }
+        self.make_draft_rules_actual(self.t_name)
         self.assertRaises(RequestProcessingError, self.handle_action, 'delete_tariff', data)
+
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': self.t_name,
+            'service_type': st_name,
+            'new_enabled': False,
+        }
+        self.handle_action('modify_actual_rule', data)
+
+        c_id = self.get_client_by_login(self.test_client_login).id
+        tariff = self.get_tariff(c_id, self.t_name)
+        service_type = self.get_service_type(c_id, st_name)
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': self.t_name,
+        }
+        self.handle_action('delete_tariff', data)
+        self.assertRaises(RuleNotFound, self.get_rule, tariff, service_type, Rule.TYPE_ACTUAL)
+        self.assertRaises(TariffNotFound, self.get_tariff, c_id, self.t_name)
+
+    def test_delete_tariff_with_draft_rules(self):
+        self.add_tariff(self.ss_name, self.t_name, self.in_archive, None)
+        st_name = self.st_names[0]
+        self.save_draft_rule(self.t_name, st_name, 'price = 1.0', True)
+
+        c_id = self.get_client_by_login(self.test_client_login).id
+        tariff = self.get_tariff(c_id, self.t_name)
+        service_type = self.get_service_type(c_id, st_name)
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'name': self.t_name,
+        }
+        self.handle_action('delete_tariff', data)
+        self.assertRaises(RuleNotFound, self.get_rule, tariff, service_type, Rule.TYPE_ACTUAL)
+        self.assertRaises(TariffNotFound, self.get_tariff, c_id, self.t_name)
 
     def test_get_tariff(self):
         pt_name = 'parent'

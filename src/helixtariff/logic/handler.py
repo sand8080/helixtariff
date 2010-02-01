@@ -407,10 +407,13 @@ class Handler(object):
         if childs:
             raise TariffUsed('''Tariff '%s' is parent of %s''' % (t.name, [t.name for t in childs]))
         rules = selector.get_rules(curs, t, [Rule.TYPE_ACTUAL, Rule.TYPE_DRAFT])
-        if rules:
+        undel_rules = filter(lambda x: x.type == Rule.TYPE_ACTUAL and x.enabled, rules)
+        if undel_rules:
             st_names_idx = selector.get_service_sets_names_indexed_by_id(curs, c_id)
             raise TariffUsed('''In tariff '%s' defined rules for services %s''' %
-                (t.name, [st_names_idx[idx] for idx in st_names_idx]))
+                (t.name, [st_names_idx[r.service_type_id] for r in undel_rules]))
+        else:
+            mapping.delete_objects(curs, rules)
         mapping.delete(curs, t)
         return response_ok()
 
@@ -596,7 +599,8 @@ class Handler(object):
             if tariff_id is None:
                 break
             if tariff_id in tariffs_ids_set:
-                raise TariffCycleError('Tariff cycle found in chain %s' % tariffs_chain)
+                raise TariffCycleError('Tariff cycle found in chain: %s' %
+                    ', '.join([n for (_, n) in tariffs_chain]))
             tariffs_chain.append((tariff_id, tariffs_names_idx[tariff_id]))
             tariffs_ids_set.add(tariff_id)
             tariff_id = parents_names_idx[tariff_id]
