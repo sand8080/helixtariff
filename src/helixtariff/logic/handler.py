@@ -42,7 +42,7 @@ def authentificate(method):
         data['client_id'] = self.get_client_id(curs, data)
         del data['login']
         del data['password']
-        data.pop('source', None)
+        data.pop('custom_client_info', None)
         return method(self, data, curs)
     return decroated
 
@@ -80,7 +80,7 @@ class Handler(object):
     @transaction()
     def add_client(self, data, curs=None):
         data['password'] = security.encrypt_password(data['password'])
-        data.pop('source', None)
+        data.pop('custom_client_info', None)
         mapping.insert(curs, Client(**data))
         return response_ok()
 

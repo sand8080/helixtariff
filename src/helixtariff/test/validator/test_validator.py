@@ -34,7 +34,7 @@ class ValidatorTestCase(RootTestCase):
 
     def test_add_client(self):
         a_name = 'add_client'
-        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'source': 's'})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'custom_client_info': 's'})
         self.validate_status_response(a_name)
         self.assertRaises(ValidationError, self.api.validate_request, a_name, {'login': 'admin'})
         self.assertRaises(ValidationError, self.api.validate_request, a_name, {'password': 'admin'})

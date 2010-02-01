@@ -41,7 +41,7 @@ class HelixtariffApplication(Application):
             c_id = authorized_data['client_id']
         data = {
             'client_id': c_id,
-            'source': authorized_data.get('source', None),
+            'custom_client_info': authorized_data.get('custom_client_info', None),
             'action': action_name,
             'request': s_req,
             'response': s_resp,

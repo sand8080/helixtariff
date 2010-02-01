@@ -6,7 +6,7 @@ def apply(curs): #IGNORE:W0622
             id serial,
             client_id integer NOT NULL,
             FOREIGN KEY (client_id) REFERENCES client(id),
-            source varchar,
+            custom_client_info varchar,
             action varchar NOT NULL,
             request_date timestamp with time zone NOT NULL DEFAULT now(),
             request text NOT NULL,

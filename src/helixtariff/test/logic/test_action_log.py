@@ -15,37 +15,37 @@ class ActionLogTestCase(ServiceTestCase):
         self.cli = Client(settings.server_host, settings.server_port,
             u'егор %s' % datetime.datetime.now(), 'qazwsx')
 
-    def _check_action_tracked(self, client, action_name, source):
+    def _check_action_tracked(self, client, action_name, custom_client_info):
         action_logs = self.get_action_logs(client, {'action': action_name})
         self.assertEqual(1, len(action_logs))
         action_log = action_logs[0]
         self.assertEqual(client.id, action_log.client_id)
         self.assertEqual(action_name, action_log.action)
-        self.assertEqual(source, action_log.source)
+        self.assertEqual(custom_client_info, action_log.custom_client_info)
 
     def _make_trackable_action(self, client, action_name, data):
         auth_data = {'login': self.cli.login, 'password': self.cli.password}
         auth_data.update(data)
         m = getattr(self.cli, action_name)
         m(**auth_data)
-        self._check_action_tracked(client, action_name, data.get('source', None))
+        self._check_action_tracked(client, action_name, data.get('custom_client_info', None))
 
     def test_unauthorized_tracking_action(self):
         self.cli.add_client(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
         self._check_action_tracked(self.get_client_by_login(self.cli.login), 'add_client', None)
 
     def test_tracking_error_action(self):
-        source = 'fake'
-        self.cli.add_client(login=self.cli.login, password=self.cli.password, source=source) #IGNORE:E1101
+        custom_client_info = 'fake'
+        self.cli.add_client(login=self.cli.login, password=self.cli.password, custom_client_info=custom_client_info) #IGNORE:E1101
         client = self.get_client_by_login(self.cli.login)
-        self._check_action_tracked(client, 'add_client', source)
+        self._check_action_tracked(client, 'add_client', custom_client_info)
         self._make_trackable_action(client, 'modify_service_type', {'name': 'fake', 'new_name': 'ff'})
 
     def test_tracking_action(self):
         self.cli.add_client(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
         client = self.get_client_by_login(self.cli.login)
 
-        self._make_trackable_action(client, 'modify_client', {'source': 'jah'})
+        self._make_trackable_action(client, 'modify_client', {'custom_client_info': 'jah'})
 
         old_st_name = 'service type'
         self._make_trackable_action(client, 'add_service_type', {'name': old_st_name})

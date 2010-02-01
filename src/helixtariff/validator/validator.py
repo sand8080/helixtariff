@@ -22,7 +22,7 @@ RESPONSE_STATUS_ONLY = AnyOf(RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
 AUTH_INFO = {
     'login': Text(),
     'password': Text(),
-    Optional('source'): NullableText,
+    Optional('custom_client_info'): NullableText,
 }
 
 # --- client ---
