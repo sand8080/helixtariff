@@ -1,5 +1,5 @@
 import helixcore.mapping.actions as mapping
-from helixcore.db.sql import Eq, Scoped, Select, In, And
+from helixcore.db.sql import Eq, Scoped, Select, In, And, MoreEq, LessEq
 from helixcore.server.exceptions import AuthError
 from helixcore.db.wrapper import EmptyResultSetError, fetchall_dicts
 
@@ -208,16 +208,18 @@ def get_service_sets_ids(curs, tariffs_ids, for_update=False):
     return list(ids)
 
 
-def get_action_log(curs, client, filter_params, for_update=False):
+def get_action_logs(curs, client, filter_params, for_update=False):
     cond = Eq('client_id', client.id)
 
-    def add_filtering_cond(p_name, c):
+    def add_filtering_cond(p_name, f_name, c):
         if p_name in filter_params:
-            return And(cond, c(p_name, filter_params[p_name]))
+            return And(cond, c(f_name, filter_params[p_name]))
         else:
             return cond
 
-    cond = add_filtering_cond('action', Eq)
+    cond = add_filtering_cond('action', 'action', Eq)
+    cond = add_filtering_cond('from_date', 'request_date', MoreEq)
+    cond = add_filtering_cond('to_date', 'request_date', LessEq)
 
     limit = filter_params.get('limit', None)
     offset = filter_params.get('offset', 0)

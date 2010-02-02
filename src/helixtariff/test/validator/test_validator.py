@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-from helixtariff.domain.objects import Rule
 import unittest
+import datetime
+import pytz
 
 from helixcore.test.root_test import RootTestCase
 from helixcore.server.exceptions import ValidationError
 from helixcore.server.api import Api
 
+from helixtariff.domain.objects import Rule
 from helixtariff.validator.validator import protocol, PRICE_CALC_NORMAL,\
     PRICE_CALC_PRICE_UNDEFINED, PRICE_CALC_RULE_DISABLED
 
@@ -329,6 +331,29 @@ class ValidatorTestCase(RootTestCase):
                     'tariffs_chain': [], 'price': None, 'price_calculation': PRICE_CALC_RULE_DISABLED,
                     'draft_tariffs_chain': ['m'], 'draft_price': '1', 'draft_price_calculation': PRICE_CALC_NORMAL},
             ]})
+        self.validate_error_response(a_name)
+
+    def test_view_action_logs(self):
+        a_name = 'view_action_logs'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'filter_params': {}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'action': 'a'}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'action': 'a', 'limit': 4}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'action': 'a', 'limit': 0, 'offset': 0}})
+        s_d1 = datetime.datetime(year=2009, month=10, day=29, tzinfo=pytz.utc).isoformat()
+        s_d2 = datetime.datetime.now(pytz.utc).isoformat()
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'action': 'a', 'limit': 0, 'offset': 10, 'from_date': s_d1}})
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
+            'filter_params': {'action': 'a', 'limit': 0, 'offset': 10, 'from_date': s_d1, 'to_date': s_d2}})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'action_logs': []})
+        self.api.validate_response(a_name, {'status': 'ok', 'action_logs': [
+            {'custom_client_info': None, 'action': 'a', 'request_date': s_d2, 'request': 't', 'response': 't'},
+            {'custom_client_info': 'i', 'action': 'a', 'request_date': s_d2, 'request': 't', 'response': 't'},
+        ]})
         self.validate_error_response(a_name)
 
 

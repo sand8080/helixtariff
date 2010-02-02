@@ -1,5 +1,6 @@
 from helixcore.server.api import ApiCall
-from helixcore.validol.validol import Scheme, Text, Optional, FlatDict, AnyOf, DecimalText
+from helixcore.validol.validol import Scheme, Text, Optional, FlatDict, AnyOf, DecimalText,\
+    NonNegative, IsoDatetime
 from helixtariff.domain.objects import Rule
 
 
@@ -363,6 +364,40 @@ VIEW_PRICES_RESPONSE = AnyOf(
 )
 
 
+# --- action log ---
+VIEW_ACTION_LOGS = dict(
+    {
+        'filter_params': {
+            Optional('action'): Text(),
+            Optional('limit'): NonNegative(int),
+            Optional('offset'): NonNegative(int),
+            Optional('from_date'): IsoDatetime(),
+            Optional('to_date'): IsoDatetime(),
+        },
+    },
+    **AUTH_INFO
+)
+
+ACTION_LOG_INFO = {
+    'custom_client_info': NullableText,
+    'action': Text(),
+    'request_date': IsoDatetime(),
+    'request': Text(),
+    'response': Text(),
+}
+
+
+VIEW_ACTION_LOGS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'action_logs': [ACTION_LOG_INFO]
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+
 # -- protocol --
 protocol = [
     ApiCall('ping_request', Scheme(PING)),
@@ -457,5 +492,8 @@ protocol = [
 
     ApiCall('view_prices_request', Scheme(VIEW_PRICES)),
     ApiCall('view_prices_response', Scheme(VIEW_PRICES_RESPONSE)),
+
+    ApiCall('view_action_logs_request', Scheme(VIEW_ACTION_LOGS)),
+    ApiCall('view_action_logs_response', Scheme(VIEW_ACTION_LOGS_RESPONSE)),
 
 ]

@@ -206,4 +206,4 @@ class ServiceTestCase(DbBasedTestCase):
 
     @transaction()
     def get_action_logs(self, client, filter_params, curs=None):
-        return selector.get_action_log(curs, client, filter_params)
+        return selector.get_action_logs(curs, client, filter_params)

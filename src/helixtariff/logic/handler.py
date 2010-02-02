@@ -725,3 +725,19 @@ class Handler(object):
 
             prices.append(p_info)
         return response_ok(**response)
+
+    @transaction()
+    @authentificate
+    def view_action_logs(self, data, curs=None):
+        c_id = data['client_id']
+        al_info = []
+        action_logs = selector.get_action_logs(curs, selector.get_client(curs, c_id), data['filter_params'])
+        for action_log in action_logs:
+            al_info.append({
+                'custom_client_info': action_log.custom_client_info,
+                'action': action_log.action,
+                'request_date': action_log.request_date.isoformat(),
+                'request': action_log.request,
+                'response': action_log.response,
+            })
+        return response_ok(action_logs=al_info)
