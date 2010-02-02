@@ -1,13 +1,13 @@
 import helixcore.mapping.actions as mapping
-from helixcore.db.sql import Eq, Scoped, Select, In, And, MoreEq, LessEq
+from helixcore.db.sql import Eq, Scoped, Select, In, And, MoreEq, LessEq, Columns
 from helixcore.server.exceptions import AuthError
-from helixcore.db.wrapper import EmptyResultSetError, fetchall_dicts
+from helixcore.db.wrapper import EmptyResultSetError, fetchall_dicts, fetchone_dict
 
-from helixtariff.domain.objects import ServiceType, \
-    ServiceSet, ServiceSetRow, Tariff, Rule, Client, ActionLog
+from helixtariff.domain.objects import (ServiceType, ServiceSet, ServiceSetRow,
+    Tariff, Rule, Client, ActionLog)
 from helixtariff.domain import security
-from helixtariff.error import ClientNotFound, TariffNotFound, RuleNotFound,\
-    ServiceTypeNotFound, ServiceSetNotFound
+from helixtariff.error import (ClientNotFound, TariffNotFound, RuleNotFound,
+    ServiceTypeNotFound, ServiceSetNotFound)
 
 
 def get_service_type(curs, client_id, name, for_update=False):
@@ -224,3 +224,15 @@ def get_action_logs(curs, client, filter_params, for_update=False):
     limit = filter_params.get('limit', None)
     offset = filter_params.get('offset', 0)
     return mapping.get_list(curs, ActionLog, cond=cond, limit=limit, offset=offset, for_update=for_update)
+
+
+def get_action_logs_count(curs, client):
+    return get_count(curs, ActionLog.table, Eq('client_id', client.id))
+
+
+def get_count(curs, table, cond):
+    q = Select(table, columns=[Columns.COUNT_ALL], cond=cond)
+    curs.execute(*q.glue())
+    count_dict = fetchone_dict(curs)
+    _, count = count_dict.popitem()
+    return count

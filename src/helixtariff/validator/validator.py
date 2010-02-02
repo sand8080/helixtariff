@@ -399,7 +399,8 @@ VIEW_ACTION_LOGS_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **{
-            'action_logs': [ACTION_LOG_INFO]
+            'total': NonNegative(int),
+            'action_logs': [ACTION_LOG_INFO],
         }
     ),
     RESPONSE_STATUS_ERROR

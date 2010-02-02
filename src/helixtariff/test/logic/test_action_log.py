@@ -105,7 +105,9 @@ class ActionLogTestCase(ServiceTestCase):
         }
         response = self.handle_action('view_action_logs', data)
         al_info = response['action_logs']
-        self.assertEqual(len(st_names) + len(ss_names) + 1, len(al_info))
+        total = len(st_names) + len(ss_names) + 1
+        self.assertEqual(total, len(al_info))
+        self.assertEqual(total, response['total'])
 
         data = {
             'login': self.cli.login,
@@ -116,6 +118,7 @@ class ActionLogTestCase(ServiceTestCase):
         al_info = response['action_logs']
         self.assertEqual(len(st_names), len(al_info))
         self.assertEqual(0, len(filter(lambda x: x['action'] != 'add_service_type', al_info)))
+        self.assertEqual(total, response['total'])
 
         data = {
             'login': self.cli.login,
@@ -126,6 +129,7 @@ class ActionLogTestCase(ServiceTestCase):
         al_info = response['action_logs']
         self.assertEqual(2, len(al_info))
         self.assertEqual(0, len(filter(lambda x: x['action'] != 'add_service_type', al_info)))
+        self.assertEqual(total, response['total'])
 
         data = {
             'login': self.cli.login,
@@ -136,6 +140,7 @@ class ActionLogTestCase(ServiceTestCase):
         al_info = response['action_logs']
         self.assertEqual(1, len(al_info))
         self.assertEqual(0, len(filter(lambda x: x['action'] != 'add_service_type', al_info)))
+        self.assertEqual(total, response['total'])
 
         data = {
             'login': self.cli.login,
@@ -146,6 +151,7 @@ class ActionLogTestCase(ServiceTestCase):
         al_info = response['action_logs']
         self.assertEqual(len(ss_names), len(al_info))
         self.assertEqual(0, len(filter(lambda x: x['action'] != 'add_service_set', al_info)))
+        self.assertEqual(total, response['total'])
 
         data = {
             'login': self.cli.login,
@@ -156,6 +162,7 @@ class ActionLogTestCase(ServiceTestCase):
         al_info = response['action_logs']
         self.assertEqual(len(st_names), len(al_info))
         self.assertEqual(0, len(filter(lambda x: x['action'] != 'add_service_type', al_info)))
+        self.assertEqual(total, response['total'])
 
 
 if __name__ == '__main__':

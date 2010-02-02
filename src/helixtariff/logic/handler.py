@@ -758,4 +758,5 @@ class Handler(object):
                 'request': action_log.request,
                 'response': action_log.response,
             })
-        return response_ok(action_logs=al_info)
+        total = selector.get_action_logs_count(curs, selector.get_client(curs, c_id))
+        return response_ok(total=int(total), action_logs=al_info)

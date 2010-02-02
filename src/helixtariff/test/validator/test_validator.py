@@ -355,8 +355,8 @@ class ValidatorTestCase(RootTestCase):
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p',
             'filter_params': {'action': 'a', 'limit': 0, 'offset': 10, 'from_date': s_d1, 'to_date': s_d2}})
 
-        self.api.validate_response(a_name, {'status': 'ok', 'action_logs': []})
-        self.api.validate_response(a_name, {'status': 'ok', 'action_logs': [
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 10, 'action_logs': []})
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 10, 'action_logs': [
             {'custom_client_info': None, 'action': 'a', 'request_date': s_d2, 'request': 't', 'response': 't'},
             {'custom_client_info': 'i', 'action': 'a', 'request_date': s_d2, 'request': 't', 'response': 't'},
         ]})
