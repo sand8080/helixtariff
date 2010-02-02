@@ -22,7 +22,7 @@ from helixtariff.error import (TariffCycleError, ServiceTypeNotFound,
     ServiceSetUsed)
 from helixtariff.validator.validator import (PRICE_CALC_NORMAL,
     PRICE_CALC_PRICE_UNDEFINED, PRICE_CALC_RULE_DISABLED)
-
+from helixtariff.utils import format_price
 
 def detalize_error(err_cls, category, f_name):
     def decorator(func):
@@ -661,8 +661,9 @@ class Handler(object):
             }
 
         try:
+            price = engine.process(RequestPrice(rule, ctx)).price
             return {
-                'price': engine.process(RequestPrice(rule, ctx)).price,
+                'price': format_price(price),
                 'price_calculation': PRICE_CALC_NORMAL,
                 'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
             }

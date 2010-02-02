@@ -147,7 +147,7 @@ class PriceTestCase(ServiceTestCase):
 
     def test_child_tariff_view_prices(self):
         added_st_names = ['child service 0', 'child service 1']
-        added_p_texts = ['10.11', '67.90']
+        added_p_texts = ['10.11', '67.00']
         self.add_service_types(added_st_names)
         self.modify_service_set(self.ss_name,
             new_service_types=[self.st_name] + added_st_names)

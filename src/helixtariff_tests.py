@@ -1,4 +1,6 @@
 import unittest
+import doctest
+from helixtariff import utils
 
 from helixtariff.test.test_environment import start_server
 
@@ -18,6 +20,9 @@ from helixtariff.test.logic.test_action_log import ActionLogTestCase #IGNORE:W06
 from helixtariff.test.rulesengine.test_engine import EngineTestCase #IGNORE:W0611 @UnusedImport
 from helixtariff.test.rulesengine.test_checker import RuleChecker #IGNORE:W0611 @UnusedImport
 
+from helixtariff.test.test_utils import UtilsTestCase #IGNORE:W0611 @UnusedImport
+
+doctest.testmod(utils)
 
 if __name__ == '__main__':
     start_server()
