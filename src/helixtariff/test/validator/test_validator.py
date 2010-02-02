@@ -244,6 +244,12 @@ class ValidatorTestCase(RootTestCase):
             'service_type': 's', 'rule': 'price = 10', 'enabled': True})
         self.validate_status_response(a_name)
 
+    def test_delete_draft_rule(self):
+        a_name = 'delete_draft_rule'
+        self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'tariff': 't',
+            'service_type': 's'})
+        self.validate_status_response(a_name)
+
     def test_make_draft_rules_actual(self):
         a_name = 'make_draft_rules_actual'
         self.api.validate_request(a_name, {'login': 'l', 'password': 'p', 'tariff': 't'})

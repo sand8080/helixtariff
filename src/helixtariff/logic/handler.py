@@ -524,6 +524,23 @@ class Handler(object):
 
     @transaction()
     @authentificate
+    @detalize_error(RuleNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
+    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
+    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
+    def delete_draft_rule(self, data, curs=None):
+        c_id = data['client_id']
+        t_name = data['tariff']
+        st_name = data['service_type']
+
+        tariff = selector.get_tariff(curs, c_id, t_name)
+        service_type = selector.get_service_type(curs, c_id, st_name)
+        rule = selector.get_rule(curs, tariff, service_type, Rule.TYPE_DRAFT, for_update=True)
+        mapping.delete(curs, rule)
+
+        return response_ok()
+
+    @transaction()
+    @authentificate
     @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
     def make_draft_rules_actual(self, data, curs=None):
         c_id = data['client_id']

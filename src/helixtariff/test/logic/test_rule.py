@@ -76,6 +76,25 @@ class RuleTestCase(ServiceTestCase):
         self.assertRaises(RequestProcessingError, self.save_draft_rule,
             'fake', service_type.name, 'pirce = 9', True)
 
+    def test_delete_draft_rule(self):
+        c_id = self.get_client_by_login(self.test_client_login).id
+        service_type = self.get_service_type(c_id, self.st_names[0])
+        tariff = self.get_tariff(c_id, self.t_name)
+
+        r_text = 'price = 1'
+        enabled = False
+        self.save_draft_rule(tariff.name, service_type.name, r_text, enabled)
+        self.get_rule(tariff, service_type, Rule.TYPE_DRAFT)
+
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': tariff.name,
+            'service_type': service_type.name,
+        }
+        self.handle_action('delete_draft_rule', data)
+        self.assertRaises(RequestProcessingError, self.handle_action, 'delete_draft_rule', data)
+
     def test_make_draft_rules_actual(self):
         c_id = self.get_client_by_login(self.test_client_login).id
         r_text = 'price = 1'

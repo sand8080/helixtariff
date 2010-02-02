@@ -241,6 +241,14 @@ SAVE_DRAFT_RULE = dict(
     **AUTH_INFO
 )
 
+DELETE_DRAFT_RULE = dict(
+    {
+        'tariff': Text(),
+        'service_type': Text(),
+    },
+    **AUTH_INFO
+)
+
 MAKE_DRAFT_RULES_ACTUAL = dict(
     {'tariff': Text()},
     **AUTH_INFO
@@ -473,6 +481,9 @@ protocol = [
     # rule
     ApiCall('save_draft_rule_request', Scheme(SAVE_DRAFT_RULE)),
     ApiCall('save_draft_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
+
+    ApiCall('delete_draft_rule_request', Scheme(DELETE_DRAFT_RULE)),
+    ApiCall('delete_draft_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     ApiCall('make_draft_rules_actual_request', Scheme(MAKE_DRAFT_RULES_ACTUAL)),
     ApiCall('make_draft_rules_actual_response', Scheme(RESPONSE_STATUS_ONLY)),
