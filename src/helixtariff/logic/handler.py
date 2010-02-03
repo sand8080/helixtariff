@@ -406,13 +406,15 @@ class Handler(object):
         t = selector.get_tariff(curs, c_id, t_name, for_update=True)
         childs = selector.get_child_tariffs(curs, t)
         if childs:
-            raise TariffUsed('''Tariff '%s' is parent of %s''' % (t.name, [t.name for t in childs]))
+            ch_names = [ch.name for ch in childs]
+            raise TariffUsed("Tariff '%s' is parent of %s" % (t.name, ', '.join(ch_names)))
         rules = selector.get_rules(curs, t, [Rule.TYPE_ACTUAL, Rule.TYPE_DRAFT])
         undel_rules = filter(lambda x: x.type == Rule.TYPE_ACTUAL and x.enabled, rules)
         if undel_rules:
             st_names_idx = selector.get_service_sets_names_indexed_by_id(curs, c_id)
-            raise TariffUsed('''In tariff '%s' defined rules for services %s''' %
-                (t.name, [st_names_idx[r.service_type_id] for r in undel_rules]))
+            st_names = [st_names_idx[r.service_type_id] for r in undel_rules]
+            raise TariffUsed("In tariff '%s' defined undeletable rules for services %s" %
+                (t.name, ', '.join(st_names)))
         else:
             mapping.delete_objects(curs, rules)
         mapping.delete(curs, t)

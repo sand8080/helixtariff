@@ -6,13 +6,13 @@ class TariffCycleError(HelixtariffError):
     pass
 
 
-class TariffNotFound(HelixtariffError):
-    def __init__(self, name):
-        super(TariffNotFound, self).__init__("Tariff '%s' not found" % name)
-
-
 class ObjectNotFound(HelixtariffError):
     pass
+
+
+class TariffNotFound(ObjectNotFound):
+    def __init__(self, name):
+        super(TariffNotFound, self).__init__("Tariff '%s' not found" % name)
 
 
 class RuleNotFound(ObjectNotFound):
