@@ -15,7 +15,7 @@ class RuleChecker(object):
             'datetime', 'now', 'year', 'month', 'day',
             'if', 'else', 'and', 'not', 'in', 'None', 'for',
             'response', 'price',
-            'request', 'customer_id', 'period', 'check_period', 'min_period', 'max_period',
+            'request', 'customer_id', 'period', 'check_period', 'min_period', 'max_period', 'get',
         ])
         self.accepted_ops = set([
             '=', '+=', '-=',
