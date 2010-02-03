@@ -76,6 +76,9 @@ class RuleTestCase(ServiceTestCase):
         self.assertRaises(RequestProcessingError, self.save_draft_rule,
             'fake', service_type.name, 'pirce = 9', True)
 
+        self.assertRaises(RequestProcessingError, self.save_draft_rule,
+            tariff.name, service_type.name, "pirce = 9 if context['time'] else 15", True)
+
     def test_delete_draft_rule(self):
         c_id = self.get_client_by_login(self.test_client_login).id
         service_type = self.get_service_type(c_id, self.st_names[0])

@@ -332,6 +332,20 @@ class PriceTestCase(ServiceTestCase):
         self.assertEqual(Decimal(price), Decimal(p_info['draft_price']))
         self.assertEqual(PRICE_CALC_NORMAL, p_info['draft_price_calculation'])
 
+        price = '0.0'
+        self.save_draft_rule(t_name, st_names[0], "price = %s if request['time'] else %s"
+            % (price, price), True)
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': t_name,
+        }
+        response = self.handle_action('view_prices', data)
+        self.assertEqual('ok', response['status'])
+        p_info = response['prices'][0]
+        self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, p_info['draft_price_calculation'])
+        self.assertEqual(None, p_info['draft_price'])
+
     def test_service_type_duplication(self):
         st_names = ['a', 'b', 'c', 'd']
         self.add_service_types(st_names)

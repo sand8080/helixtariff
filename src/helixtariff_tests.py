@@ -24,6 +24,7 @@ from helixtariff.test.test_utils import UtilsTestCase #IGNORE:W0611 @UnusedImpor
 
 doctest.testmod(utils)
 
+
 if __name__ == '__main__':
     start_server()
     unittest.main()

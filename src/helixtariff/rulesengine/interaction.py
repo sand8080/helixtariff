@@ -5,24 +5,25 @@ class PriceProcessingError(Exception):
     pass
 
 
-class RequestPrice(object):
+class RequestPrice(dict):
     def __init__(self, rule, context=None):
+        ctx = {} if context is None else context
+        super(RequestPrice, self).__init__(ctx)
         self.rule = rule
-        self.context = {} if context is None else context
 
     def check_period(self, min_period=1, max_period=1):
-        period = self.context.get('period')
+        period = self.period
         if period is None or period < min_period or period > max_period:
             raise PriceProcessingError('In rule %s period %s out of bounds: [%s, %s]' %
                 (self.rule, period, min_period, max_period))
 
     @property
     def customer_id(self):
-        return self.context.get('customer_id')
+        return self.get('customer_id', None)
 
     @property
     def period(self):
-        return self.context.get('period')
+        return self.get('period', None)
 
 
 class ResponsePrice(object):
