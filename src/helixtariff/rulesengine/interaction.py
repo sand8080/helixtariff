@@ -19,11 +19,11 @@ class RequestPrice(dict):
 
     @property
     def customer_id(self):
-        return self.get('customer_id', None)
+        return self.get('customer_id')
 
     @property
     def period(self):
-        return self.get('period', None)
+        return self.get('period')
 
 
 class ResponsePrice(object):
