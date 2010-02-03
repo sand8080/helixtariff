@@ -37,8 +37,8 @@ def detalize_error(err_cls, category, f_name):
     return decorator
 
 
-@detalize_error(AuthError, RequestProcessingError.Category.auth, 'login')
 def authentificate(method):
+    @detalize_error(AuthError, RequestProcessingError.Category.auth, 'login')
     def decroated(self, data, curs):
         data['client_id'] = self.get_client_id(curs, data)
         del data['login']
