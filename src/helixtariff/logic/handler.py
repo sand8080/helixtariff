@@ -668,7 +668,7 @@ class Handler(object):
                 'price_calculation': PRICE_CALC_NORMAL,
                 'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
             }
-        except PriceProcessingError:
+        except (PriceProcessingError, RuleError):
             return {
                 'price': None,
                 'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
