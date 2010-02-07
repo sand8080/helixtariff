@@ -24,7 +24,6 @@ settings.log_console = True
 
 from eventlet import api, util
 util.wrap_socket_with_coroutine_socket()
-import urllib2
 from helixtariff.wsgi.server import Server
 from helixtariff.test.wsgi.client import Client
 
@@ -33,7 +32,7 @@ def start_server():
     cli = Client(settings.server_host, settings.server_port, '', '')
     try:
         cli.ping() #IGNORE:E1101
-    except urllib2.URLError:
+    except Exception: #IGNORE:W0703
         api.spawn(Server.run)
     cli.ping() #IGNORE:E1101
 
