@@ -1,9 +1,7 @@
 import psycopg2.extensions
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
 
-from eventlet import util
-util.wrap_socket_with_coroutine_socket()
-
+from eventlet.green import socket #@UnusedImport IGNORE:W0611
 from functools import partial
 
 import helixtariff.conf.lock_order #@UnusedImport IGNORE:W0611
