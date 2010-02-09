@@ -1,7 +1,6 @@
 # coding=utf-8
-from eventlet import util, coros
+from eventlet import GreenPool
 from decimal import Decimal
-util.wrap_socket_with_coroutine_socket()
 
 import unittest
 import datetime
@@ -142,12 +141,12 @@ class ApplicationTestCase(DbBasedTestCase):
 
     def test_loading(self):
         self.cli.add_client(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
-        pool = coros.CoroutinePool(max_size=10)
+        pool = GreenPool(size=10)
 
         for _ in xrange(1):
-            pool.execute_async(self.loader_task)
+            pool.spawn(self.loader_task)
 
-        pool.wait_all()
+        pool.waitall()
 
     def test_ping_ok(self):
         self.check_status_ok(self.cli.ping()) #IGNORE:E1101

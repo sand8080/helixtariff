@@ -1,5 +1,6 @@
 import logging
-from eventlet import api, wsgi
+from eventlet import wsgi
+from eventlet.green import socket
 
 from helixcore.server.wsgi_application import Application
 import helixcore.mapping.actions as mapping
@@ -56,8 +57,11 @@ class Server(object):
 
     @staticmethod
     def run():
+        sock = socket.socket()
+        sock.bind((settings.server_host, settings.server_port))
+        sock.listen(settings.server_connections)
         wsgi.server(
-            api.tcp_listener((settings.server_host, settings.server_port)),
+            sock,
             HelixtariffApplication(handle_action, protocol, logger),
             max_size=5000,
             log=Server.ServerLog()
