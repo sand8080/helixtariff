@@ -27,8 +27,8 @@ class HelixtariffApplication(Application):
         ))
 
     @transaction()
-    def track_api_call(self, s_req, s_resp, authorized_data, curs=None): #IGNORE:W0221
-        super(HelixtariffApplication, self).track_api_call(s_req, s_resp, authorized_data)
+    def track_api_call(self, remote_addr, s_req, s_resp, authorized_data, curs=None): #IGNORE:W0221
+        super(HelixtariffApplication, self).track_api_call(remote_addr, s_req, s_resp, authorized_data)
         action_name = authorized_data['action']
         c_id = None
         if action_name in self.unauthorized_trackable:
