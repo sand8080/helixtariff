@@ -1,20 +1,16 @@
 # coding=utf-8
 import unittest
 import datetime
+import pytz
 
 from helixtariff.test.db_based_test import ServiceTestCase
-from helixtariff.conf import settings
-from helixtariff.test.test_environment import start_server
-
 from helixtariff.test.wsgi.client import Client
-import pytz
 
 
 class ActionLogTestCase(ServiceTestCase):
     def setUp(self):
         super(ActionLogTestCase, self).setUp()
-        self.cli = Client(settings.server_host, settings.server_port,
-            u'егор %s' % datetime.datetime.now(), 'qazwsx')
+        self.cli = Client(u'егор %s' % datetime.datetime.now(), 'qazwsx')
 
     def _check_action_tracked(self, client, action_name, custom_client_info):
         action_logs = self.get_action_logs(client, {'action': action_name})
@@ -40,7 +36,7 @@ class ActionLogTestCase(ServiceTestCase):
 
     def test_tracking_error_action(self):
         custom_client_info = 'fake'
-        self.cli.add_client(login=self.cli.login, password=self.cli.password, custom_client_info=custom_client_info) #IGNORE:E1101
+        self.cli.add_client(custom_client_info=custom_client_info) #IGNORE:E1101
         client = self.get_client_by_login(self.cli.login)
         self._check_action_tracked(client, 'add_client', custom_client_info)
         self._make_trackable_action(client, 'modify_service_type', {'name': 'fake', 'new_name': 'ff'})
@@ -166,5 +162,4 @@ class ActionLogTestCase(ServiceTestCase):
 
 
 if __name__ == '__main__':
-    start_server()
     unittest.main()

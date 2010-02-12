@@ -22,19 +22,21 @@ settings.log_level = logging.ERROR
 settings.log_console = True
 
 
-from eventlet import api
-
-from helixtariff.wsgi.server import Server
-from helixtariff.test.wsgi.client import Client
-
-
-def start_server():
-    cli = Client(settings.server_host, settings.server_port, '', '')
-    try:
-        cli.ping() #IGNORE:E1101
-    except Exception: #IGNORE:W0703
-        api.spawn(Server.run)
-    cli.ping() #IGNORE:E1101
+#from helixtariff.wsgi.server import Server
+#from helixtariff.test.wsgi.client import Client
+#import time
+#from threading import Thread
+#import eventlet
+#from eventlet import api
 
 
-
+#def start_server():
+#    cli = Client(settings.server_host, settings.server_port, '', '')
+#    try:
+#        cli.ping() #IGNORE:E1101
+#    except Exception, e: #IGNORE:W0703
+#        t = Thread(target=Server.run)
+#        t.setDaemon(True)
+#        t.start()
+#        time.sleep(2)
+#    cli.ping() #IGNORE:E1101
