@@ -2,12 +2,9 @@ import unittest
 import doctest
 from helixtariff import utils
 
-from helixtariff.test.test_environment import start_server
-
-from helixtariff.test.validator.test_validator import ValidatorTestCase #IGNORE:W0611 @UnusedImport
-
 from helixtariff.test.wsgi.test_application_loading import ApplicationTestCase #IGNORE:W0611 @UnusedImport
 
+from helixtariff.test.validator.test_validator import ValidatorTestCase #IGNORE:W0611 @UnusedImport
 from helixtariff.test.logic.test_ping import PingTestCase #IGNORE:W0611 @UnusedImport
 from helixtariff.test.logic.test_client import ClientTestCase #IGNORE:W0611 @UnusedImport
 from helixtariff.test.logic.test_service_type import ServiceTypeTestCase #IGNORE:W0611 @UnusedImport
@@ -26,5 +23,4 @@ doctest.testmod(utils)
 
 
 if __name__ == '__main__':
-    start_server()
     unittest.main()

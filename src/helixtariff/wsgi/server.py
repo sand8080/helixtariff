@@ -1,5 +1,6 @@
 import logging
-from eventlet import api, wsgi
+from eventlet import wsgi
+from eventlet.green import socket
 
 from helixcore.server.wsgi_application import Application
 import helixcore.mapping.actions as mapping
@@ -26,8 +27,8 @@ class HelixtariffApplication(Application):
         ))
 
     @transaction()
-    def track_api_call(self, s_req, s_resp, authorized_data, curs=None): #IGNORE:W0221
-        super(HelixtariffApplication, self).track_api_call(s_req, s_resp, authorized_data)
+    def track_api_call(self, remote_addr, s_req, s_resp, authorized_data, curs=None): #IGNORE:W0221
+        super(HelixtariffApplication, self).track_api_call(remote_addr, s_req, s_resp, authorized_data)
         action_name = authorized_data['action']
         c_id = None
         if action_name in self.unauthorized_trackable:
@@ -56,8 +57,11 @@ class Server(object):
 
     @staticmethod
     def run():
+        sock = socket.socket()
+        sock.bind((settings.server_host, settings.server_port))
+        sock.listen(settings.server_connections)
         wsgi.server(
-            api.tcp_listener((settings.server_host, settings.server_port)),
+            sock,
             HelixtariffApplication(handle_action, protocol, logger),
             max_size=5000,
             log=Server.ServerLog()

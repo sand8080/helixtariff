@@ -208,26 +208,34 @@ def get_service_sets_ids(curs, tariffs_ids, for_update=False):
     return list(ids)
 
 
-def get_action_logs(curs, client, filter_params, for_update=False):
-    cond = Eq('client_id', client.id)
-
-    def add_filtering_cond(p_name, f_name, c):
+def _get_filter_params(seed, cond_map, filter_params):
+    cond = seed
+    for p_name, db_f_name, c in cond_map:
         if p_name in filter_params:
-            return And(cond, c(f_name, filter_params[p_name]))
-        else:
-            return cond
+            cond = And(cond, c(db_f_name, filter_params[p_name]))
+    return cond
 
-    cond = add_filtering_cond('action', 'action', Eq)
-    cond = add_filtering_cond('from_date', 'request_date', MoreEq)
-    cond = add_filtering_cond('to_date', 'request_date', LessEq)
 
+def _get_action_log_conds(client, filter_params):
+    cond = Eq('client_id', client.id)
+    cond_map = [
+        ('action', 'action', Eq),
+        ('from_date', 'request_date', MoreEq),
+        ('to_date', 'request_date', LessEq),
+    ]
+    return _get_filter_params(cond, cond_map, filter_params)
+
+
+def get_action_logs(curs, client, filter_params, for_update=False):
+    cond = _get_action_log_conds(client, filter_params)
     limit = filter_params.get('limit', None)
     offset = filter_params.get('offset', 0)
     return mapping.get_list(curs, ActionLog, cond=cond, limit=limit, offset=offset, for_update=for_update)
 
 
-def get_action_logs_count(curs, client):
-    return get_count(curs, ActionLog.table, Eq('client_id', client.id))
+def get_action_logs_count(curs, client, filter_params):
+    cond = _get_action_log_conds(client, filter_params)
+    return get_count(curs, ActionLog.table, cond)
 
 
 def get_count(curs, table, cond):

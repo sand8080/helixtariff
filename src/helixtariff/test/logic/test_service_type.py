@@ -1,7 +1,6 @@
 import unittest
 
 from helixcore.server.errors import RequestProcessingError
-from helixcore.server.exceptions import AuthError
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.error import ServiceTypeNotFound
@@ -97,7 +96,7 @@ class ServiceTypeTestCase(ServiceTestCase):
         self.assertEqual(types, response['service_types'])
 
     def test_view_service_types_invalid(self):
-        self.assertRaises(AuthError, self.handle_action, 'view_service_types', {'login': 'fake',
+        self.assertRaises(RequestProcessingError, self.handle_action, 'view_service_types', {'login': 'fake',
             'password': self.test_client_password})
 
     def test_view_service_types_detailed(self):

@@ -1,9 +1,15 @@
 from helixcore.test.util import ClientApplication
 
+from helixtariff.conf.log import logger
+from helixtariff.logic.actions import handle_action
+from helixtariff.validator.validator import protocol
+from helixtariff.wsgi.server import HelixtariffApplication
+
 
 class Client(ClientApplication):
-    def __init__(self, host, port, login, password, protocol='http'):
-        super(Client, self).__init__(host, port, login, password, protocol=protocol)
+    def __init__(self, login, password):
+        app = HelixtariffApplication(handle_action, protocol, logger)
+        super(Client, self).__init__(app, login, password)
 
 
 def make_api_call(f_name):

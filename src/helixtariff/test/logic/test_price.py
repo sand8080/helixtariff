@@ -2,8 +2,12 @@ from helixcore.server.errors import RequestProcessingError
 import unittest
 from decimal import Decimal
 
+import helixcore.mapping.actions as mapping
+
 from helixtariff.test.db_based_test import ServiceTestCase
+from helixtariff.conf.db import transaction
 from helixtariff.validator.validator import PRICE_CALC_NORMAL, PRICE_CALC_PRICE_UNDEFINED
+from helixtariff.domain.objects import Rule
 
 
 class PriceTestCase(ServiceTestCase):
@@ -287,6 +291,10 @@ class PriceTestCase(ServiceTestCase):
             self.assertEqual(None, p_info['draft_price'])
             self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, p_info['draft_price_calculation'])
 
+    @transaction()
+    def _save_rule(self, rule, curs=None):
+        mapping.insert(curs, rule)
+
     def test_view_prices_rules_unprocessed_price(self):
         st_names = ['serv0']
         ss_name = 'set'
@@ -294,8 +302,28 @@ class PriceTestCase(ServiceTestCase):
         self.add_service_types(st_names)
         self.add_service_sets([ss_name], st_names)
         self.add_tariff(ss_name, t_name, False, None)
-        self.save_draft_rule(t_name, st_names[0], 'price = None', True)
 
+        c_id = self.get_client_by_login(self.test_client_login).id
+        t_id = self.get_tariff(c_id, t_name).id
+        st_id = self.get_service_type(c_id, st_names[0]).id
+        r_text = "price = 0.0 if context.get('time') else 100"
+        rule = Rule(client_id=c_id, type=Rule.TYPE_DRAFT, enabled=True, tariff_id=t_id,
+            service_type_id=st_id, rule=r_text
+        )
+        self._save_rule(rule)
+
+        data = {
+            'login': self.test_client_login,
+            'password': self.test_client_password,
+            'tariff': t_name,
+        }
+        response = self.handle_action('view_prices', data)
+        self.assertEqual('ok', response['status'])
+        p_info = response['prices'][0]
+        self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, p_info['draft_price_calculation'])
+        self.assertEqual(None, p_info['draft_price'])
+
+        self.save_draft_rule(t_name, st_names[0], 'price = None', True)
         data = {
             'login': self.test_client_login,
             'password': self.test_client_password,

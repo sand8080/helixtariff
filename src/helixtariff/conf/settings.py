@@ -9,6 +9,7 @@ patch_table_name = 'patches'
 
 server_host = 'localhost'
 server_port = 9999
+server_connections = 50
 
 import logging
 log_filename = '/var/log/helixtariff/helixtariff.log'

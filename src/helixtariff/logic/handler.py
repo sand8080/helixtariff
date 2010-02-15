@@ -3,7 +3,7 @@ from functools import partial
 import helixcore.mapping.actions as mapping
 from helixcore.db.sql import Eq, In, And
 from helixcore.server.response import response_ok
-from helixcore.db.wrapper import EmptyResultSetError, ObjectAlreadyExists
+from helixcore.db.wrapper import EmptyResultSetError, ObjectCreationError
 from helixcore.server.errors import RequestProcessingError
 from helixcore.server.exceptions import AuthError
 
@@ -37,8 +37,8 @@ def detalize_error(err_cls, category, f_name):
     return decorator
 
 
-@detalize_error(AuthError, RequestProcessingError.Category.auth, 'login')
 def authentificate(method):
+    @detalize_error(AuthError, RequestProcessingError.Category.auth, 'login')
     def decroated(self, data, curs):
         data['client_id'] = self.get_client_id(curs, data)
         del data['login']
@@ -77,7 +77,7 @@ class Handler(object):
             mapping.update(curs, obj)
 
     # client
-    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'login')
+    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'login')
     @transaction()
     def add_client(self, data, curs=None):
         data['password'] = security.encrypt_password(data['password'])
@@ -97,7 +97,7 @@ class Handler(object):
     # server_type
     @transaction()
     @authentificate
-    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'name')
+    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'name')
     def add_service_type(self, data, curs=None):
         mapping.insert(curs, ServiceType(**data))
         return response_ok()
@@ -174,7 +174,7 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'name')
+    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'name')
     def add_service_set(self, data, curs=None):
         service_types_names = data['service_types']
         del data['service_types']
@@ -325,7 +325,7 @@ class Handler(object):
     # tariff
     @transaction()
     @authentificate
-    @detalize_error(ObjectAlreadyExists, RequestProcessingError.Category.data_integrity, 'name')
+    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'name')
     @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.data_integrity, 'service_set')
     @detalize_error(TariffNotFound, RequestProcessingError.Category.data_integrity, 'parent_tariff')
     def add_tariff(self, data, curs=None):
@@ -670,7 +670,7 @@ class Handler(object):
                 'price_calculation': PRICE_CALC_NORMAL,
                 'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
             }
-        except PriceProcessingError:
+        except (PriceProcessingError, RuleError):
             return {
                 'price': None,
                 'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
@@ -761,5 +761,5 @@ class Handler(object):
                 'request': action_log.request,
                 'response': action_log.response,
             })
-        total = selector.get_action_logs_count(curs, selector.get_client(curs, c_id))
+        total = selector.get_action_logs_count(curs, selector.get_client(curs, c_id), data['filter_params'])
         return response_ok(total=int(total), action_logs=al_info)
