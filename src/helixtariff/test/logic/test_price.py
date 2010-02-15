@@ -34,8 +34,8 @@ class PriceTestCase(ServiceTestCase):
 
     def test_get_price(self):
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
             'service_type': self.st_name,
         }
@@ -50,11 +50,11 @@ class PriceTestCase(ServiceTestCase):
         self.assertEqual(None, response['draft_price'])
         self.assertEqual(PRICE_CALC_PRICE_UNDEFINED, response['draft_price_calculation'])
 
-        data = { 'login': self.test_client_login, 'password': self.test_client_password,
+        data = { 'login': self.test_login, 'password': self.test_password,
             'tariff': self.t_name + 'fake', 'service_type': self.st_name}
         self.assertRaises(RequestProcessingError, self.handle_action, 'get_price', data)
 
-        data = {'login': self.test_client_login, 'password': self.test_client_password,
+        data = {'login': self.test_login, 'password': self.test_password,
             'tariff': self.t_name, 'service_type': self.st_name + 'fake'}
         self.assertRaises(RequestProcessingError, self.handle_action, 'get_price', data)
 
@@ -64,8 +64,8 @@ class PriceTestCase(ServiceTestCase):
         self.add_tariff(self.ss_name, ch_t_name, False, self.t_name)
         self.save_draft_rule(ch_t_name, self.st_name, 'price = %s' % ch_t_price_text, True)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': ch_t_name,
             'service_type': self.st_name,
         }
@@ -82,8 +82,8 @@ class PriceTestCase(ServiceTestCase):
 
         self.make_draft_rules_actual(ch_t_name)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': ch_t_name,
             'service_type': self.st_name,
         }
@@ -111,8 +111,8 @@ class PriceTestCase(ServiceTestCase):
             'draft_tariffs_chain': [self.t_name],
         }]
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
         }
         response = self.handle_action('view_prices', data)
@@ -127,8 +127,8 @@ class PriceTestCase(ServiceTestCase):
         )
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
             'context': {'customer_id': 'c', 'period': 3},
         }
@@ -143,8 +143,8 @@ class PriceTestCase(ServiceTestCase):
             self._cast(actual_prices, ['price', 'draft_price'], Decimal)
         )
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': 'fake',
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'view_prices', data)
@@ -180,8 +180,8 @@ class PriceTestCase(ServiceTestCase):
                 'draft_tariffs_chain': [ch_t_name],
             })
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': ch_t_name,
         }
         response = self.handle_action('view_prices', data)
@@ -198,8 +198,8 @@ class PriceTestCase(ServiceTestCase):
     def test_view_prices_inherited(self):
         self.save_draft_rule(self.t_name, self.st_name, 'price = %s' % self.p_text, True)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
         }
         response = self.handle_action('view_prices', data)
@@ -233,8 +233,8 @@ class PriceTestCase(ServiceTestCase):
         self.save_draft_rule(ch_t_name, ch_st_name, 'price = %s' % ch_p_text, True)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': ch_t_name,
         }
         response = self.handle_action('view_prices', data)
@@ -277,8 +277,8 @@ class PriceTestCase(ServiceTestCase):
         self.add_service_sets([ss_name], st_names)
         self.add_tariff(ss_name, t_name, False, None)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': t_name,
         }
         response = self.handle_action('view_prices', data)
@@ -303,7 +303,7 @@ class PriceTestCase(ServiceTestCase):
         self.add_service_sets([ss_name], st_names)
         self.add_tariff(ss_name, t_name, False, None)
 
-        c_id = self.get_client_by_login(self.test_client_login).id
+        c_id = self.get_operator_by_login(self.test_login).id
         t_id = self.get_tariff(c_id, t_name).id
         st_id = self.get_service_type(c_id, st_names[0]).id
         r_text = "price = 0.0 if context.get('time') else 100"
@@ -313,8 +313,8 @@ class PriceTestCase(ServiceTestCase):
         self._save_rule(rule)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': t_name,
         }
         response = self.handle_action('view_prices', data)
@@ -325,8 +325,8 @@ class PriceTestCase(ServiceTestCase):
 
         self.save_draft_rule(t_name, st_names[0], 'price = None', True)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': t_name,
         }
         response = self.handle_action('view_prices', data)
@@ -337,8 +337,8 @@ class PriceTestCase(ServiceTestCase):
 
         self.save_draft_rule(t_name, st_names[0], "price = 'lala'", True)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': t_name,
         }
         response = self.handle_action('view_prices', data)
@@ -350,8 +350,8 @@ class PriceTestCase(ServiceTestCase):
         price = '0.0'
         self.save_draft_rule(t_name, st_names[0], 'price = %s' % price, True)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': t_name,
         }
         response = self.handle_action('view_prices', data)
@@ -364,8 +364,8 @@ class PriceTestCase(ServiceTestCase):
         self.save_draft_rule(t_name, st_names[0], "price = %s if request['time'] else %s"
             % (price, price), True)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': t_name,
         }
         response = self.handle_action('view_prices', data)
@@ -388,8 +388,8 @@ class PriceTestCase(ServiceTestCase):
         self.add_tariff(ch_ss_name, ch_t_name, False, p_t_name)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': ch_t_name,
         }
         response = self.handle_action('view_prices', data)

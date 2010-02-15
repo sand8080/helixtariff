@@ -23,13 +23,13 @@ RESPONSE_STATUS_ONLY = AnyOf(RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
 AUTH_INFO = {
     'login': Text(),
     'password': Text(),
-    Optional('custom_client_info'): NullableText,
+    Optional('custom_operator_info'): NullableText,
 }
 
-# --- client ---
-ADD_CLIENT = AUTH_INFO
+# --- operator ---
+ADD_OPERATOR = AUTH_INFO
 
-MODIFY_CLIENT = dict(
+MODIFY_OPERATOR = dict(
     {
         Optional('new_login'): Text(),
         Optional('new_password'): Text(),
@@ -413,11 +413,11 @@ protocol = [
     ApiCall('ping_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     # client
-    ApiCall('add_client_request', Scheme(ADD_CLIENT)),
-    ApiCall('add_client_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('add_operator_request', Scheme(ADD_OPERATOR)),
+    ApiCall('add_operator_response', Scheme(RESPONSE_STATUS_ONLY)),
 
-    ApiCall('modify_client_request', Scheme(MODIFY_CLIENT)),
-    ApiCall('modify_client_response', Scheme(RESPONSE_STATUS_ONLY)),
+    ApiCall('modify_operator_request', Scheme(MODIFY_OPERATOR)),
+    ApiCall('modify_operator_response', Scheme(RESPONSE_STATUS_ONLY)),
 
     # service type
     ApiCall('add_service_type_request', Scheme(ADD_SERVICE_TYPE)),

@@ -5,8 +5,8 @@ def apply(curs): #IGNORE:W0622
         CREATE TABLE rule (
             id serial,
             PRIMARY KEY(id),
-            client_id integer NOT NULL,
-            FOREIGN KEY (client_id) REFERENCES client(id),
+            operator_id integer NOT NULL,
+            FOREIGN KEY (operator_id) REFERENCES operator(id),
             tariff_id integer NOT NULL,
             FOREIGN KEY (tariff_id) REFERENCES tariff(id),
             service_type_id integer NOT NULL,

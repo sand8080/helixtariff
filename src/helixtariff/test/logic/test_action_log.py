@@ -32,18 +32,18 @@ class ActionLogTestCase(ServiceTestCase):
 
     def test_unauthorized_tracking_action(self):
         self.cli.add_client(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
-        self._check_action_tracked(self.get_client_by_login(self.cli.login), 'add_client', None)
+        self._check_action_tracked(self.get_operator_by_login(self.cli.login), 'add_client', None)
 
     def test_tracking_error_action(self):
         custom_client_info = 'fake'
         self.cli.add_client(custom_client_info=custom_client_info) #IGNORE:E1101
-        client = self.get_client_by_login(self.cli.login)
+        client = self.get_operator_by_login(self.cli.login)
         self._check_action_tracked(client, 'add_client', custom_client_info)
         self._make_trackable_action(client, 'modify_service_type', {'name': 'fake', 'new_name': 'ff'})
 
     def test_tracking_action(self):
         self.cli.add_client(login=self.cli.login, password=self.cli.password) #IGNORE:E1101
-        client = self.get_client_by_login(self.cli.login)
+        client = self.get_operator_by_login(self.cli.login)
 
         self._make_trackable_action(client, 'modify_client', {'custom_client_info': 'jah'})
 

@@ -4,24 +4,24 @@ from helixcore.server.exceptions import AuthError
 from helixcore.db.wrapper import EmptyResultSetError, fetchall_dicts, fetchone_dict
 
 from helixtariff.domain.objects import (ServiceType, ServiceSet, ServiceSetRow,
-    Tariff, Rule, Client, ActionLog)
+    Tariff, Rule, Operator, ActionLog)
 from helixtariff.domain import security
-from helixtariff.error import (ClientNotFound, TariffNotFound, RuleNotFound,
+from helixtariff.error import (OperatorNotFound, TariffNotFound, RuleNotFound,
     ServiceTypeNotFound, ServiceSetNotFound)
 
 
-def get_service_type(curs, client_id, name, for_update=False):
+def get_service_type(curs, operator, name, for_update=False):
     try:
         return mapping.get_obj_by_fields(curs, ServiceType,
-            {'client_id': client_id, 'name': name}, for_update)
+            {'operator_id': operator.id, 'name': name}, for_update)
     except EmptyResultSetError:
         raise ServiceTypeNotFound(name)
 
 
-def get_service_set_by_name(curs, client_id, name, for_update=False):
+def get_service_set_by_name(curs, operator, name, for_update=False):
     try:
         return mapping.get_obj_by_fields(curs, ServiceSet,
-            {'client_id': client_id, 'name': name}, for_update)
+            {'operator_id': operator.id, 'name': name}, for_update)
     except EmptyResultSetError:
         raise ServiceSetNotFound(name)
 
@@ -30,32 +30,32 @@ def get_service_set(curs, id, for_update=False): #IGNORE:W0622
     return mapping.get_obj_by_field(curs, ServiceSet, 'id', id, for_update)
 
 
-def get_client(curs, id, for_update=False): #IGNORE:W0622
+def get_operator(curs, id, for_update=False): #IGNORE:W0622
     try:
-        return mapping.get_obj_by_field(curs, Client, 'id', id, for_update)
+        return mapping.get_obj_by_field(curs, Operator, 'id', id, for_update)
     except EmptyResultSetError:
-        raise ClientNotFound(id)
+        raise OperatorNotFound(id)
 
 
-def get_client_by_login(curs, login, for_update=False):
+def get_operator_by_login(curs, login, for_update=False):
     try:
-        return mapping.get_obj_by_field(curs, Client, 'login', login, for_update)
+        return mapping.get_obj_by_field(curs, Operator, 'login', login, for_update)
     except EmptyResultSetError:
-        raise ClientNotFound(login)
+        raise OperatorNotFound(login)
 
 
-def get_auth_client(curs, login, password, for_update=False):
+def get_auth_operator(curs, login, password, for_update=False):
     try:
-        return mapping.get_obj_by_fields(curs, Client,
+        return mapping.get_obj_by_fields(curs, Operator,
             {'login': login, 'password': security.encrypt_password(password)}, for_update)
     except EmptyResultSetError:
         raise AuthError('Access denied.')
 
 
-def get_service_types_by_service_set(curs, client_id, name, for_update=False):
+def get_service_types_by_service_set(curs, operator, name, for_update=False):
     cond_name = Eq('name', name)
-    cond_client_id = Eq('client_id', client_id)
-    sel_ss = Select(ServiceSet.table, columns='id', cond=And(cond_name, cond_client_id))
+    cond_o_id = Eq('operator_id', operator.id)
+    sel_ss = Select(ServiceSet.table, columns='id', cond=And(cond_name, cond_o_id))
     cond_descr_id = Eq('service_set_id', Scoped(sel_ss))
     sel_type_ids = Select(ServiceSetRow.table, columns='service_type_id', cond=cond_descr_id)
     cond_type_in = In('id', Scoped(sel_type_ids))
@@ -146,13 +146,15 @@ def _get_indexed_values(curs, q, k_name, v_name):
     return result
 
 
-def get_service_types_names_indexed_by_id(curs, client_id, for_update=False):
-    q = Select(ServiceType.table, columns=['id', 'name'], cond=Eq('client_id', client_id), for_update=for_update)
+def get_service_types_names_indexed_by_id(curs, operator, for_update=False):
+    q = Select(ServiceType.table, columns=['id', 'name'], cond=Eq('operator_id', operator.id),
+        for_update=for_update)
     return _get_indexed_values(curs, q, 'id', 'name')
 
 
-def get_service_sets_names_indexed_by_id(curs, client_id, for_update=False):
-    q = Select(ServiceSet.table, columns=['id', 'name'], cond=Eq('client_id', client_id), for_update=for_update)
+def get_service_sets_names_indexed_by_id(curs, operator, for_update=False):
+    q = Select(ServiceSet.table, columns=['id', 'name'], cond=Eq('operator_id', operator.id),
+        for_update=for_update)
     return _get_indexed_values(curs, q, 'id', 'name')
 
 

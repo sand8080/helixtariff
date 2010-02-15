@@ -21,7 +21,7 @@ class EngineTestCase(ServiceTestCase):
     def test_request_price_not_modified(self):
         st_name = self.st_names[0]
         self.save_draft_rule(self.t_name, st_name, 'price = 1.0', True)
-        c_id = self.get_client_by_login(self.test_client_login).id
+        c_id = self.get_operator_by_login(self.test_login).id
         tariff = self.get_tariff(c_id, self.t_name)
         service_type = self.get_service_type(c_id, st_name)
         rule = self.get_rule(tariff, service_type, Rule.TYPE_DRAFT)
@@ -40,7 +40,7 @@ if request.customer_id == 'lucky':
 if request.period > 1:
     price += 10.00 * (request.period - 1)
 '''
-        c_id = self.get_client_by_login(self.test_client_login).id
+        c_id = self.get_operator_by_login(self.test_login).id
         st_name = self.st_names[0]
         self.save_draft_rule(self.t_name, st_name, r_text, True)
         tariff = self.get_tariff(c_id, self.t_name)

@@ -48,8 +48,8 @@ class TariffTestCase(ServiceTestCase):
         self.add_tariff(self.ss_name, self.t_name, self.in_archive, None)
         new_name = 'new' + self.t_name
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': self.t_name,
             'new_name': new_name,
             'new_in_archive': not self.in_archive,
@@ -61,23 +61,23 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(not self.in_archive, t.in_archive)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': 'fake_%s' % self.t_name,
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'modify_tariff', data)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': new_name,
             'new_service_set': 'fake',
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'modify_tariff', data)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': new_name,
             'new_parent_tariff': 'fake',
         }
@@ -89,8 +89,8 @@ class TariffTestCase(ServiceTestCase):
         self.add_service_sets([new_ss_name], self.st_names[2:])
         c_id = self.get_root_client().id
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': self.t_name,
             'new_service_set': new_ss_name,
         }
@@ -108,8 +108,8 @@ class TariffTestCase(ServiceTestCase):
         self.add_tariff(self.ss_name, child_name, self.in_archive, parent_name)
         new_child_name = 'new' + child_name
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': child_name,
             'new_name': new_child_name,
             'new_in_archive': not self.in_archive,
@@ -123,8 +123,8 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(None, t.parent_id)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': new_child_name,
             'new_parent_tariff': parent_name,
         }
@@ -137,8 +137,8 @@ class TariffTestCase(ServiceTestCase):
     def test_modify_tariff_do_nothing(self):
         self.add_tariff(self.ss_name, self.t_name, self.in_archive, None)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': self.t_name,
         }
         self.handle_action('modify_tariff', data)
@@ -150,8 +150,8 @@ class TariffTestCase(ServiceTestCase):
         self.add_tariff(self.ss_name, self.t_name, self.in_archive, None)
         self.add_tariff(self.ss_name, 'child of %s' % self.t_name, self.in_archive, self.t_name)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': self.t_name,
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'delete_tariff', data)
@@ -163,18 +163,18 @@ class TariffTestCase(ServiceTestCase):
         self.add_tariff(self.ss_name, ch_name, self.in_archive, p_name)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': ch_name,
         }
         self.handle_action('delete_tariff', data)
 
-        c_id = self.get_client_by_login(self.test_client_login).id
+        c_id = self.get_operator_by_login(self.test_login).id
         self.assertRaises(TariffNotFound, self.get_tariff, c_id, ch_name)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': p_name,
         }
         self.handle_action('delete_tariff', data)
@@ -185,28 +185,28 @@ class TariffTestCase(ServiceTestCase):
         st_name = self.st_names[0]
         self.save_draft_rule(self.t_name, st_name, 'price = 1.0', True)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': self.t_name,
         }
         self.make_draft_rules_actual(self.t_name)
         self.assertRaises(RequestProcessingError, self.handle_action, 'delete_tariff', data)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
             'service_type': st_name,
             'new_enabled': False,
         }
         self.handle_action('modify_actual_rule', data)
 
-        c_id = self.get_client_by_login(self.test_client_login).id
+        c_id = self.get_operator_by_login(self.test_login).id
         tariff = self.get_tariff(c_id, self.t_name)
         service_type = self.get_service_type(c_id, st_name)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': self.t_name,
         }
         self.handle_action('delete_tariff', data)
@@ -218,12 +218,12 @@ class TariffTestCase(ServiceTestCase):
         st_name = self.st_names[0]
         self.save_draft_rule(self.t_name, st_name, 'price = 1.0', True)
 
-        c_id = self.get_client_by_login(self.test_client_login).id
+        c_id = self.get_operator_by_login(self.test_login).id
         tariff = self.get_tariff(c_id, self.t_name)
         service_type = self.get_service_type(c_id, st_name)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': self.t_name,
         }
         self.handle_action('delete_tariff', data)
@@ -236,8 +236,8 @@ class TariffTestCase(ServiceTestCase):
         ch_name = 'child'
         self.add_tariff(self.ss_name, ch_name, self.in_archive, pt_name)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': pt_name,
         }
         response = self.handle_action('get_tariff', data)
@@ -248,8 +248,8 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(None, response['parent_tariff'])
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': ch_name,
         }
         response = self.handle_action('get_tariff', data)
@@ -266,8 +266,8 @@ class TariffTestCase(ServiceTestCase):
         self.add_tariff(self.ss_name, ch_name, self.in_archive, p_name)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': p_name
         }
         response = self.handle_action('get_tariff_detailed', data)
@@ -279,8 +279,8 @@ class TariffTestCase(ServiceTestCase):
         self.assertEqual(None, response['parent_tariff'])
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': ch_name
         }
         response = self.handle_action('get_tariff_detailed', data)
@@ -296,8 +296,8 @@ class TariffTestCase(ServiceTestCase):
         self.add_service_sets([empty_s_name], [])
         self.add_tariff(empty_s_name, t_name, False, p_name)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': t_name
         }
         response = self.handle_action('get_tariff_detailed', data)
@@ -310,8 +310,8 @@ class TariffTestCase(ServiceTestCase):
 
     def test_view_tariffs(self):
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
         }
         result = self.handle_action('view_tariffs', data)
         self.assertTrue('tariffs' in result)
@@ -322,8 +322,8 @@ class TariffTestCase(ServiceTestCase):
         ch_name = 'child'
         self.add_tariff(self.ss_name, ch_name, self.in_archive, pt_name)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
         }
         result = self.handle_action('view_tariffs', data)
         self.assertTrue('tariffs' in result)
@@ -342,8 +342,8 @@ class TariffTestCase(ServiceTestCase):
 
     def test_view_tariffs_detailed(self):
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
         }
         result = self.handle_action('view_tariffs_detailed', data)
         self.assertTrue('tariffs' in result)
@@ -354,12 +354,12 @@ class TariffTestCase(ServiceTestCase):
         ch_name = 'child'
         self.add_tariff(self.ss_name, ch_name, self.in_archive, p_name)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
         }
         result = self.handle_action('view_tariffs_detailed', data)
 
-        c_id = self.get_client_by_login(self.test_client_login).id
+        c_id = self.get_operator_by_login(self.test_login).id
         service_types = self.get_service_types_by_service_set_name(c_id, self.ss_name)
         st_names = sorted([service_type.name for service_type in service_types])
         self.assertTrue('tariffs' in result)

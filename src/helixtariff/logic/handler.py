@@ -5,10 +5,10 @@ from helixcore.db.sql import Eq, In, And
 from helixcore.server.response import response_ok
 from helixcore.db.wrapper import EmptyResultSetError, ObjectCreationError
 from helixcore.server.errors import RequestProcessingError
-from helixcore.server.exceptions import AuthError
+from helixcore.server.exceptions import AuthError, DataIntegrityError
 
 from helixtariff.conf.db import transaction
-from helixtariff.domain.objects import (Client, ServiceType,
+from helixtariff.domain.objects import (Operator, ServiceType,
     ServiceSet, ServiceSetRow, Tariff, Rule)
 from helixtariff.logic import selector
 from helixtariff.rulesengine.checker import RuleChecker, RuleError
@@ -19,7 +19,7 @@ from helixtariff.domain import security
 from helixtariff.error import (TariffCycleError, ServiceTypeNotFound,
     ServiceSetNotEmpty, ServiceTypeUsed, TariffUsed, RuleNotFound,
     ServiceSetNotFound, TariffNotFound, ServiceTypeNotInServiceSet,
-    ServiceSetUsed)
+    ServiceSetUsed, OperatorAlreadyExists)
 from helixtariff.validator.validator import (PRICE_CALC_NORMAL,
     PRICE_CALC_PRICE_UNDEFINED, PRICE_CALC_RULE_DISABLED)
 from helixtariff.utils import format_price
@@ -40,11 +40,12 @@ def detalize_error(err_cls, category, f_name):
 def authentificate(method):
     @detalize_error(AuthError, RequestProcessingError.Category.auth, 'login')
     def decroated(self, data, curs):
-        data['client_id'] = self.get_client_id(curs, data)
+        operator = self.get_operator(curs, data)
+        data['operator_id'] = operator.id
         del data['login']
         del data['password']
-        data.pop('custom_client_info', None)
-        return method(self, data, curs)
+        data.pop('custom_operator_info', None)
+        return method(self, data, operator, curs)
     return decroated
 
 
@@ -53,8 +54,8 @@ class Handler(object):
     def ping(self, _):
         return response_ok()
 
-    def get_client_id(self, curs, data):
-        return selector.get_auth_client(curs, data['login'], data['password']).id
+    def get_operator(self, curs, data):
+        return selector.get_auth_operator(curs, data['login'], data['password'])
 
     def get_fields_for_update(self, data, prefix_of_new='new_'):
         '''
@@ -76,21 +77,25 @@ class Handler(object):
                 setattr(obj, f, data[new_f])
             mapping.update(curs, obj)
 
-    # client
-    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'login')
+    # operator
     @transaction()
-    def add_client(self, data, curs=None):
+    @detalize_error(OperatorAlreadyExists, RequestProcessingError.Category.data_integrity, 'login')
+    def add_operator(self, data, curs=None):
         data['password'] = security.encrypt_password(data['password'])
-        data.pop('custom_client_info', None)
-        mapping.insert(curs, Client(**data))
+        data.pop('custom_operator_info', None)
+        try:
+            mapping.insert(curs, Operator(**data))
+        except ObjectCreationError:
+            raise OperatorAlreadyExists(data['login'])
         return response_ok()
 
     @transaction()
     @authentificate
-    def modify_client(self, data, curs=None):
+    @detalize_error(DataIntegrityError, RequestProcessingError.Category.data_integrity, 'new_login')
+    def modify_operator(self, data, operator, curs=None):
         if 'new_password' in data:
             data['new_password'] = security.encrypt_password(data['new_password'])
-        loader = partial(selector.get_client, curs, data['client_id'], for_update=True)
+        loader = partial(selector.get_operator, curs, operator.id, for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
@@ -98,15 +103,16 @@ class Handler(object):
     @transaction()
     @authentificate
     @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'name')
-    def add_service_type(self, data, curs=None):
+    def add_service_type(self, data, _, curs=None):
         mapping.insert(curs, ServiceType(**data))
         return response_ok()
 
     @transaction()
     @authentificate
     @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.auth, 'name')
-    def modify_service_type(self, data, curs=None):
-        loader = partial(selector.get_service_type, curs, data['client_id'], data['name'], for_update=True)
+    def modify_service_type(self, data, operator, curs=None):
+        name = data['name']
+        loader = partial(selector.get_service_type, curs, operator, name, for_update=True)
         self.update_obj(curs, data, loader)
         return response_ok()
 
@@ -114,13 +120,12 @@ class Handler(object):
     @authentificate
     @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.auth, 'name')
     @detalize_error(ServiceTypeUsed, RequestProcessingError.Category.auth, 'name')
-    def delete_service_type(self, data, curs=None):
-        c_id = data['client_id']
+    def delete_service_type(self, data, operator, curs=None):
         st_name = data['name']
-        t = selector.get_service_type(curs, c_id, st_name, for_update=True)
+        t = selector.get_service_type(curs, operator, st_name, for_update=True)
         ss_ids = selector.get_service_sets_ids_by_service_type(curs, t)
         if ss_ids:
-            ss_names_idx = selector.get_service_sets_names_indexed_by_id(curs, c_id)
+            ss_names_idx = selector.get_service_sets_names_indexed_by_id(curs, operator)
             ss_names = [ss_names_idx[idx] for idx in ss_ids]
             raise ServiceTypeUsed('''Service type '%s' used in service sets %s''' %
                 (st_name, ss_names))
@@ -158,9 +163,9 @@ class Handler(object):
             )
         return response_ok(service_types=st_info_list)
 
-    def _set_service_types_to_service_set(self, curs, client_id, service_set, service_types_names):
+    def _set_service_types_to_service_set(self, curs, operator, service_set, service_types_names):
         curs.execute(*mapping.Delete(ServiceSetRow.table, cond=Eq('service_set_id', service_set.id)).glue())
-        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
+        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, operator)
         st_ids_idx = dict([(v, k) for (k, v) in st_names_idx.items()])
 
         not_found_st_names = filter(lambda x: x not in st_ids_idx, service_types_names)
@@ -175,15 +180,12 @@ class Handler(object):
     @transaction()
     @authentificate
     @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'name')
-    def add_service_set(self, data, curs=None):
+    def add_service_set(self, data, operator, curs=None):
         service_types_names = data['service_types']
         del data['service_types']
-        client_id = data['client_id']
-
         service_set = ServiceSet(**data)
         mapping.insert(curs, service_set)
-        self._set_service_types_to_service_set(curs, client_id, service_set, service_types_names)
-
+        self._set_service_types_to_service_set(curs, operator, service_set, service_types_names)
         return response_ok()
 
     def _check_types_not_used(self, curs, client_id, service_sets_ids, service_types_names):
@@ -752,7 +754,7 @@ class Handler(object):
     def view_action_logs(self, data, curs=None):
         c_id = data['client_id']
         al_info = []
-        action_logs = selector.get_action_logs(curs, selector.get_client(curs, c_id), data['filter_params'])
+        action_logs = selector.get_action_logs(curs, selector.get_operator(curs, c_id), data['filter_params'])
         for action_log in action_logs:
             al_info.append({
                 'custom_client_info': action_log.custom_client_info,
@@ -761,5 +763,5 @@ class Handler(object):
                 'request': action_log.request,
                 'response': action_log.response,
             })
-        total = selector.get_action_logs_count(curs, selector.get_client(curs, c_id), data['filter_params'])
+        total = selector.get_action_logs_count(curs, selector.get_operator(curs, c_id), data['filter_params'])
         return response_ok(total=int(total), action_logs=al_info)

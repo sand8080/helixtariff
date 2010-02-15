@@ -21,13 +21,13 @@ class ServiceSetTestCase(ServiceTestCase):
 
     def test_modify_service_set(self):
         name = self.ss_names[0]
-        client = self.get_client_by_login(self.test_client_login)
+        client = self.get_operator_by_login(self.test_login)
         s_old = self.get_service_set_by_name(client.id, name)
 
         new_name = 'new' + name
         data = {
             'login': client.login,
-            'password': self.test_client_password,
+            'password': self.test_password,
             'name': name,
             'new_name': new_name
         }
@@ -40,7 +40,7 @@ class ServiceSetTestCase(ServiceTestCase):
         new_st_names = self.st_names[len(self.st_names)/2:]
         data = {
             'login': client.login,
-            'password': self.test_client_password,
+            'password': self.test_password,
             'name': new_name,
             'new_service_types': new_st_names
         }
@@ -56,14 +56,14 @@ class ServiceSetTestCase(ServiceTestCase):
 
         data = {
             'login': client.login,
-            'password': self.test_client_password,
+            'password': self.test_password,
             'name': '%s_fake' % new_name,
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'modify_service_set', data)
 
         data = {
             'login': client.login,
-            'password': self.test_client_password,
+            'password': self.test_password,
             'name': new_name,
             'new_service_types': new_st_names + ['fake_service_type_name']
         }
@@ -76,8 +76,8 @@ class ServiceSetTestCase(ServiceTestCase):
         self.add_tariff(ss_name, t_name, False, None)
         self.save_draft_rule(t_name, st_name, 'price = 2.01', True)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': ss_name,
             'new_service_types': self.st_names[1:]
         }
@@ -86,8 +86,8 @@ class ServiceSetTestCase(ServiceTestCase):
         another_ss_name = 'another %s' % ss_name
         self.add_service_sets([another_ss_name], self.st_names)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': another_ss_name,
             'new_service_types': self.st_names[1:]
         }
@@ -97,26 +97,26 @@ class ServiceSetTestCase(ServiceTestCase):
     def test_delete_service_set(self):
         ss_name = self.ss_names[0]
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': ss_name
         }
         self.assertRaises(ServiceSetNotEmpty, self.handle_action, 'delete_service_set', data)
 
-        c_id = self.get_client_by_login(self.test_client_login).id
+        c_id = self.get_operator_by_login(self.test_login).id
         service_type = self.get_service_set_by_name(c_id, ss_name)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': ss_name,
             'new_service_types': []
         }
         self.handle_action('modify_service_set', data)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'name': ss_name
         }
         self.handle_action('delete_service_set', data)
@@ -130,8 +130,8 @@ class ServiceSetTestCase(ServiceTestCase):
         self.assertRaises(ServiceSetNotEmpty, self.handle_action,
             'delete_service_set',
             {
-                'login': self.test_client_login,
-                'password': self.test_client_password,
+                'login': self.test_login,
+                'password': self.test_password,
                 'name': ss_name
             }
         )
@@ -139,16 +139,16 @@ class ServiceSetTestCase(ServiceTestCase):
     def test_get_service_set(self):
         ss_name = self.ss_names[0]
         self.modify_service_set(ss_name, new_service_types=self.st_names)
-        response = self.handle_action('get_service_set', {'login': self.test_client_login,
-            'password': self.test_client_password, 'name': ss_name,})
+        response = self.handle_action('get_service_set', {'login': self.test_login,
+            'password': self.test_password, 'name': ss_name,})
         self.assertEqual('ok', response['status'])
         self.assertEqual(ss_name, response['name'])
         self.assertEquals(sorted(self.st_names), sorted(response['service_types']))
 
     def test_get_service_set_detailed(self):
         ss_name = self.ss_names[0]
-        response = self.handle_action('get_service_set_detailed', {'login': self.test_client_login,
-            'password': self.test_client_password, 'name': ss_name,})
+        response = self.handle_action('get_service_set_detailed', {'login': self.test_login,
+            'password': self.test_password, 'name': ss_name,})
         self.assertEqual('ok', response['status'])
         self.assertEqual(ss_name, response['name'])
         self.assertEquals(sorted(self.st_names), response['service_types'])
@@ -157,8 +157,8 @@ class ServiceSetTestCase(ServiceTestCase):
         t_names = ['t1', 't0', 't3']
         for n in t_names:
             self.add_tariff(ss_name, n, False, None)
-        response = self.handle_action('get_service_set_detailed', {'login': self.test_client_login,
-            'password': self.test_client_password, 'name': ss_name,})
+        response = self.handle_action('get_service_set_detailed', {'login': self.test_login,
+            'password': self.test_password, 'name': ss_name,})
         self.assertEqual('ok', response['status'])
         self.assertEqual(ss_name, response['name'])
         self.assertEquals(sorted(self.st_names), response['service_types'])
@@ -173,8 +173,8 @@ class ServiceSetTestCase(ServiceTestCase):
         for s, t in sets_struct.items():
             self.modify_service_set(s, new_service_types=t)
 
-        response = self.handle_action('view_service_sets', {'login': self.test_client_login,
-            'password': self.test_client_password,})
+        response = self.handle_action('view_service_sets', {'login': self.test_login,
+            'password': self.test_password,})
         self.assertEqual('ok', response['status'])
         service_sets_info = response['service_sets']
         self.assertEqual(len(self.ss_names), len(service_sets_info))
@@ -193,8 +193,8 @@ class ServiceSetTestCase(ServiceTestCase):
             self.modify_service_set(ss_name, new_service_types=st_names)
             self.add_tariff(ss_name, t_name, False, None)
 
-        response = self.handle_action('view_service_sets_detailed', {'login': self.test_client_login,
-            'password': self.test_client_password})
+        response = self.handle_action('view_service_sets_detailed', {'login': self.test_login,
+            'password': self.test_password})
         self.assertEqual('ok', response['status'])
         service_sets_info = response['service_sets']
         self.assertEqual(len(self.ss_names), len(service_sets_info))

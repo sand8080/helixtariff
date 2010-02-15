@@ -1,8 +1,8 @@
-def apply(curs):  #IGNORE:W0622
-    print 'Creating table client'
+def apply(curs):
+    print 'Creating table operator'
     curs.execute(
     '''
-        CREATE TABLE client (
+        CREATE TABLE operator (
             id serial,
             login varchar NOT NULL,
             password varchar NOT NULL,
@@ -13,6 +13,6 @@ def apply(curs):  #IGNORE:W0622
 
 
 def revert(curs):
-    print 'Dropping table client'
-    curs.execute('DROP TABLE client')
+    print 'Dropping table operator'
+    curs.execute('DROP TABLE operator')
 

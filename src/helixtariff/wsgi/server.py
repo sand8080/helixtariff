@@ -12,7 +12,7 @@ from helixtariff.validator.validator import protocol
 from helixtariff.logic import selector
 from helixtariff.conf.db import transaction
 from helixtariff.domain.objects import ActionLog
-from helixtariff.error import ClientNotFound
+from helixtariff.error import OperatorNotFound
 
 
 class HelixtariffApplication(Application):
@@ -34,8 +34,8 @@ class HelixtariffApplication(Application):
         if action_name in self.unauthorized_trackable:
             try:
                 login = authorized_data['login']
-                c_id = selector.get_client_by_login(curs, login).id
-            except ClientNotFound:
+                c_id = selector.get_operator_by_login(curs, login).id
+            except OperatorNotFound:
                 self.logger.log(logging.ERROR,
                     'Unable to track action for not existed client. Request: %s. Response: %s', (s_req, s_resp))
         else:

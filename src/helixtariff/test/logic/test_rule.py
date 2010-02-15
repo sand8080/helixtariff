@@ -39,7 +39,7 @@ class RuleTestCase(ServiceTestCase):
             ch_t_name, p_st_names[0], 'price = 8.00', True)
 
     def test_save_draft_rule(self):
-        c_id = self.get_client_by_login(self.test_client_login).id
+        c_id = self.get_operator_by_login(self.test_login).id
         service_type = self.get_service_type(c_id, self.st_names[0])
         tariff = self.get_tariff(c_id, self.t_name)
 
@@ -80,7 +80,7 @@ class RuleTestCase(ServiceTestCase):
             tariff.name, service_type.name, "pirce = 9 if context['time'] else 15", True)
 
     def test_delete_draft_rule(self):
-        c_id = self.get_client_by_login(self.test_client_login).id
+        c_id = self.get_operator_by_login(self.test_login).id
         service_type = self.get_service_type(c_id, self.st_names[0])
         tariff = self.get_tariff(c_id, self.t_name)
 
@@ -90,8 +90,8 @@ class RuleTestCase(ServiceTestCase):
         self.get_rule(tariff, service_type, Rule.TYPE_DRAFT)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': tariff.name,
             'service_type': service_type.name,
         }
@@ -99,7 +99,7 @@ class RuleTestCase(ServiceTestCase):
         self.assertRaises(RequestProcessingError, self.handle_action, 'delete_draft_rule', data)
 
     def test_make_draft_rules_actual(self):
-        c_id = self.get_client_by_login(self.test_client_login).id
+        c_id = self.get_operator_by_login(self.test_login).id
         r_text = 'price = 1'
         st_names = self.st_names[:2]
         for st_name in st_names:
@@ -139,7 +139,7 @@ class RuleTestCase(ServiceTestCase):
         self.assertRaises(RequestProcessingError, self.make_draft_rules_actual,'fake')
 
     def test_modify_actual_rule(self):
-        c_id = self.get_client_by_login(self.test_client_login).id
+        c_id = self.get_operator_by_login(self.test_login).id
         st_name = self.st_names[0]
         self.save_draft_rule(self.t_name, st_name, 'price = 1.0', True)
         self.make_draft_rules_actual(self.t_name)
@@ -147,8 +147,8 @@ class RuleTestCase(ServiceTestCase):
         service_type = self.get_service_type(c_id, st_name)
         old_rule = self.get_rule(tariff, service_type, Rule.TYPE_ACTUAL)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
             'service_type': st_name,
             'new_enabled': False,
@@ -163,8 +163,8 @@ class RuleTestCase(ServiceTestCase):
         self.assertEqual(False, new_rule.enabled)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': 'fake',
             'service_type': st_name,
             'new_enabled': False,
@@ -172,8 +172,8 @@ class RuleTestCase(ServiceTestCase):
         self.assertRaises(RequestProcessingError, self.handle_action, 'modify_actual_rule', data)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
             'service_type': 'fake',
             'new_enabled': False,
@@ -183,32 +183,32 @@ class RuleTestCase(ServiceTestCase):
     def test_get_rule(self):
         st_name = self.st_names[0]
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': 'fake %s' % self.t_name,
             'service_type': st_name,
             'type': Rule.TYPE_DRAFT,
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'get_rule', data)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
             'service_type': 'fake %s' % st_name,
             'type': Rule.TYPE_DRAFT,
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'get_rule', data)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
             'service_type': st_name,
             'type': Rule.TYPE_DRAFT,
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'get_rule', data)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
             'service_type': st_name,
             'type': Rule.TYPE_ACTUAL,
@@ -220,8 +220,8 @@ class RuleTestCase(ServiceTestCase):
         self.save_draft_rule(self.t_name, st_name, r_text, enabled)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
             'service_type': st_name,
             'type': Rule.TYPE_DRAFT,
@@ -236,8 +236,8 @@ class RuleTestCase(ServiceTestCase):
 
         self.make_draft_rules_actual(self.t_name)
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
             'service_type': st_name,
             'type': Rule.TYPE_ACTUAL,
@@ -252,8 +252,8 @@ class RuleTestCase(ServiceTestCase):
 
     def test_view_rules(self):
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
         }
         response = self.handle_action('view_rules', data)
@@ -274,8 +274,8 @@ class RuleTestCase(ServiceTestCase):
         self.make_draft_rules_actual(self.t_name)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
         }
         response = self.handle_action('view_rules', data)
@@ -284,16 +284,16 @@ class RuleTestCase(ServiceTestCase):
         self.assertEqual(expected_r_info, response['rules'])
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': 'fake',
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'view_rules', data)
 
     def test_view_not_all_defined_rules(self):
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
         }
         response = self.handle_action('view_rules', data)
@@ -314,8 +314,8 @@ class RuleTestCase(ServiceTestCase):
         self.make_draft_rules_actual(self.t_name)
 
         data = {
-            'login': self.test_client_login,
-            'password': self.test_client_password,
+            'login': self.test_login,
+            'password': self.test_password,
             'tariff': self.t_name,
         }
         response = self.handle_action('view_rules', data)

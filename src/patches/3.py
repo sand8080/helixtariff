@@ -4,18 +4,19 @@ def apply(curs):  #IGNORE:W0622
     '''
         CREATE TABLE service_type (
             id serial,
-            client_id integer NOT NULL,
+            operator_id integer NOT NULL,
             name varchar NOT NULL,
             PRIMARY KEY(id),
-            FOREIGN KEY (client_id) REFERENCES client(id)
+            FOREIGN KEY (operator_id) REFERENCES operator(id)
         )
     ''')
-    print 'Creating unique index on service_type (client_id, name)'
-    curs.execute('CREATE UNIQUE INDEX service_type_client_id_name_idx ON service_type (client_id, name)')
+    print 'Creating unique index on service_type (operator_id, name)'
+    curs.execute('CREATE UNIQUE INDEX service_type_operator_id_name_idx ON service_type (operator_id, name)')
+
 
 def revert(curs):
-    print 'Dropping unique index on service_type (client_id, name)'
-    curs.execute('DROP INDEX service_type_client_id_name_idx')
+    print 'Dropping unique index on service_type (operator_id, name)'
+    curs.execute('DROP INDEX service_type_operator_id_name_idx')
     print 'Dropping table service_type'
     curs.execute('DROP TABLE service_type')
 

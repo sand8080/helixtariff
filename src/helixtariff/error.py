@@ -1,4 +1,11 @@
+from helixcore.server.exceptions import ActionNotAllowedError
+
+
 class HelixtariffError(Exception):
+    pass
+
+
+class OperatorAlreadyExists(ActionNotAllowedError, HelixtariffError):
     pass
 
 
@@ -53,6 +60,6 @@ class ServiceSetUsed(HelixtariffError):
         super(ServiceSetUsed, self).__init__("Service set used in tariffs '%s'" % tariffs)
 
 
-class ClientNotFound(ObjectNotFound):
+class OperatorNotFound(ObjectNotFound):
     def __init__(self, client_id):
-        super(ClientNotFound, self).__init__("Client '%s' not found" % client_id)
+        super(OperatorNotFound, self).__init__("Operator '%s' not found" % client_id)
