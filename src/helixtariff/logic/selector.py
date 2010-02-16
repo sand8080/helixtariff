@@ -62,8 +62,9 @@ def get_service_types_by_service_set(curs, operator, name, for_update=False):
     return mapping.get_list(curs, ServiceType, cond_type_in, order_by='id', for_update=for_update)
 
 
-def get_service_types(curs, client_id, for_update=False):
-    return mapping.get_list(curs, ServiceType, cond=Eq('client_id', client_id), for_update=for_update)
+def get_service_types(curs, operator, for_update=False):
+    return mapping.get_list(curs, ServiceType, cond=Eq('operator_id', operator.id),
+        for_update=for_update)
 
 
 def get_tariff(curs, client_id, name, for_update=False):

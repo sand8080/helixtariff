@@ -134,17 +134,16 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def view_service_types(self, data, curs=None):
-        service_types = selector.get_service_types(curs, data['client_id'])
+    def view_service_types(self, _, operator, curs=None):
+        service_types = selector.get_service_types(curs, operator)
         return response_ok(
             service_types=[t.name for t in service_types]
         )
 
     @transaction()
     @authentificate
-    def view_service_types_detailed(self, data, curs=None):
-        c_id = data['client_id']
-        service_types = selector.get_service_types(curs, c_id)
+    def view_service_types_detailed(self, _, operator, curs=None):
+        service_types = selector.get_service_types(curs, operator)
         # {service_type_id: [service_set_id, ...]}
         st_info_idx = {}
         for row in selector.get_service_set_rows_by_service_types(curs, service_types):
@@ -153,7 +152,7 @@ class Handler(object):
                 st_info_idx[st_id] = []
             st_info_idx[st_id].append(row.service_set_id)
 
-        ss_names_idx = selector.get_service_sets_names_indexed_by_id(curs, c_id)
+        ss_names_idx = selector.get_service_sets_names_indexed_by_id(curs, operator)
         st_info_list = []
         for service_type in service_types:
             ss_ids = st_info_idx.get(service_type.id, [])
