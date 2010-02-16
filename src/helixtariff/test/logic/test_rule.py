@@ -39,9 +39,9 @@ class RuleTestCase(ServiceTestCase):
             ch_t_name, p_st_names[0], 'price = 8.00', True)
 
     def test_save_draft_rule(self):
-        c_id = self.get_operator_by_login(self.test_login)
-        service_type = self.get_service_type(c_id, self.st_names[0])
-        tariff = self.get_tariff(c_id, self.t_name)
+        operator = self.get_operator_by_login(self.test_login)
+        service_type = self.get_service_type(operator, self.st_names[0])
+        tariff = self.get_tariff(operator, self.t_name)
 
         r_text = 'price = 1'
         enabled = False
@@ -80,9 +80,9 @@ class RuleTestCase(ServiceTestCase):
             tariff.name, service_type.name, "pirce = 9 if context['time'] else 15", True)
 
     def test_delete_draft_rule(self):
-        c_id = self.get_operator_by_login(self.test_login)
-        service_type = self.get_service_type(c_id, self.st_names[0])
-        tariff = self.get_tariff(c_id, self.t_name)
+        operator = self.get_operator_by_login(self.test_login)
+        service_type = self.get_service_type(operator, self.st_names[0])
+        tariff = self.get_tariff(operator, self.t_name)
 
         r_text = 'price = 1'
         enabled = False
@@ -99,16 +99,16 @@ class RuleTestCase(ServiceTestCase):
         self.assertRaises(RequestProcessingError, self.handle_action, 'delete_draft_rule', data)
 
     def test_make_draft_rules_actual(self):
-        c_id = self.get_operator_by_login(self.test_login)
+        operator = self.get_operator_by_login(self.test_login)
         r_text = 'price = 1'
         st_names = self.st_names[:2]
         for st_name in st_names:
             self.save_draft_rule(self.t_name, st_name, r_text, False)
         self.make_draft_rules_actual(self.t_name)
-        tariff = self.get_tariff(c_id, self.t_name)
+        tariff = self.get_tariff(operator, self.t_name)
         rule_loader = partial(self.get_rule, tariff)
         for st_name in st_names:
-            service_type = self.get_service_type(c_id, st_name)
+            service_type = self.get_service_type(operator, st_name)
             self.assertRaises(RuleNotFound, rule_loader, service_type, Rule.TYPE_DRAFT)
             rule = rule_loader(service_type, Rule.TYPE_ACTUAL)
             self.assertEqual(service_type.id, rule.service_type_id)
@@ -120,7 +120,7 @@ class RuleTestCase(ServiceTestCase):
         self.save_draft_rule(self.t_name, st_name_check, r_text, enabled)
         self.make_draft_rules_actual(self.t_name)
 
-        service_type = self.get_service_type(c_id, st_name_check)
+        service_type = self.get_service_type(operator, st_name_check)
         rule = rule_loader(service_type, Rule.TYPE_ACTUAL)
         self.assertEqual(service_type.id, rule.service_type_id)
         self.assertEqual(r_text, rule.rule)
@@ -130,7 +130,7 @@ class RuleTestCase(ServiceTestCase):
         st_name = st_names[0]
         enabled = True
         self.save_draft_rule(self.t_name, st_name, r_text, enabled)
-        service_type = self.get_service_type(c_id, st_name)
+        service_type = self.get_service_type(operator, st_name)
         rule = rule_loader(service_type, Rule.TYPE_DRAFT)
         self.assertEqual(service_type.id, rule.service_type_id)
         self.assertEqual(r_text, rule.rule)
@@ -139,12 +139,12 @@ class RuleTestCase(ServiceTestCase):
         self.assertRaises(RequestProcessingError, self.make_draft_rules_actual,'fake')
 
     def test_modify_actual_rule(self):
-        c_id = self.get_operator_by_login(self.test_login)
+        operator = self.get_operator_by_login(self.test_login)
         st_name = self.st_names[0]
         self.save_draft_rule(self.t_name, st_name, 'price = 1.0', True)
         self.make_draft_rules_actual(self.t_name)
-        tariff = self.get_tariff(c_id, self.t_name)
-        service_type = self.get_service_type(c_id, st_name)
+        tariff = self.get_tariff(operator, self.t_name)
+        service_type = self.get_service_type(operator, st_name)
         old_rule = self.get_rule(tariff, service_type, Rule.TYPE_ACTUAL)
         data = {
             'login': self.test_login,

@@ -303,11 +303,11 @@ class PriceTestCase(ServiceTestCase):
         self.add_service_sets([ss_name], st_names)
         self.add_tariff(ss_name, t_name, False, None)
 
-        c_id = self.get_operator_by_login(self.test_login).id
-        t_id = self.get_tariff(c_id, t_name).id
-        st_id = self.get_service_type(c_id, st_names[0]).id
+        operator = self.get_operator_by_login(self.test_login)
+        t_id = self.get_tariff(operator, t_name).id
+        st_id = self.get_service_type(operator, st_names[0]).id
         r_text = "price = 0.0 if context.get('time') else 100"
-        rule = Rule(client_id=c_id, type=Rule.TYPE_DRAFT, enabled=True, tariff_id=t_id,
+        rule = Rule(operator_id=operator.id, type=Rule.TYPE_DRAFT, enabled=True, tariff_id=t_id,
             service_type_id=st_id, rule=r_text
         )
         self._save_rule(rule)
