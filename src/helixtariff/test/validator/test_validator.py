@@ -357,8 +357,10 @@ class ValidatorTestCase(RootTestCase):
 
         self.api.validate_response(a_name, {'status': 'ok', 'total': 10, 'action_logs': []})
         self.api.validate_response(a_name, {'status': 'ok', 'total': 10, 'action_logs': [
-            {'custom_client_info': None, 'action': 'a', 'request_date': s_d2, 'request': 't', 'response': 't'},
-            {'custom_client_info': 'i', 'action': 'a', 'request_date': s_d2, 'request': 't', 'response': 't'},
+            {'custom_operator_info': None, 'action': 'a', 'request_date': s_d2, 'remote_addr': 'a',
+                'request': 't', 'response': 't'},
+            {'custom_operator_info': 'i', 'action': 'a', 'request_date': s_d2, 'remote_addr': 'b',
+                'request': 't', 'response': 't'},
         ]})
         self.validate_error_response(a_name)
 

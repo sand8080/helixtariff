@@ -37,6 +37,6 @@ class Rule(Mapped):
 
 
 class ActionLog(Mapped):
-    __slots__ = ['id', 'operator_id', 'custom_client_info', 'action', 'request_date',
+    __slots__ = ['id', 'operator_id', 'custom_operator_info', 'action', 'request_date',
         'remote_addr', 'request', 'response']
     table = 'action_log'

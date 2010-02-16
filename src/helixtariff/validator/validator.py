@@ -387,9 +387,10 @@ VIEW_ACTION_LOGS = dict(
 )
 
 ACTION_LOG_INFO = {
-    'custom_client_info': NullableText,
+    'custom_operator_info': NullableText,
     'action': Text(),
     'request_date': IsoDatetime(),
+    'remote_addr': NullableText,
     'request': Text(),
     'response': Text(),
 }

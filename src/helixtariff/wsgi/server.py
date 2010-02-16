@@ -17,9 +17,9 @@ from helixtariff.error import OperatorNotFound
 
 class HelixtariffApplication(Application):
     def __init__(self, h, p, l):
-        self.unauthorized_trackable = ['add_client']
+        self.unauthorized_trackable = ['add_operator']
         super(HelixtariffApplication, self).__init__(h, p, l, (
-            'add_client', 'modify_client', 'delete_client',
+            'add_operator', 'modify_operator',
             'add_service_type', 'modify_service_type', 'delete_service_type',
             'add_service_set', 'modify_service_set', 'delete_service_set',
             'add_tariff', 'modify_tariff', 'delete_tariff',
@@ -30,20 +30,21 @@ class HelixtariffApplication(Application):
     def track_api_call(self, remote_addr, s_req, s_resp, authorized_data, curs=None): #IGNORE:W0221
         super(HelixtariffApplication, self).track_api_call(remote_addr, s_req, s_resp, authorized_data)
         action_name = authorized_data['action']
-        c_id = None
+        o_id = None
         if action_name in self.unauthorized_trackable:
             try:
                 login = authorized_data['login']
-                c_id = selector.get_operator_by_login(curs, login).id
+                o_id = selector.get_operator_by_login(curs, login).id
             except OperatorNotFound:
                 self.logger.log(logging.ERROR,
                     'Unable to track action for not existed client. Request: %s. Response: %s', (s_req, s_resp))
         else:
-            c_id = authorized_data['client_id']
+            o_id = authorized_data['operator_id']
         data = {
-            'client_id': c_id,
-            'custom_client_info': authorized_data.get('custom_client_info', None),
+            'operator_id': o_id,
+            'custom_operator_info': authorized_data.get('custom_operator_info', None),
             'action': action_name,
+            'remote_addr': remote_addr,
             'request': s_req,
             'response': s_resp,
         }

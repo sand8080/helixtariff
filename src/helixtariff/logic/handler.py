@@ -729,9 +729,10 @@ class Handler(object):
         action_logs = selector.get_action_logs(curs, operator, data['filter_params'])
         for action_log in action_logs:
             al_info.append({
-                'custom_client_info': action_log.custom_client_info,
+                'custom_operator_info': action_log.custom_operator_info,
                 'action': action_log.action,
                 'request_date': action_log.request_date.isoformat(),
+                'remote_addr': action_log.remote_addr,
                 'request': action_log.request,
                 'response': action_log.response,
             })
