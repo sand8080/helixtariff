@@ -127,7 +127,7 @@ class ApplicationTestCase(DbBasedTestCase):
         self.view_rules(tariffs_names[0], repeats=50)
 
     def test_loading(self):
-        self.cli.add_client() #IGNORE:E1101
+        self.cli.add_operator() #IGNORE:E1101
         pool = GreenPool(size=10)
         for _ in xrange(1):
             pool.spawn(self.loader_task)
