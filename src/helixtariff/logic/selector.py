@@ -67,8 +67,8 @@ def get_service_types(curs, operator, for_update=False):
         for_update=for_update)
 
 
-def get_tariff(curs, client_id, name, for_update=False):
-    cond_id = Eq('client_id', client_id)
+def get_tariff(curs, operator, name, for_update=False):
+    cond_id = Eq('operator_id', operator.id)
     cond_name = Eq('name', name)
     cond = And(cond_id, cond_name)
     try:
@@ -77,15 +77,15 @@ def get_tariff(curs, client_id, name, for_update=False):
         raise TariffNotFound(name)
 
 
-def get_tariff_by_id(curs, client_id, tariff_id, for_update=False):
-    cond_client_id = Eq('client_id', client_id)
+def get_tariff_by_id(curs, operator, tariff_id, for_update=False):
+    cond_o_id = Eq('operator_id', operator.id)
     cond_id = Eq('id', tariff_id)
-    cond = And(cond_client_id, cond_id)
+    cond = And(cond_o_id, cond_id)
     return mapping.get(curs, Tariff, cond=cond, for_update=for_update)
 
 
 def get_child_tariffs(curs, tariff, for_update=False):
-    cond_c_id = Eq('client_id', tariff.client_id)
+    cond_c_id = Eq('operator_id', tariff.operator_id)
     cond_pt_id = Eq('parent_id', tariff.id)
     return mapping.get_list(curs, Tariff, cond=And(cond_c_id, cond_pt_id), for_update=for_update)
 
@@ -100,33 +100,28 @@ def get_rule(curs, tariff, service_type, rule_type, for_update=False):
             (tariff.name, service_type.name))
 
 
-def _gen_sel_service_type(name, client_id):
-    cond_n = Eq('name', name)
-    cond_c_id = Eq('client_id', client_id)
-    return Select(ServiceType.table, columns='id', cond=And(cond_n, cond_c_id))
-
-
 def get_rules(curs, tariff, rule_types, for_update=False):
-    cond_c_id = Eq('client_id', tariff.client_id)
+    cond_c_id = Eq('operator_id', tariff.operator_id)
     cond_t_id = Eq('tariff_id', tariff.id)
     cond_result = And(cond_c_id, cond_t_id)
     cond_result = And(cond_result, In('type', rule_types))
     return mapping.get_list(curs, Rule, cond=cond_result, for_update=for_update)
 
 
-def get_rules_for_service_types(curs, client_id, service_types_ids, for_update=False):
-    cond_c_id = Eq('client_id', client_id)
+def get_rules_for_service_types(curs, operator, service_types_ids, for_update=False):
+    cond_c_id = Eq('operator_id', operator.id)
     cond_st_ids = In('service_type_id', service_types_ids)
     return mapping.get_list(curs, Rule, cond=And(cond_c_id, cond_st_ids), for_update=for_update)
 
 
-def get_rules_indexed_by_tariff_service_type_ids(curs, client_id, tariffs_ids, service_types_ids, for_update=False):
+def get_rules_indexed_by_tariff_service_type_ids(curs, operator, tariffs_ids,
+    service_types_ids, for_update=False):
     '''
     @return: {(tariff_id, service_type_id, type): rule}
     '''
     cond_names = In('id', service_types_ids)
-    cond_client_id = Eq('client_id', client_id)
-    sel_st_id = Select(ServiceType.table, columns='id', cond=And(cond_names, cond_client_id))
+    cond_o_id = Eq('operator_id', operator.id)
+    sel_st_id = Select(ServiceType.table, columns='id', cond=And(cond_names, cond_o_id))
 
     cond_st_name = In('service_type_id', Scoped(sel_st_id))
     cond_tariffs_ids = In('tariff_id', tariffs_ids)
@@ -165,20 +160,20 @@ def get_service_sets_ids_by_service_type(curs, service_type, for_update=False):
     return [r.service_set_id for r in ss_rows]
 
 
-def get_tariffs_names_indexed_by_id(curs, client_id, for_update=False):
-    q = Select(Tariff.table, columns=['id', 'name'], cond=Eq('client_id', client_id), for_update=for_update)
+def get_tariffs_names_indexed_by_id(curs, operator, for_update=False):
+    q = Select(Tariff.table, columns=['id', 'name'], cond=Eq('operator_id', operator.id), for_update=for_update)
     return _get_indexed_values(curs, q, 'id', 'name')
 
 
-def get_tariffs_parent_ids_indexed_by_id(curs, client_id, for_update=False):
-    q = Select(Tariff.table, columns=['id', 'parent_id'], cond=Eq('client_id', client_id), for_update=for_update)
+def get_tariffs_parent_ids_indexed_by_id(curs, operator, for_update=False):
+    q = Select(Tariff.table, columns=['id', 'parent_id'], cond=Eq('operator_id', operator.id), for_update=for_update)
     return _get_indexed_values(curs, q, 'id', 'parent_id')
 
 
-def get_tariffs_binded_with_service_sets(curs, client_id, service_sets_ids, for_update=False):
-    cond_client_id = Eq('client_id', client_id)
+def get_tariffs_binded_with_service_sets(curs, operator, service_sets_ids, for_update=False):
+    cond_o_id = Eq('operator_id', operator.id)
     cond_ss_ids = In('service_set_id', service_sets_ids)
-    return mapping.get_list(curs, Tariff, cond=And(cond_client_id, cond_ss_ids), for_update=for_update)
+    return mapping.get_list(curs, Tariff, cond=And(cond_o_id, cond_ss_ids), for_update=for_update)
 
 
 def get_service_set_rows(curs, service_sets_ids, for_update=False):
@@ -219,8 +214,8 @@ def _get_filter_params(seed, cond_map, filter_params):
     return cond
 
 
-def _get_action_log_conds(client, filter_params):
-    cond = Eq('client_id', client.id)
+def _get_action_log_conds(operator, filter_params):
+    cond = Eq('operator_id', operator.id)
     cond_map = [
         ('action', 'action', Eq),
         ('from_date', 'request_date', MoreEq),

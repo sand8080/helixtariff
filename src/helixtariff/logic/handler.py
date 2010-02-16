@@ -3,7 +3,7 @@ from functools import partial
 import helixcore.mapping.actions as mapping
 from helixcore.db.sql import Eq, In, And
 from helixcore.server.response import response_ok
-from helixcore.db.wrapper import EmptyResultSetError, ObjectCreationError
+from helixcore.db.wrapper import ObjectCreationError
 from helixcore.server.errors import RequestProcessingError
 from helixcore.server.exceptions import AuthError, DataIntegrityError
 
@@ -187,10 +187,10 @@ class Handler(object):
         self._set_service_types_to_service_set(curs, operator, service_set, service_types_names)
         return response_ok()
 
-    def _check_types_not_used(self, curs, client_id, service_sets_ids, service_types_names):
-        service_types_names_idx = selector.get_service_types_names_indexed_by_id(curs, client_id)
+    def _check_types_not_used(self, curs, operator, service_sets_ids, service_types_names):
+        service_types_names_idx = selector.get_service_types_names_indexed_by_id(curs, operator)
         service_types_ids_idx = dict([(v, k) for (k, v) in service_types_names_idx.items()])
-        tariffs = selector.get_tariffs_binded_with_service_sets(curs, client_id, service_sets_ids)
+        tariffs = selector.get_tariffs_binded_with_service_sets(curs, operator, service_sets_ids)
         cond_t_ids = In('tariff_id', [t.id for t in tariffs])
         cond_st_ids = In('service_type_id', [service_types_ids_idx[n] for n in service_types_names])
         rules = mapping.get_list(curs, Rule, cond=And(cond_t_ids, cond_st_ids))
@@ -208,19 +208,19 @@ class Handler(object):
     @authentificate
     @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.auth, 'name')
     @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_integrity, 'service_types')
-    def modify_service_set(self, data, curs=None):
-        client_id = data['client_id']
-        service_set = selector.get_service_set_by_name(curs, data['client_id'],
-            data['name'], for_update=True)
+    def modify_service_set(self, data, operator, curs=None):
+        name = data['name']
+        service_set = selector.get_service_set_by_name(curs, operator, name, for_update=True)
         def loader():
             return service_set
         if 'new_service_types' in data:
-            old_service_types_names = [t.name for t in selector.get_service_types_by_service_set(curs, client_id, service_set.name)]
+            service_types = selector.get_service_types_by_service_set(curs, operator, service_set.name)
+            old_service_types_names = [t.name for t in service_types]
             service_types_names = data['new_service_types']
             service_types_names_to_check = list(set(old_service_types_names) - set(service_types_names))
-            self._check_types_not_used(curs, client_id, [service_set.id], service_types_names_to_check)
+            self._check_types_not_used(curs, operator, [service_set.id], service_types_names_to_check)
             del data['new_service_types']
-            self._set_service_types_to_service_set(curs, client_id, service_set, service_types_names)
+            self._set_service_types_to_service_set(curs, operator, service_set, service_types_names)
         self.update_obj(curs, data, loader)
         return response_ok()
 
@@ -228,38 +228,28 @@ class Handler(object):
     @authentificate
     @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.auth, 'name')
     @detalize_error(ServiceSetUsed, RequestProcessingError.Category.auth, 'name')
-    def delete_service_set(self, data, curs=None):
-        c_id = data['client_id']
+    def delete_service_set(self, data, operator, curs=None):
         ss_name = data['name']
-        service_set = selector.get_service_set_by_name(curs, c_id, ss_name, for_update=True)
+        service_set = selector.get_service_set_by_name(curs, operator, ss_name, for_update=True)
         if selector.get_service_set_rows(curs, [service_set.id]):
             raise ServiceSetNotEmpty(service_set.name)
-        used_in_tariffs = selector.get_tariffs_binded_with_service_sets(curs, c_id, [service_set.id])
+        used_in_tariffs = selector.get_tariffs_binded_with_service_sets(curs, operator, [service_set.id])
         if used_in_tariffs:
             raise ServiceSetUsed(used_in_tariffs)
         mapping.delete(curs, service_set)
         return response_ok()
 
-    def _get_service_set_info(self, curs, client_id, service_set_name):
-        service_set = selector.get_service_set_by_name(curs, client_id, service_set_name)
-        service_types = selector.get_service_types_by_service_set(curs, client_id, service_set.name)
+    def _get_service_set_info(self, curs, operator, service_set_name):
+        service_set = selector.get_service_set_by_name(curs, operator, service_set_name)
+        service_types = selector.get_service_types_by_service_set(curs, operator, service_set.name)
         return service_set, service_types
 
-    def _process_service_set_row(self, curs, service_set, types_names, func):
-        for n in types_names:
-            try:
-                t = selector.get_service_type(curs, service_set.client_id, n)
-                s = ServiceSetRow(**{'service_type_id': t.id, 'service_set_id': service_set.id})
-                func(curs, s)
-            except EmptyResultSetError, _:
-                raise ServiceTypeNotFound(n)
-
-    def _get_service_sets_types_dict(self, curs, client_id):
+    def _get_service_sets_types_dict(self, curs, operator):
         '''
         @return: dictionary {service_set_name: [types_names]}
         '''
-        t_names = selector.get_service_types_names_indexed_by_id(curs, client_id)
-        ss_names = selector.get_service_sets_names_indexed_by_id(curs, client_id)
+        t_names = selector.get_service_types_names_indexed_by_id(curs, operator)
+        ss_names = selector.get_service_sets_names_indexed_by_id(curs, operator)
         ss_rows = selector.get_service_set_rows(curs, ss_names.keys())
         service_sets_info = {}
         for n in ss_names.values():
@@ -274,8 +264,9 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def get_service_set(self, data, curs=None):
-        service_set, service_types = self._get_service_set_info(curs, data['client_id'], data['name'])
+    def get_service_set(self, data, operator, curs=None):
+        name = data['name']
+        service_set, service_types = self._get_service_set_info(curs, operator, name)
         return response_ok(
             name=service_set.name,
             service_types=sorted([t.name for t in service_types])
@@ -283,11 +274,10 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def get_service_set_detailed(self, data, curs=None):
-        c_id = data['client_id']
+    def get_service_set_detailed(self, data, operator, curs=None):
         ss_name = data['name']
-        ss, s_types = self._get_service_set_info(curs, c_id, ss_name)
-        ts = selector.get_tariffs_binded_with_service_sets(curs, c_id, [ss.id])
+        ss, s_types = self._get_service_set_info(curs, operator, ss_name)
+        ts = selector.get_tariffs_binded_with_service_sets(curs, operator, [ss.id])
         return response_ok(
             name=ss.name,
             service_types=sorted([st.name for st in s_types]),
@@ -296,9 +286,8 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def view_service_sets(self, data, curs=None):
-        c_id = data['client_id']
-        ss_types = self._get_service_sets_types_dict(curs, c_id)
+    def view_service_sets(self, _, operator, curs=None):
+        ss_types = self._get_service_sets_types_dict(curs, operator)
         result = []
         for n in sorted(ss_types.keys()):
             result.append({'name': n, 'service_types': sorted(ss_types[n])})
@@ -306,13 +295,12 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def view_service_sets_detailed(self, data, curs=None):
-        c_id = data['client_id']
-        ss_names_idx = selector.get_service_sets_names_indexed_by_id(curs, c_id)
+    def view_service_sets_detailed(self, _, operator, curs=None):
+        ss_names_idx = selector.get_service_sets_names_indexed_by_id(curs, operator)
         ss_ids_idx = dict([(v, k) for (k, v) in ss_names_idx.items()])
-        ss_with_types = self._get_service_sets_types_dict(curs, c_id)
+        ss_with_types = self._get_service_sets_types_dict(curs, operator)
         ss_ids = [ss_ids_idx[n] for n in sorted(ss_with_types.keys())]
-        tariffs = selector.get_tariffs_binded_with_service_sets(curs, c_id, ss_ids)
+        tariffs = selector.get_tariffs_binded_with_service_sets(curs, operator, ss_ids)
         result = []
         for ss_id in ss_ids:
             ss_name = ss_names_idx[ss_id]
@@ -329,24 +317,24 @@ class Handler(object):
     @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'name')
     @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.data_integrity, 'service_set')
     @detalize_error(TariffNotFound, RequestProcessingError.Category.data_integrity, 'parent_tariff')
-    def add_tariff(self, data, curs=None):
-        service_set = selector.get_service_set_by_name(curs, data['client_id'], data['service_set'])
+    def add_tariff(self, data, operator, curs=None):
+        service_set = selector.get_service_set_by_name(curs, operator, data['service_set'])
         del data['service_set']
         data['service_set_id'] = service_set.id
         parent_tariff = data['parent_tariff']
         if parent_tariff is None:
             parent_id = None
         else:
-            parent_id = selector.get_tariff(curs, data['client_id'], parent_tariff).id
+            parent_id = selector.get_tariff(curs, operator, parent_tariff).id
         del data['parent_tariff']
         data['parent_id'] = parent_id
         mapping.insert(curs, Tariff(**data))
         return response_ok()
 
-    def _get_new_parent_id(self, curs, client_id, tariff_name, new_parent_name):
+    def _get_new_parent_id(self, curs, operator, tariff_name, new_parent_name):
         if new_parent_name is None:
             return None
-        tariffs_names_idx = selector.get_tariffs_names_indexed_by_id(curs, client_id)
+        tariffs_names_idx = selector.get_tariffs_names_indexed_by_id(curs, operator)
         tariffs_ids_idx = dict([(v, k) for (k, v) in tariffs_names_idx.iteritems()])
 
         if tariff_name not in tariffs_ids_idx:
@@ -357,7 +345,7 @@ class Handler(object):
             raise TariffNotFound(new_parent_name)
         new_parent_id = tariffs_ids_idx[new_parent_name]
 
-        parents_ids_idx = selector.get_tariffs_parent_ids_indexed_by_id(curs, client_id)
+        parents_ids_idx = selector.get_tariffs_parent_ids_indexed_by_id(curs, operator)
         parents_ids_idx[tariff_id] = new_parent_id
         self._calculate_tariffs_chain(
             tariff_id,
@@ -371,25 +359,24 @@ class Handler(object):
     @detalize_error(TariffNotFound, RequestProcessingError.Category.data_integrity, 'name')
     @detalize_error(TariffCycleError, RequestProcessingError.Category.data_integrity, 'parent_tariff')
     @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.data_integrity, 'service_set')
-    def modify_tariff(self, data, curs=None):
-        c_id = data['client_id']
+    def modify_tariff(self, data, operator, curs=None):
         t_name = data['name']
-        t = selector.get_tariff(curs, c_id, t_name, for_update=True)
+        t = selector.get_tariff(curs, operator, t_name, for_update=True)
         if 'new_parent_tariff' in data:
             new_p_name = data['new_parent_tariff']
             try:
-                data['new_parent_id'] = self._get_new_parent_id(curs, c_id, t_name, new_p_name)
+                data['new_parent_id'] = self._get_new_parent_id(curs, operator, t_name, new_p_name)
             except TariffNotFound, e:
                 raise RequestProcessingError(RequestProcessingError.Category.data_integrity,
                     e.message, details={'parent_tariff': e.message})
             del data['new_parent_tariff']
         if 'new_service_set' in data:
-            new_ss = selector.get_service_set_by_name(curs, c_id, data['new_service_set'])
-            st_names_idx = selector.get_service_types_names_indexed_by_id(curs, c_id)
+            new_ss = selector.get_service_set_by_name(curs, operator, data['new_service_set'])
+            st_names_idx = selector.get_service_types_names_indexed_by_id(curs, operator)
             old_st_ids = selector.get_service_types_ids(curs, [t.service_set_id])
             new_st_ids = selector.get_service_types_ids(curs, [new_ss.id])
             st_names_to_check = [st_names_idx[idx] for idx in set(old_st_ids) - set(new_st_ids)]
-            self._check_types_not_used(curs, c_id, [new_ss.id], st_names_to_check)
+            self._check_types_not_used(curs, operator, [new_ss.id], st_names_to_check)
             data['new_service_set_id'] = new_ss.id
             del data['new_service_set']
         def loader():
@@ -401,10 +388,9 @@ class Handler(object):
     @transaction()
     @authentificate
     @detalize_error(TariffUsed, RequestProcessingError.Category.data_integrity, 'name')
-    def delete_tariff(self, data, curs=None):
-        c_id = data['client_id']
+    def delete_tariff(self, data, operator, curs=None):
         t_name = data['name']
-        t = selector.get_tariff(curs, c_id, t_name, for_update=True)
+        t = selector.get_tariff(curs, operator, t_name, for_update=True)
         childs = selector.get_child_tariffs(curs, t)
         if childs:
             ch_names = [ch.name for ch in childs]
@@ -412,7 +398,7 @@ class Handler(object):
         rules = selector.get_rules(curs, t, [Rule.TYPE_ACTUAL, Rule.TYPE_DRAFT])
         undel_rules = filter(lambda x: x.type == Rule.TYPE_ACTUAL and x.enabled, rules)
         if undel_rules:
-            st_names_idx = selector.get_service_sets_names_indexed_by_id(curs, c_id)
+            st_names_idx = selector.get_service_sets_names_indexed_by_id(curs, operator)
             st_names = [st_names_idx[r.service_type_id] for r in undel_rules]
             raise TariffUsed("In tariff '%s' defined undeletable rules for services %s" %
                 (t.name, ', '.join(st_names)))
@@ -421,10 +407,10 @@ class Handler(object):
         mapping.delete(curs, t)
         return response_ok()
 
-    def _get_tariffs_data(self, curs, c_id, tariffs):
-        ss_names = selector.get_service_sets_names_indexed_by_id(curs, c_id)
-        t_names_idx = selector.get_tariffs_names_indexed_by_id(curs, c_id)
-        pt_ids_idx = selector.get_tariffs_parent_ids_indexed_by_id(curs, c_id)
+    def _get_tariffs_data(self, curs, operator, tariffs):
+        ss_names = selector.get_service_sets_names_indexed_by_id(curs, operator)
+        t_names_idx = selector.get_tariffs_names_indexed_by_id(curs, operator)
+        pt_ids_idx = selector.get_tariffs_parent_ids_indexed_by_id(curs, operator)
 
         result = []
         for tariff in tariffs:
@@ -451,37 +437,33 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def get_tariff(self, data, curs=None):
-        client_id = data['client_id']
-        tariff = selector.get_tariff(curs, client_id, data['name'])
-        tariffs_data = self._get_tariffs_data(curs, client_id, [tariff])
+    def get_tariff(self, data, operator, curs=None):
+        tariff = selector.get_tariff(curs, operator, data['name'])
+        tariffs_data = self._get_tariffs_data(curs, operator, [tariff])
         return response_ok(**tariffs_data[0])
 
     @transaction()
     @authentificate
-    def get_tariff_detailed(self, data, curs=None):
-        client_id = data['client_id']
-        tariff = selector.get_tariff(curs, client_id, data['name'])
-        tariffs_data = self._get_tariffs_data(curs, client_id, [tariff])
+    def get_tariff_detailed(self, data, operator, curs=None):
+        tariff = selector.get_tariff(curs, operator, data['name'])
+        tariffs_data = self._get_tariffs_data(curs, operator, [tariff])
         tariff_data = tariffs_data[0]
-        types = selector.get_service_types_by_service_set(curs, client_id, tariff_data['service_set'])
+        types = selector.get_service_types_by_service_set(curs, operator, tariff_data['service_set'])
         tariff_data['service_types'] = sorted([t.name for t in types])
         return response_ok(**tariff_data)
 
     @transaction()
     @authentificate
-    def view_tariffs(self, data, curs=None):
-        client_id = data['client_id']
-        tariffs = mapping.get_list(curs, Tariff, cond=Eq('client_id', client_id))
-        return response_ok(tariffs=self._get_tariffs_data(curs, client_id, tariffs))
+    def view_tariffs(self, _, operator, curs=None):
+        tariffs = mapping.get_list(curs, Tariff, cond=Eq('operator_id', operator.id))
+        return response_ok(tariffs=self._get_tariffs_data(curs, operator, tariffs))
 
     @transaction()
     @authentificate
-    def view_tariffs_detailed(self, data, curs=None):
-        client_id = data['client_id']
-        tariffs = mapping.get_list(curs, Tariff, cond=Eq('client_id', client_id))
-        service_sets_types = self._get_service_sets_types_dict(curs, client_id)
-        tariffs_data = self._get_tariffs_data(curs, client_id, tariffs)
+    def view_tariffs_detailed(self, _, operator, curs=None):
+        tariffs = mapping.get_list(curs, Tariff, cond=Eq('operator_id', operator.id))
+        service_sets_types = self._get_service_sets_types_dict(curs, operator)
+        tariffs_data = self._get_tariffs_data(curs, operator, tariffs)
         for d in tariffs_data:
             d['service_types'] = service_sets_types[d['service_set']]
         return response_ok(tariffs=tariffs_data)
@@ -498,16 +480,15 @@ class Handler(object):
     @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
     @detalize_error(ServiceTypeNotInServiceSet, RequestProcessingError.Category.data_invalid, 'service_type')
     @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-    def save_draft_rule(self, data, curs=None):
-        c_id = data['client_id']
+    def save_draft_rule(self, data, operator, curs=None):
         r_text = data['rule']
         st_name = data['service_type']
         enabled = data['enabled']
         t_name = data['tariff']
 
-        tariff = selector.get_tariff(curs, c_id, t_name)
+        tariff = selector.get_tariff(curs, operator, t_name)
         service_set = selector.get_service_set(curs, tariff.service_set_id)
-        service_type = selector.get_service_type(curs, c_id, st_name)
+        service_type = selector.get_service_type(curs, operator, st_name)
 
         self._check_service_type_in_service_set(curs, service_type, service_set)
         RuleChecker().check(r_text)
@@ -531,13 +512,12 @@ class Handler(object):
     @detalize_error(RuleNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
     @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
     @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-    def delete_draft_rule(self, data, curs=None):
-        c_id = data['client_id']
+    def delete_draft_rule(self, data, operator, curs=None):
         t_name = data['tariff']
         st_name = data['service_type']
 
-        tariff = selector.get_tariff(curs, c_id, t_name)
-        service_type = selector.get_service_type(curs, c_id, st_name)
+        tariff = selector.get_tariff(curs, operator, t_name)
+        service_type = selector.get_service_type(curs, operator, st_name)
         rule = selector.get_rule(curs, tariff, service_type, Rule.TYPE_DRAFT, for_update=True)
         mapping.delete(curs, rule)
 
@@ -546,10 +526,9 @@ class Handler(object):
     @transaction()
     @authentificate
     @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-    def make_draft_rules_actual(self, data, curs=None):
-        c_id = data['client_id']
+    def make_draft_rules_actual(self, data, operator, curs=None):
         t_name = data['tariff']
-        tariff = selector.get_tariff(curs, c_id, t_name)
+        tariff = selector.get_tariff(curs, operator, t_name)
         all_rules = selector.get_rules(curs, tariff, [Rule.TYPE_DRAFT, Rule.TYPE_ACTUAL], for_update=True)
         draft_rules = filter(lambda x: x.type == Rule.TYPE_DRAFT, all_rules)
         draft_st_ids = [r.service_type_id for r in draft_rules]
@@ -564,12 +543,11 @@ class Handler(object):
     @authentificate
     @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
     @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-    def modify_actual_rule(self, data, curs=None):
-        c_id = data['client_id']
+    def modify_actual_rule(self, data, operator, curs=None):
         t_name = data['tariff']
         st_name = data['service_type']
-        tariff = selector.get_tariff(curs, c_id, t_name)
-        service_type = selector.get_service_type(curs, c_id, st_name)
+        tariff = selector.get_tariff(curs, operator, t_name)
+        service_type = selector.get_service_type(curs, operator, st_name)
         loader = partial(selector.get_rule, curs, tariff, service_type, rule_type=Rule.TYPE_ACTUAL,
             for_update=True)
         self.update_obj(curs, data, loader)
@@ -580,13 +558,12 @@ class Handler(object):
     @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
     @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
     @detalize_error(RuleNotFound, RequestProcessingError.Category.data_invalid, 'type')
-    def get_rule(self, data, curs=None):
-        c_id = data['client_id']
+    def get_rule(self, data, operator, curs=None):
         t_name = data['tariff']
         st_name = data['service_type']
         rule_type = data['type']
-        tariff = selector.get_tariff(curs, c_id, t_name)
-        service_type = selector.get_service_type(curs, c_id, st_name)
+        tariff = selector.get_tariff(curs, operator, t_name)
+        service_type = selector.get_service_type(curs, operator, st_name)
         rule = selector.get_rule(curs, tariff, service_type, rule_type)
         return response_ok(tariff=tariff.name, service_type=service_type.name, rule=rule.rule,
             type=rule.type, enabled=rule.enabled)
@@ -594,11 +571,10 @@ class Handler(object):
     @transaction()
     @authentificate
     @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-    def view_rules(self, data, curs=None):
-        c_id = data['client_id']
+    def view_rules(self, data, operator, curs=None):
         t_name = data['tariff']
-        tariff = selector.get_tariff(curs, c_id, t_name)
-        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, c_id)
+        tariff = selector.get_tariff(curs, operator, t_name)
+        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, operator)
         rules = []
         for rule in selector.get_rules(curs, tariff, [Rule.TYPE_ACTUAL, Rule.TYPE_DRAFT]):
             rules.append({
@@ -627,14 +603,14 @@ class Handler(object):
             tariff_id = parents_names_idx[tariff_id]
         return tariffs_chain
 
-    def _get_tariffs_chain(self, curs, client_id, tariff_name):
+    def _get_tariffs_chain(self, curs, operator, tariff_name):
         '''
         @return: tariffs chain for tariff_name as [(tariff_id, tariff_name)]
         '''
         return self._calculate_tariffs_chain(
-            selector.get_tariff(curs, client_id, tariff_name).id,
-            selector.get_tariffs_names_indexed_by_id(curs, client_id),
-            selector.get_tariffs_parent_ids_indexed_by_id(curs, client_id)
+            selector.get_tariff(curs, operator, tariff_name).id,
+            selector.get_tariffs_names_indexed_by_id(curs, operator),
+            selector.get_tariffs_parent_ids_indexed_by_id(curs, operator)
         )
 
     def _find_nearest_rules_pair(self, indexed_rules, tariffs_ids, service_type_id):
@@ -683,17 +659,16 @@ class Handler(object):
     @authentificate
     @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
     @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
-    def get_price(self, data, curs=None):
-        c_id = data['client_id']
+    def get_price(self, data, operator, curs=None):
         t_name = data['tariff']
         ctx = data.get('context', {})
         st_name = data['service_type']
 
-        t_chain = self._get_tariffs_chain(curs, c_id, t_name)
+        t_chain = self._get_tariffs_chain(curs, operator, t_name)
         t_ids, t_names = map(list, zip(*t_chain))
 
-        st = selector.get_service_type(curs, c_id, st_name)
-        rules_idx = selector.get_rules_indexed_by_tariff_service_type_ids(curs, c_id, t_ids,
+        st = selector.get_service_type(curs, operator, st_name)
+        rules_idx = selector.get_rules_indexed_by_tariff_service_type_ids(curs, operator, t_ids,
             [st.id])
         response = {}
         response['tariff'] = t_name
@@ -714,19 +689,18 @@ class Handler(object):
     @transaction()
     @authentificate
     @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-    def view_prices(self, data, curs=None):
-        c_id = data['client_id']
+    def view_prices(self, data, operator, curs=None):
         t_name = data['tariff']
         ctx = data.get('context', {})
 
-        t_chain = self._get_tariffs_chain(curs, c_id, t_name)
+        t_chain = self._get_tariffs_chain(curs, operator, t_name)
         t_ids, t_names = map(list, zip(*t_chain))
 
         ss_ids = selector.get_service_sets_ids(curs, t_ids)
         st_ids = selector.get_service_types_ids(curs, ss_ids)
 
-        rules_idx = selector.get_rules_indexed_by_tariff_service_type_ids(curs, c_id, t_ids, st_ids)
-        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, c_id)
+        rules_idx = selector.get_rules_indexed_by_tariff_service_type_ids(curs, operator, t_ids, st_ids)
+        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, operator)
 
         response = {}
         response['tariff'] = t_name
@@ -750,10 +724,9 @@ class Handler(object):
 
     @transaction()
     @authentificate
-    def view_action_logs(self, data, curs=None):
-        c_id = data['client_id']
+    def view_action_logs(self, data, operator, curs=None):
         al_info = []
-        action_logs = selector.get_action_logs(curs, selector.get_operator(curs, c_id), data['filter_params'])
+        action_logs = selector.get_action_logs(curs, operator, data['filter_params'])
         for action_log in action_logs:
             al_info.append({
                 'custom_client_info': action_log.custom_client_info,
@@ -762,5 +735,5 @@ class Handler(object):
                 'request': action_log.request,
                 'response': action_log.response,
             })
-        total = selector.get_action_logs_count(curs, selector.get_operator(curs, c_id), data['filter_params'])
+        total = selector.get_action_logs_count(curs, operator, data['filter_params'])
         return response_ok(total=int(total), action_logs=al_info)

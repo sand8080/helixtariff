@@ -3,8 +3,8 @@ import unittest
 from helixcore.server.errors import RequestProcessingError
 
 from helixtariff.test.db_based_test import ServiceTestCase
-from helixtariff.error import ServiceSetNotEmpty, ServiceTypeUsed,\
-    ServiceSetNotFound
+from helixtariff.error import (ServiceSetNotEmpty, ServiceTypeUsed,
+    ServiceSetNotFound)
 
 
 class ServiceSetTestCase(ServiceTestCase):
@@ -21,48 +21,49 @@ class ServiceSetTestCase(ServiceTestCase):
 
     def test_modify_service_set(self):
         name = self.ss_names[0]
-        client = self.get_operator_by_login(self.test_login)
-        s_old = self.get_service_set_by_name(client.id, name)
+        operator = self.get_operator_by_login(self.test_login)
+        s_old = self.get_service_set_by_name(operator, name)
 
         new_name = 'new' + name
         data = {
-            'login': client.login,
+            'login': operator.login,
             'password': self.test_password,
             'name': name,
             'new_name': new_name
         }
         self.handle_action('modify_service_set', data)
 
-        s_new = self.get_service_set_by_name(client.id, new_name)
+        s_new = self.get_service_set_by_name(operator, new_name)
         self.assertEqual(s_old.id, s_new.id)
         self.assertEquals(s_new.name, new_name)
 
         new_st_names = self.st_names[len(self.st_names)/2:]
         data = {
-            'login': client.login,
+            'login': operator.login,
             'password': self.test_password,
             'name': new_name,
             'new_service_types': new_st_names
         }
         self.handle_action('modify_service_set', data)
 
-        s_new = self.get_service_set_by_name(client.id, new_name)
+        s_new = self.get_service_set_by_name(operator, new_name)
         self.assertEqual(s_old.id, s_new.id)
         self.assertEquals(s_new.name, new_name)
-        actual_service_types_names = [t.name for t in self.get_service_types_by_service_set_name(client.id, new_name)]
+        actual_service_types = self.get_service_types_by_service_set_name(operator, new_name)
+        actual_service_types_names = [t.name for t in actual_service_types]
         self.assertEquals(sorted(new_st_names), sorted(actual_service_types_names))
-        service_set = self.get_service_set_by_name(client.id, new_name)
+        service_set = self.get_service_set_by_name(operator, new_name)
         self.assertEqual(len(actual_service_types_names), len(self.get_service_set_rows(service_set)))
 
         data = {
-            'login': client.login,
+            'login': operator.login,
             'password': self.test_password,
             'name': '%s_fake' % new_name,
         }
         self.assertRaises(RequestProcessingError, self.handle_action, 'modify_service_set', data)
 
         data = {
-            'login': client.login,
+            'login': operator.login,
             'password': self.test_password,
             'name': new_name,
             'new_service_types': new_st_names + ['fake_service_type_name']
@@ -103,8 +104,8 @@ class ServiceSetTestCase(ServiceTestCase):
         }
         self.assertRaises(ServiceSetNotEmpty, self.handle_action, 'delete_service_set', data)
 
-        c_id = self.get_operator_by_login(self.test_login).id
-        service_type = self.get_service_set_by_name(c_id, ss_name)
+        operator = self.get_operator_by_login(self.test_login)
+        service_type = self.get_service_set_by_name(operator, ss_name)
 
         data = {
             'login': self.test_login,
@@ -120,7 +121,7 @@ class ServiceSetTestCase(ServiceTestCase):
             'name': ss_name
         }
         self.handle_action('delete_service_set', data)
-        self.assertRaises(ServiceSetNotFound, self.get_service_set_by_name, c_id, ss_name)
+        self.assertRaises(ServiceSetNotFound, self.get_service_set_by_name, operator, ss_name)
         self.assertEqual([], self.get_service_set_rows(service_type))
 
     def test_delete_nonempty_service_set_failure(self):
@@ -208,7 +209,7 @@ class ServiceSetTestCase(ServiceTestCase):
     def test_view_empty_service_sets(self):
         login = 'test'
         password = 'qazwsx'
-        self.add_client(login, password)
+        self.add_operator(login, password)
         response = self.handle_action('view_service_sets', {'login': login, 'password': password})
         self.assertEqual('ok', response['status'])
         self.assertEqual([], response['service_sets'])

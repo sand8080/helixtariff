@@ -14,7 +14,6 @@ from helixtariff.logic import selector
 from root_test import RootTestCase
 from helixtariff.domain.objects import Rule
 from helixtariff.validator.validator import protocol
-#from helixtariff.error import ObjectNotFound
 
 
 class DbBasedTestCase(RootTestCase):
@@ -34,11 +33,11 @@ class ServiceTestCase(DbBasedTestCase):
         self.handle_action('add_operator', {'login': login, 'password': password,
             'custom_operator_info': custom_operator_info})
         operator = self.get_operator_by_login(login)
-        auth_client = self.get_auth_operator(login, password)
+        auth_operator = self.get_auth_operator(login, password)
         self.assertEqual(login, operator.login)
-        self.assertEqual(operator.id, auth_client.id)
-        self.assertEqual(operator.login, auth_client.login)
-        self.assertEqual(operator.password, auth_client.password)
+        self.assertEqual(operator.id, auth_operator.id)
+        self.assertEqual(operator.login, auth_operator.login)
+        self.assertEqual(operator.password, auth_operator.password)
 
     @transaction()
     def get_operator_by_login(self, login, curs=None):
@@ -60,8 +59,8 @@ class ServiceTestCase(DbBasedTestCase):
             self.assertEqual(sorted(service_types_names), sorted(st_names))
 
     @transaction()
-    def get_service_type(self, client_id, name, curs=None):
-        return selector.get_service_type(curs, client_id, name)
+    def get_service_type(self, operator, name, curs=None):
+        return selector.get_service_type(curs, operator, name)
 
     def add_service_types(self, service_types):
         for t in service_types:
@@ -79,9 +78,9 @@ class ServiceTestCase(DbBasedTestCase):
         return selector.get_service_types_by_service_set(curs, operator, name)
 
     def modify_service_set(self, name, new_name=None, new_service_types=None):
-        client = self.get_operator_by_login(self.test_login)
+        operator = self.get_operator_by_login(self.test_login)
         data = {
-            'login': client.login,
+            'login': operator.login,
             'password': self.test_password,
             'name': name,
         }
@@ -92,8 +91,8 @@ class ServiceTestCase(DbBasedTestCase):
         self.handle_action('modify_service_set', data)
 
         n = new_name if new_name else name
-        service_set = self.get_service_set_by_name(client.id, n)
-        service_types = self.get_service_types_by_service_set_name(client.id, service_set.name)
+        service_set = self.get_service_set_by_name(operator, n)
+        service_types = self.get_service_types_by_service_set_name(operator, service_set.name)
         actual_service_types = set([t.name for t in service_types])
         self.assertEqual(sorted(new_service_types), sorted(actual_service_types))
 
@@ -106,48 +105,46 @@ class ServiceTestCase(DbBasedTestCase):
         return selector.get_service_set_rows(curs, [service_set.id])
 
     @transaction()
-    def get_tariff(self, client_id, name, curs=None):
-        return selector.get_tariff(curs, client_id, name)
+    def get_tariff(self, operator, name, curs=None):
+        return selector.get_tariff(curs, operator, name)
 
     def add_tariff(self, servise_set_name, name, in_archive, parent_tariff_name):
-        pass
-#        client_id = self.get_root_client().id
-#        data = {
-#            'login': self.test_login,
-#            'password': self.test_password,
-#            'service_set': servise_set_name,
-#            'name': name,
-#            'in_archive': in_archive,
-#            'parent_tariff': parent_tariff_name
-#        }
-#        self.handle_action('add_tariff', data)
-#        t = self.get_tariff(client_id, name)
-#        parent_id = None if parent_tariff_name is None else self.get_tariff(client_id, parent_tariff_name).id
-#        service_set = self.get_service_set_by_name(client_id, servise_set_name)
-#        self.assertEqual(servise_set_name, service_set.name)
-#        self.assertEqual(service_set.id, t.service_set_id)
-#        self.assertEqual(client_id, t.client_id)
-#        self.assertEqual(name, t.name)
-#        self.assertEqual(parent_id, t.parent_id)
-#        self.assertEqual(in_archive, t.in_archive)
+        operator = self.get_operator_by_login(self.test_login)
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'service_set': servise_set_name,
+            'name': name,
+            'in_archive': in_archive,
+            'parent_tariff': parent_tariff_name
+        }
+        self.handle_action('add_tariff', data)
+        t = self.get_tariff(operator, name)
+        parent_id = None if parent_tariff_name is None else self.get_tariff(operator, parent_tariff_name).id
+        service_set = self.get_service_set_by_name(operator, servise_set_name)
+        self.assertEqual(servise_set_name, service_set.name)
+        self.assertEqual(service_set.id, t.service_set_id)
+        self.assertEqual(operator.id, t.operator_id)
+        self.assertEqual(name, t.name)
+        self.assertEqual(parent_id, t.parent_id)
+        self.assertEqual(in_archive, t.in_archive)
 
     def modify_tariff(self, name, new_parent_tariff=None):
-        pass
-#        client_id = self.get_root_client().id
-#        data = {
-#            'login': self.test_login,
-#            'password': self.test_password,
-#            'name': name,
-#            'new_parent_tariff': new_parent_tariff
-#        }
-#        self.handle_action('modify_tariff', data)
-#        t = self.get_tariff(client_id, name)
-#        if new_parent_tariff is None:
-#            parent_tariff_id = None
-#        else:
-#            parent_tariff_id = self.get_tariff(client_id, new_parent_tariff).id
-#        self.assertEqual(name, t.name)
-#        self.assertEqual(parent_tariff_id, t.parent_id)
+        operator = self.get_operator_by_login(self.test_login)
+        data = {
+            'login': self.test_login,
+            'password': self.test_password,
+            'name': name,
+            'new_parent_tariff': new_parent_tariff
+        }
+        self.handle_action('modify_tariff', data)
+        t = self.get_tariff(operator, name)
+        if new_parent_tariff is None:
+            parent_tariff_id = None
+        else:
+            parent_tariff_id = self.get_tariff(operator, new_parent_tariff).id
+        self.assertEqual(name, t.name)
+        self.assertEqual(parent_tariff_id, t.parent_id)
 
     @transaction()
     def get_rule(self, tariff, service_type, rule_type, curs=None):
@@ -164,9 +161,9 @@ class ServiceTestCase(DbBasedTestCase):
         }
         self.handle_action('save_draft_rule', data)
 
-        c_id = self.get_operator_by_login(self.test_login).id
-        tariff = self.get_tariff(c_id, tariff_name)
-        service_type = self.get_service_type(c_id, service_type_name)
+        operator = self.get_operator_by_login(self.test_login)
+        tariff = self.get_tariff(operator, tariff_name)
+        service_type = self.get_service_type(operator, service_type_name)
         rule_type = 'draft'
         obj = self.get_rule(tariff, service_type, rule_type)
 
@@ -183,14 +180,14 @@ class ServiceTestCase(DbBasedTestCase):
         return selector.get_rules(curs, tariff, rule_types)
 
     def make_draft_rules_actual(self, tariff_name):
-        client_id = self.get_operator_by_login(self.test_login).id
+        operator = self.get_operator_by_login(self.test_login)
         data = {
             'login': self.test_login,
             'password': self.test_password,
             'tariff': tariff_name,
         }
         self.handle_action('make_draft_rules_actual', data)
-        tariff = self.get_tariff(client_id, tariff_name)
+        tariff = self.get_tariff(operator, tariff_name)
         self.assertEqual([], self.get_rules(tariff, [Rule.TYPE_DRAFT]))
 
     def handle_action(self, action, data):
@@ -202,5 +199,5 @@ class ServiceTestCase(DbBasedTestCase):
         return response
 
     @transaction()
-    def get_action_logs(self, client, filter_params, curs=None):
-        return selector.get_action_logs(curs, client, filter_params)
+    def get_action_logs(self, operator, filter_params, curs=None):
+        return selector.get_action_logs(curs, operator, filter_params)
