@@ -6,7 +6,8 @@ class HelixtariffError(Exception):
 
 
 class OperatorAlreadyExists(ActionNotAllowedError, HelixtariffError):
-    pass
+    def __init__(self, login):
+        super(OperatorAlreadyExists, self).__init__("Operator '%s' already exists" % login)
 
 
 class TariffCycleError(HelixtariffError):
@@ -61,5 +62,5 @@ class ServiceSetUsed(HelixtariffError):
 
 
 class OperatorNotFound(ObjectNotFound):
-    def __init__(self, client_id):
-        super(OperatorNotFound, self).__init__("Operator '%s' not found" % client_id)
+    def __init__(self, operator_id):
+        super(OperatorNotFound, self).__init__("Operator '%s' not found" % operator_id)
