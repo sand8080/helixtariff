@@ -5,7 +5,7 @@ import helixtariff.test.test_environment #IGNORE:W0611 @UnusedImport
 from helixcore.install import install
 from helixcore.server.api import Api
 
-from helixtariff.conf.db import get_connection, transaction
+from helixtariff.conf.db import get_connection, put_connection, transaction
 from helixtariff.conf.settings import patch_table_name
 from helixtariff.test.test_environment import patches_path
 from helixtariff.logic.actions import handle_action
@@ -18,7 +18,7 @@ from helixtariff.validator.validator import protocol
 
 class DbBasedTestCase(RootTestCase):
     def setUp(self):
-        install.execute('reinit', get_connection, patch_table_name, patches_path)
+        install.execute('reinit', get_connection, put_connection, patch_table_name, patches_path)
 
 
 class ServiceTestCase(DbBasedTestCase):
