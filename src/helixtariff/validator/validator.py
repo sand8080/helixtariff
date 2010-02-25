@@ -6,7 +6,7 @@ from helixtariff.domain.objects import Rule
 
 NullableText = AnyOf(Text(), None)
 
-PING = {}
+PING = {Optional('custom_operator_info'): NullableText}
 
 RESPONSE_STATUS_OK = {'status': 'ok'}
 
