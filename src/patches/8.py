@@ -5,7 +5,7 @@ def apply(curs):
         CREATE TABLE action_log (
             id serial,
             PRIMARY KEY(id),
-            operator_id integer NOT NULL,
+            operator_id integer,
             FOREIGN KEY (operator_id) REFERENCES operator(id),
             custom_operator_info varchar,
             action varchar NOT NULL,
