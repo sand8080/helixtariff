@@ -3,7 +3,7 @@ from eventlet import wsgi
 from eventlet.green import socket
 
 from helixcore.server.wsgi_application import Application
-import helixcore.mapping.actions as mapping
+from helixcore import mapping
 
 from helixtariff.conf import settings
 from helixtariff.conf.log import logger

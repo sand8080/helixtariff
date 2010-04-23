@@ -80,7 +80,7 @@ class NginxTestCase(DbBasedTestCase):
         handler = Handler()
         request = '{"action": "add_client", "password": "f", "login": "c"}'
         _, decoded_data = a.handle_request(request)
-        handler.add_client(decoded_data)
+        handler.add_client(decoded_data) #IGNORE:E1101
 
         request = '{"action": "add_service_type", "login": "c", "password": "f", "name": "\u0447\u0447\u0447"}'
         _, decoded_data = a.handle_request(request)

@@ -2,7 +2,7 @@ from helixcore.server.errors import RequestProcessingError
 import unittest
 from decimal import Decimal
 
-import helixcore.mapping.actions as mapping
+from helixcore import mapping
 
 from helixtariff.test.db_based_test import ServiceTestCase
 from helixtariff.conf.db import transaction

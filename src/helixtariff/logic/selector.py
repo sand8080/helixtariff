@@ -1,4 +1,4 @@
-import helixcore.mapping.actions as mapping
+from helixcore import mapping
 from helixcore.db.sql import Eq, Scoped, Select, In, And, MoreEq, LessEq, Columns
 from helixcore.server.exceptions import AuthError
 from helixcore.db.wrapper import EmptyResultSetError, fetchall_dicts, fetchone_dict
