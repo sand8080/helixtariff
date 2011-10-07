@@ -5,10 +5,11 @@ DSN = {
     'password': '_DBC_DBPASS_'
 }
 
+
 patch_table_name = 'patches'
 
 server_host = 'localhost'
-server_port = 9999
+server_port = 9997
 server_connections = 50
 
 import logging

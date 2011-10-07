@@ -1,6 +1,8 @@
 import unittest
 
-import helixtariff.test.test_environment #IGNORE:W0611 @UnusedImport
+# setting test environment variables
+import helixtariff.test.test_env #IGNORE:W0611 @UnusedImport
+
 
 class RootTestCase(unittest.TestCase):
     pass

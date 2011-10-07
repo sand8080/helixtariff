@@ -1,54 +1,11 @@
-import logging
 from eventlet import wsgi
 from eventlet.green import socket
-
-from helixcore.server.wsgi_application import Application
-from helixcore import mapping
 
 from helixtariff.conf import settings
 from helixtariff.conf.log import logger
 from helixtariff.logic.actions import handle_action
-from helixtariff.validator.validator import protocol
-from helixtariff.logic import selector
-from helixtariff.conf.db import transaction
-from helixtariff.domain.objects import ActionLog
-from helixtariff.error import OperatorNotFound
-
-
-class HelixtariffApplication(Application):
-    def __init__(self, h, p, l):
-        self.unauthorized_trackable = ['add_operator']
-        super(HelixtariffApplication, self).__init__(h, p, l, (
-            'add_operator', 'modify_operator',
-            'add_service_type', 'modify_service_type', 'delete_service_type',
-            'add_service_set', 'modify_service_set', 'delete_service_set',
-            'add_tariff', 'modify_tariff', 'delete_tariff',
-            'save_draft_rule', 'make_draft_rules_actual', 'modify_actual_rule',
-        ))
-
-    @transaction()
-    def track_api_call(self, remote_addr, s_req, s_resp, authorized_data, curs=None): #IGNORE:W0221
-        super(HelixtariffApplication, self).track_api_call(remote_addr, s_req, s_resp, authorized_data)
-        action_name = authorized_data['action']
-        o_id = None
-        if action_name in self.unauthorized_trackable:
-            try:
-                login = authorized_data['login']
-                o_id = selector.get_operator_by_login(curs, login).id
-            except OperatorNotFound:
-                self.logger.log(logging.ERROR,
-                    'Unable to track action for not existed client. Request: %s. Response: %s', (s_req, s_resp))
-        else:
-            o_id = authorized_data['operator_id']
-        data = {
-            'operator_id': o_id,
-            'custom_operator_info': authorized_data.get('custom_operator_info', None),
-            'action': action_name,
-            'remote_addr': remote_addr,
-            'request': s_req,
-            'response': s_resp,
-        }
-        mapping.insert(curs, ActionLog(**data))
+from helixtariff.wsgi.application import HelixtariffApplication
+from helixtariff.wsgi.protocol import protocol
 
 
 class Server(object):
@@ -58,7 +15,7 @@ class Server(object):
 
     @staticmethod
     def run():
-        sock = socket.socket()
+        sock = socket.socket() #@UndefinedVariable
         sock.bind((settings.server_host, settings.server_port))
         sock.listen(settings.server_connections)
         wsgi.server(

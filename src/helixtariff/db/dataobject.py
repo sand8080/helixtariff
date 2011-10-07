@@ -1,12 +1,12 @@
 from helixcore.mapping.objects import Mapped
 
 
-class Operator(Mapped):
-    __slots__ = ['id', 'login', 'password']
-    table = 'operator'
-
-    def __repr__(self, except_attrs=()):
-        return super(Operator, self).__repr__(except_attrs=except_attrs + ('password',))
+#class Operator(Mapped):
+#    __slots__ = ['id', 'login', 'password']
+#    table = 'operator'
+#
+#    def __repr__(self, except_attrs=()):
+#        return super(Operator, self).__repr__(except_attrs=except_attrs + ('password',))
 
 
 class ServiceType(Mapped):
