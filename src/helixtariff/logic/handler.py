@@ -1,12 +1,17 @@
 from functools import wraps, partial
 
-from helixcore import error_code
+from helixcore import error_code, mapping
 from helixcore.security import Session
 from helixcore.security.auth import CoreAuthenticator
 from helixcore.server.response import response_ok
 
 
 from helixtariff.conf import settings
+from helixtariff.conf.db import transaction
+from helixcore.actions.handler import detalize_error
+from helixcore.db.wrapper import ObjectCreationError
+from helixtariff.db.dataobject import TarificationObject
+
 
 
 def _add_log_info(data, session, custom_actor_info=None):
@@ -59,6 +64,16 @@ class Handler(object):
         auth = CoreAuthenticator(settings.auth_server_url)
         resp = auth.logout(data)
         return resp
+
+    @transaction()
+    @authenticate
+    @detalize_error(ObjectCreationError, ['environment_id', 'name'])
+    def add_tarification_object(self, data, session, curs=None):
+        to_data = {'environment_id': session.environment_id,
+            'name': data['name']}
+        to = TarificationObject(**to_data)
+        mapping.insert(curs, to)
+        return response_ok(id=to.id)
 
 #    def get_operator(self, curs, data):
 #        return selector.get_auth_operator(curs, data['login'], data['password'])

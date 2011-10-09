@@ -35,7 +35,6 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
         self.validate_error_response(a_name)
 
-
 #    def test_modify_used_currencies(self):
 #        a_name = 'modify_used_currencies'
 #        self.api.validate_request(a_name, {'session_id': 's'})
