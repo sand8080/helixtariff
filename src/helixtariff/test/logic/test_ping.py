@@ -1,9 +1,9 @@
 import unittest
 
-from helixtariff.test.db_based_test import ServiceTestCase
+from helixtariff.test.logic.logic_test import LogicTestCase
 
 
-class PingTestCase(ServiceTestCase):
+class PingTestCase(LogicTestCase):
     def test_ping(self):
         self.handle_action('ping', {})
 
