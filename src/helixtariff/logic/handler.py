@@ -50,6 +50,16 @@ class Handler(object):
     def ping(self, _):
         return response_ok()
 
+    def login(self, data):
+        auth = CoreAuthenticator(settings.auth_server_url)
+        resp = auth.login(data)
+        return resp
+
+    def logout(self, data):
+        auth = CoreAuthenticator(settings.auth_server_url)
+        resp = auth.logout(data)
+        return resp
+
 #    def get_operator(self, curs, data):
 #        return selector.get_auth_operator(curs, data['login'], data['password'])
 #
