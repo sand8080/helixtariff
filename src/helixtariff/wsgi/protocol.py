@@ -1,45 +1,20 @@
 from helixcore.server.api import ApiCall
 from helixcore.json_validator import (Scheme, Text, Optional, AnyOf, DecimalText,
     NonNegative, IsoDatetime)
-from helixtariff.db.dataobject import Rule
-from helixcore.server.protocol_primitives import PING_REQUEST, PING_RESPONSE,\
-    LOGIN_REQUEST, LOGIN_RESPONSE, LOGOUT_REQUEST, LOGOUT_RESPONSE
+from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
+    LOGIN_REQUEST, LOGIN_RESPONSE, LOGOUT_REQUEST, LOGOUT_RESPONSE,
+    AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE)
 
 
-#NullableText = AnyOf(Text(), None)
-#
-#PING = {Optional('custom_operator_info'): NullableText}
-#
-#RESPONSE_STATUS_OK = {'status': 'ok'}
-#
-#
-#RESPONSE_STATUS_ERROR = {
-#    'status': 'error',
-#    'category': Text(),
-#    'message': Text(),
-#    'details': [FlatDict()],
-#}
-#
-#RESPONSE_STATUS_ONLY = AnyOf(RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
-#
-#AUTH_INFO = {
-#    'login': Text(),
-#    'password': Text(),
-#    Optional('custom_operator_info'): NullableText,
-#}
-#
-## --- operator ---
-#ADD_OPERATOR = AUTH_INFO
-#
-#MODIFY_OPERATOR = dict(
-#    {
-#        Optional('new_login'): Text(),
-#        Optional('new_password'): Text(),
-#    },
-#    **AUTH_INFO
-#)
-#
-## --- service type ---
+ADD_TARIFICATION_OBJECT_REQUEST = dict(
+    {'name': Text()},
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+ADD_TARIFICATION_OBJECT_RESPONSE = ADDING_OBJECT_RESPONSE
+
+
+#from helixtariff.db.dataobject import Rule
 #SERVICE_TYPE = dict(
 #    {'name': Text(),},
 #    **AUTH_INFO
@@ -423,17 +398,9 @@ protocol = [
     ApiCall('logout_request', Scheme(LOGOUT_REQUEST)),
     ApiCall('logout_response', Scheme(LOGOUT_RESPONSE)),
 
-
-#    # client
-#    ApiCall('add_operator_request', Scheme(ADD_OPERATOR)),
-#    ApiCall('add_operator_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('modify_operator_request', Scheme(MODIFY_OPERATOR)),
-#    ApiCall('modify_operator_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    # service type
-#    ApiCall('add_service_type_request', Scheme(ADD_SERVICE_TYPE)),
-#    ApiCall('add_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),
+    # tarification object
+    ApiCall('add_tarification_object_request', Scheme(ADD_TARIFICATION_OBJECT_REQUEST)),
+    ApiCall('add_tarification_object_response', Scheme(ADD_TARIFICATION_OBJECT_RESPONSE)),
 #
 #    ApiCall('modify_service_type_request', Scheme(MODIFY_SERVICE_TYPE)),
 #    ApiCall('modify_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),

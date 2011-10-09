@@ -6,8 +6,6 @@ from helixcore.test.utils_for_testing import ProtocolTester
 
 from helixtariff.test.root_test import RootTestCase
 from helixtariff.wsgi.protocol import protocol
-import datetime
-import pytz
 
 
 class ProtocolTestCase(RootTestCase, ProtocolTester):
@@ -28,37 +26,16 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         a_name = 'logout'
         self.api.validate_request(a_name, {'session_id': 'i'})
         self.validate_status_response(a_name)
-#
-#    def test_get_currencies(self):
-#        a_name = 'get_currencies'
-#        self.api.validate_request(a_name, {'session_id': 's'})
-#        self.api.validate_request(a_name, {'session_id': 's',
-#            'ordering_params': ['code']})
-#        self.api.validate_request(a_name, {'session_id': 's',
-#            'ordering_params': ['-code']})
-#
-#        self.api.validate_response(a_name, {'status': 'ok', 'currencies': []})
-#        self.api.validate_response(a_name, {'status': 'ok', 'currencies': [
-#            {'id': 1, 'code': 'YYY', 'name': 'y',
-#                'location': 'y', 'cent_factor': 100}
-#        ]})
-#        self.validate_error_response(a_name)
-#
-#    def test_get_used_currencies(self):
-#        a_name = 'get_used_currencies'
-#        self.api.validate_request(a_name, {'session_id': 's'})
-#        self.api.validate_request(a_name, {'session_id': 's',
-#            'ordering_params': ['code']})
-#        self.api.validate_request(a_name, {'session_id': 's',
-#            'ordering_params': ['-code']})
-#
-#        self.api.validate_response(a_name, {'status': 'ok', 'currencies': []})
-#        self.api.validate_response(a_name, {'status': 'ok', 'currencies': [
-#            {'id': 1, 'code': 'YYY', 'name': 'y',
-#                'location': 'y', 'cent_factor': 100}
-#        ]})
-#        self.validate_error_response(a_name)
-#
+
+    def test_add_tarification_object(self):
+        a_name = 'add_tarification_object'
+        self.api.validate_request(a_name, {'session_id': 's', 'name': 'one'})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'name': u'лунный свет'})
+        self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
+        self.validate_error_response(a_name)
+
+
 #    def test_modify_used_currencies(self):
 #        a_name = 'modify_used_currencies'
 #        self.api.validate_request(a_name, {'session_id': 's'})
