@@ -11,7 +11,8 @@ from helixtariff.conf.db import transaction
 from helixcore.actions.handler import detalize_error, AbstractHandler
 from helixcore.db.wrapper import ObjectCreationError
 from helixtariff.db.dataobject import TarifficationObject
-from helixtariff.error import HelixtariffObjectAlreadyExists
+from helixtariff.error import HelixtariffObjectAlreadyExists,\
+    TarifficationObjectNotFound
 from helixcore.error import DataIntegrityError
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter)
 
@@ -81,14 +82,23 @@ class Handler(AbstractHandler):
     @transaction()
     @authenticate
     @detalize_error(HelixtariffObjectAlreadyExists, 'new_name')
+    @detalize_error(TarifficationObjectNotFound, 'id')
     def modify_tariffication_object(self, data, session, curs=None):
-        f = TarifficationObjectFilter(session, {'id': data['id']}, {}, None)
+        f = TarifficationObjectFilter(session, {'id': data.get('id')}, {}, None)
         loader = partial(f.filter_one_obj, curs, for_update=True)
         try:
             self.update_obj(curs, data, loader)
         except DataIntegrityError:
             raise HelixtariffObjectAlreadyExists('Tariffication object %s already exists' %
                 data.get('new_name'))
+        return response_ok()
+
+    @transaction()
+    @authenticate
+    @detalize_error(TarifficationObjectNotFound, 'id')
+    def delete_tariffication_object(self, data, session, curs=None):
+        f = TarifficationObjectFilter(session, {'id': data.get('id')}, {}, None)
+        mapping.delete(curs, f.filter_one_obj(curs))
         return response_ok()
 
     @transaction()

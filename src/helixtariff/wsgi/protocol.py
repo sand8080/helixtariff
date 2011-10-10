@@ -25,16 +25,13 @@ MODIFY_TARIFFICATION_OBJECT_REQUEST = dict(
 
 MODIFY_TARIFFICATION_OBJECT_RESPONSE = RESPONSE_STATUS_ONLY
 
-#MODIFY_SERVICE_TYPE = dict(
-#    {
-#        'name': Text(),
-#        'new_name': Text(),
-#    },
-#    **AUTH_INFO
-#)
-#
-#DELETE_SERVICE_TYPE = SERVICE_TYPE
-#
+DELETE_TARIFFICATION_OBJECT_REQUEST = dict(
+    {'id': int},
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+DELETE_TARIFFICATION_OBJECT_RESPONSE = RESPONSE_STATUS_ONLY
+
 #VIEW_SERVICE_TYPES = AUTH_INFO
 #
 #VIEW_SERVICE_TYPES_RESPONSE = AnyOf(
@@ -407,6 +404,9 @@ protocol = [
 
     ApiCall('modify_tariffication_object_request', Scheme(MODIFY_TARIFFICATION_OBJECT_REQUEST)),
     ApiCall('modify_tariffication_object_response', Scheme(MODIFY_TARIFFICATION_OBJECT_RESPONSE)),
+
+    ApiCall('delete_tariffication_object_request', Scheme(DELETE_TARIFFICATION_OBJECT_REQUEST)),
+    ApiCall('delete_tariffication_object_response', Scheme(DELETE_TARIFFICATION_OBJECT_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),

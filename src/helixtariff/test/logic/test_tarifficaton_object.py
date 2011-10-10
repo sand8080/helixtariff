@@ -34,6 +34,19 @@ class TarifficationObjectTestCase(ActorLogicTestCase):
 
         # TODO: implement checking by get action
 
+    def test_delete_tariffication_object_request(self):
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'name': 'one'}
+        resp = self.add_tariffication_object(**req)
+        self.check_response_ok(resp)
+        to_id = resp['id']
+
+        req = {'session_id': sess.session_id, 'id': to_id}
+        resp = self.delete_tariffication_object(**req)
+        self.check_response_ok(resp)
+
+        # TODO: implement checking by get action
+
 
 #    def test_delete_service_type(self):
 #        self.add_service_types([self.st_name])

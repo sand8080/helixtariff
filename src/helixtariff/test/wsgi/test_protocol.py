@@ -43,6 +43,11 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'id': 1, 'new_name': 'one'})
         self.validate_status_response(a_name)
 
+    def test_delete_tariffication_object(self):
+        a_name = 'delete_tariffication_object'
+        self.api.validate_request(a_name, {'session_id': 's', 'id': 1})
+        self.validate_status_response(a_name)
+
     def test_get_action_logs(self):
         a_name = 'get_action_logs'
         self.api.validate_request(a_name, {'session_id': 's',
