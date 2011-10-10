@@ -3,25 +3,26 @@ from helixcore.json_validator import (Scheme, Text, Optional, AnyOf, DecimalText
     NonNegative, IsoDatetime)
 from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
     LOGIN_REQUEST, LOGIN_RESPONSE, LOGOUT_REQUEST, LOGOUT_RESPONSE,
-    AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE)
+    AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE, RESPONSE_STATUS_ONLY)
 
 
-ADD_TARIFICATION_OBJECT_REQUEST = dict(
+ADD_TARIFFICATION_OBJECT_REQUEST = dict(
     {'name': Text()},
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-ADD_TARIFICATION_OBJECT_RESPONSE = ADDING_OBJECT_RESPONSE
+ADD_TARIFFICATION_OBJECT_RESPONSE = ADDING_OBJECT_RESPONSE
 
+MODIFY_TARIFFICATION_OBJECT_REQUEST = dict(
+    {
+        'id': int,
+        'new_name': Text(),
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
 
-#from helixtariff.db.dataobject import Rule
-#SERVICE_TYPE = dict(
-#    {'name': Text(),},
-#    **AUTH_INFO
-#)
-#
-#ADD_SERVICE_TYPE = SERVICE_TYPE
-#
+MODIFY_TARIFFICATION_OBJECT_RESPONSE = RESPONSE_STATUS_ONLY
+
 #MODIFY_SERVICE_TYPE = dict(
 #    {
 #        'name': Text(),
@@ -398,12 +399,12 @@ protocol = [
     ApiCall('logout_request', Scheme(LOGOUT_REQUEST)),
     ApiCall('logout_response', Scheme(LOGOUT_RESPONSE)),
 
-    # tarification object
-    ApiCall('add_tarification_object_request', Scheme(ADD_TARIFICATION_OBJECT_REQUEST)),
-    ApiCall('add_tarification_object_response', Scheme(ADD_TARIFICATION_OBJECT_RESPONSE)),
-#
-#    ApiCall('modify_service_type_request', Scheme(MODIFY_SERVICE_TYPE)),
-#    ApiCall('modify_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),
+    # tariffication object
+    ApiCall('add_tariffication_object_request', Scheme(ADD_TARIFFICATION_OBJECT_REQUEST)),
+    ApiCall('add_tariffication_object_response', Scheme(ADD_TARIFFICATION_OBJECT_RESPONSE)),
+
+    ApiCall('modify_tariffication_object_request', Scheme(MODIFY_TARIFFICATION_OBJECT_REQUEST)),
+    ApiCall('modify_tariffication_object_response', Scheme(MODIFY_TARIFFICATION_OBJECT_RESPONSE)),
 #
 #    ApiCall('delete_service_type_request', Scheme(DELETE_SERVICE_TYPE)),
 #    ApiCall('delete_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),

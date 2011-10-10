@@ -1,33 +1,40 @@
+# coding=utf-8
 import unittest
 
 from helixtariff.test.logic.actor_logic_test import ActorLogicTestCase
+from helixcore.error import RequestProcessingError
 
 
-class TarificationObjectTestCase(ActorLogicTestCase):
-    def test_add_tarification_object(self):
+class TarifficationObjectTestCase(ActorLogicTestCase):
+    def test_add_tariffication_object(self):
         sess = self.login_actor()
         req = {'session_id': sess.session_id, 'name': 'Product one'}
-        resp = self.add_tarification_object(**req)
+        resp = self.add_tariffication_object(**req)
         self.check_response_ok(resp)
 
-#    def test_modify_service_type(self):
-#        self.add_service_types([self.st_name])
-#        old_name = self.st_name
-#        t_old = self.get_service_type(self.operator, old_name)
-#
-#        new_name = 'new' + old_name
-#        data = {
-#            'login': self.test_login,
-#            'password': self.test_password,
-#            'name': old_name,
-#            'new_name': new_name
-#        }
-#        self.handle_action('modify_service_type', data)
-#
-#        t_new = self.get_service_type(self.operator, new_name)
-#        self.assertEqual(t_old.id, t_new.id)
-#        self.assertEquals(t_new.name, new_name)
-#
+        req = {'session_id': sess.session_id, 'name': u'маринад'}
+        resp = self.add_tariffication_object(**req)
+        self.check_response_ok(resp)
+
+        # checking unique environment_id, name constraint
+        req = {'session_id': sess.session_id, 'name': u'маринад'}
+        self.assertRaises(RequestProcessingError, self.add_tariffication_object, **req)
+
+    def test_modify_tariffication_object(self):
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'name': 'one'}
+        resp = self.add_tariffication_object(**req)
+        self.check_response_ok(resp)
+        to_id = resp['id']
+
+        req = {'session_id': sess.session_id, 'id': to_id,
+            'new_name': 'new_one'}
+        resp = self.modify_tariffication_object(**req)
+        self.check_response_ok(resp)
+
+        # TODO: implement checking by get action
+
+
 #    def test_delete_service_type(self):
 #        self.add_service_types([self.st_name])
 #        self.handle_action(

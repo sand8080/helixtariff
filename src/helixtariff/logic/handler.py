@@ -8,9 +8,12 @@ from helixcore.server.response import response_ok
 
 from helixtariff.conf import settings
 from helixtariff.conf.db import transaction
-from helixcore.actions.handler import detalize_error
+from helixcore.actions.handler import detalize_error, AbstractHandler
 from helixcore.db.wrapper import ObjectCreationError
-from helixtariff.db.dataobject import TarificationObject
+from helixtariff.db.dataobject import TarifficationObject
+from helixtariff.error import HelixtariffObjectAlreadyExists
+from helixcore.error import DataIntegrityError
+from helixtariff.db.filters import TarifficationObjectFilter
 
 
 
@@ -47,7 +50,7 @@ def authenticate(method):
     return decroated
 
 
-class Handler(object):
+class Handler(AbstractHandler):
     '''
     Handles all API actions. Method names are called like actions.
     '''
@@ -68,16 +71,26 @@ class Handler(object):
     @transaction()
     @authenticate
     @detalize_error(ObjectCreationError, ['environment_id', 'name'])
-    def add_tarification_object(self, data, session, curs=None):
+    def add_tariffication_object(self, data, session, curs=None):
         to_data = {'environment_id': session.environment_id,
             'name': data['name']}
-        to = TarificationObject(**to_data)
+        to = TarifficationObject(**to_data)
         mapping.insert(curs, to)
         return response_ok(id=to.id)
 
-#    def get_operator(self, curs, data):
-#        return selector.get_auth_operator(curs, data['login'], data['password'])
-#
+    @transaction()
+    @authenticate
+    @detalize_error(HelixtariffObjectAlreadyExists, 'new_name')
+    def modify_tariffication_object(self, data, session, curs=None):
+        f = TarifficationObjectFilter(session, {'id': data['id']}, {}, None)
+        loader = partial(f.filter_one_obj, curs, for_update=True)
+        try:
+            self.update_obj(curs, data, loader)
+        except DataIntegrityError:
+            raise HelixtariffObjectAlreadyExists('Tariffication object %s already exists' %
+                data.get('new_name'))
+        return response_ok()
+
 #    def get_fields_for_update(self, data, prefix_of_new='new_'):
 #        '''
 #        If data contains fields with previx == prefix_of_new,

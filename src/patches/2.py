@@ -1,8 +1,8 @@
 def apply(curs):
-    print 'Creating table tarification_object'
+    print 'Creating table tariffication_object'
     curs.execute(
     '''
-        CREATE TABLE tarification_object (
+        CREATE TABLE tariffication_object (
             id serial,
             environment_id integer NOT NULL,
             name varchar NOT NULL,
@@ -10,18 +10,18 @@ def apply(curs):
         )
     ''')
 
-    print 'Creating unique index tarification_object_environment_id_name_idx on tarification_object'
+    print 'Creating unique index tariffication_object_environment_id_name_idx on tariffication_object'
     curs.execute(
     '''
-        CREATE UNIQUE INDEX tarification_object_environment_id_name_idx ON
-            tarification_object(environment_id, name)
+        CREATE UNIQUE INDEX tariffication_object_environment_id_name_idx ON
+            tariffication_object(environment_id, name)
     ''')
 
 
 def revert(curs):
-    print 'Creating unique index tarification_object_environment_id_name_idx on tarification_object'
-    curs.execute('DROP INDEX tarification_object_environment_id_name_idx')
+    print 'Creating unique index tariffication_object_environment_id_name_idx on tariffication_object'
+    curs.execute('DROP INDEX tariffication_object_environment_id_name_idx')
 
-    print 'Dropping table tarification_object'
-    curs.execute('DROP TABLE tarification_object')
+    print 'Dropping table tariffication_object'
+    curs.execute('DROP TABLE tariffication_object')
 

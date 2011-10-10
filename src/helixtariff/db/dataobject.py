@@ -1,9 +1,9 @@
 from helixcore.mapping.objects import Mapped
 
 
-class TarificationObject(Mapped):
+class TarifficationObject(Mapped):
     __slots__ = ['id', 'environment_id', 'name']
-    table = 'tarification_object'
+    table = 'tariffication_object'
 
 
 class ServiceSet(Mapped):

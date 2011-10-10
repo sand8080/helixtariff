@@ -27,13 +27,19 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_request(a_name, {'session_id': 'i'})
         self.validate_status_response(a_name)
 
-    def test_add_tarification_object(self):
-        a_name = 'add_tarification_object'
+    def test_add_tariffication_object(self):
+        a_name = 'add_tariffication_object'
         self.api.validate_request(a_name, {'session_id': 's', 'name': 'one'})
         self.api.validate_request(a_name, {'session_id': 's',
             'name': u'лунный свет'})
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
         self.validate_error_response(a_name)
+
+    def test_modify_tariffication_object(self):
+        a_name = 'modify_tariffication_object'
+        self.api.validate_request(a_name, {'session_id': 's',
+            'id': 1, 'new_name': 'one'})
+        self.validate_status_response(a_name)
 
 #    def test_modify_used_currencies(self):
 #        a_name = 'modify_used_currencies'
