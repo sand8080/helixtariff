@@ -5,7 +5,8 @@ from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
     LOGIN_REQUEST, LOGIN_RESPONSE, LOGOUT_REQUEST, LOGOUT_RESPONSE,
     AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE, RESPONSE_STATUS_ONLY,
     GET_ACTION_LOGS_REQUEST, GET_ACTION_LOGS_RESPONSE,
-    GET_ACTION_LOGS_SELF_REQUEST, GET_ACTION_LOGS_SELF_RESPONSE)
+    GET_ACTION_LOGS_SELF_REQUEST, GET_ACTION_LOGS_SELF_RESPONSE,
+    REQUEST_PAGING_PARAMS, RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
 
 
 ADD_TARIFFICATION_OBJECT_REQUEST = dict(
@@ -14,6 +15,35 @@ ADD_TARIFFICATION_OBJECT_REQUEST = dict(
 )
 
 ADD_TARIFFICATION_OBJECT_RESPONSE = ADDING_OBJECT_RESPONSE
+
+GET_TARIFFICATION_OBJECTS_REQUEST = dict(
+    {
+        'filter_params': {
+            Optional('id'): int,
+            Optional('ids'): [int],
+            Optional('name'): Text(),
+        },
+        'paging_params': REQUEST_PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('id', '-id')]
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+TARIFFICATION_OBJECT_INFO = {
+    'id': int,
+    'name': Text(),
+}
+
+GET_TARIFFICATION_OBJECTS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'tariffication_objects': [TARIFFICATION_OBJECT_INFO],
+            'total': NonNegative(int),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
 
 MODIFY_TARIFFICATION_OBJECT_REQUEST = dict(
     {
@@ -401,6 +431,9 @@ protocol = [
     # tariffication object
     ApiCall('add_tariffication_object_request', Scheme(ADD_TARIFFICATION_OBJECT_REQUEST)),
     ApiCall('add_tariffication_object_response', Scheme(ADD_TARIFFICATION_OBJECT_RESPONSE)),
+
+    ApiCall('get_tariffication_objects_request', Scheme(GET_TARIFFICATION_OBJECTS_REQUEST)),
+    ApiCall('get_tariffication_objects_response', Scheme(GET_TARIFFICATION_OBJECTS_RESPONSE)),
 
     ApiCall('modify_tariffication_object_request', Scheme(MODIFY_TARIFFICATION_OBJECT_REQUEST)),
     ApiCall('modify_tariffication_object_response', Scheme(MODIFY_TARIFFICATION_OBJECT_RESPONSE)),

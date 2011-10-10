@@ -1,4 +1,4 @@
-from helixcore.db.sql import (Eq, Like, MoreEq, LessEq, Any)
+from helixcore.db.sql import (Eq, Like, MoreEq, LessEq, Any, In)
 from helixcore.db.filters import (InSessionFilter, EnvironmentObjectsFilter)
 
 from helixtariff.db.dataobject import (TarifficationObject, ActionLog)
@@ -9,6 +9,7 @@ from helixtariff.error import TarifficationObjectNotFound
 class TarifficationObjectFilter(InSessionFilter):
     cond_map = [
         ('id', 'id', Eq),
+        ('ids', 'id', In),
         ('name', 'name', Like),
     ]
 

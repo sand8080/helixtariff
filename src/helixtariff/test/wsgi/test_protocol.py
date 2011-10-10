@@ -37,6 +37,22 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
         self.validate_error_response(a_name)
 
+    def test_get_tariffication_object(self):
+        a_name = 'get_tariffication_object'
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'filter_params': {}, 'paging_params': {},})
+        self.api.validate_request(a_name, {'session_id': 'i',
+            'filter_params': {'id': 1, 'ids': [1, 2], 'name': 'lala'},
+            'paging_params': {'limit': 0, 'offset': 0,}})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'tariffication_objects': [
+                {'id': 1, 'name': 'one'},
+                {'id': 2, 'name': 'two'},
+            ]
+        })
+        self.validate_error_response(a_name)
+
     def test_modify_tariffication_object(self):
         a_name = 'modify_tariffication_object'
         self.api.validate_request(a_name, {'session_id': 's',

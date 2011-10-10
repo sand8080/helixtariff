@@ -20,6 +20,22 @@ class TarifficationObjectTestCase(ActorLogicTestCase):
         req = {'session_id': sess.session_id, 'name': u'маринад'}
         self.assertRaises(RequestProcessingError, self.add_tariffication_object, **req)
 
+    def test_get_tariffication_objects(self):
+        sess = self.login_actor()
+        prods = ['one', 'two', 'three']
+        for prod in prods:
+            req = {'session_id': sess.session_id, 'name': prod}
+            resp = self.add_tariffication_object(**req)
+            self.check_response_ok(resp)
+
+        req = {'session_id': sess.session_id, 'filter_params': {},
+            'paging_params': {}}
+        resp = self.get_tariffication_objects(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(len(prods), resp['total'])
+        for d in resp['tariffication_objects']:
+            self.assertTrue(d['name'] in prods)
+
     def test_modify_tariffication_object(self):
         sess = self.login_actor()
         req = {'session_id': sess.session_id, 'name': 'one'}

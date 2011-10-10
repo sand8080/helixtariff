@@ -81,6 +81,19 @@ class Handler(AbstractHandler):
 
     @transaction()
     @authenticate
+    def get_tariffication_objects(self, data, session, curs=None):
+        to_f = TarifficationObjectFilter(session, data['filter_params'],
+            data['paging_params'], data.get('ordering_params'))
+        tos, total = to_f.filter_counted(curs)
+        def viewer(to):
+            return {
+                'id': to.id,
+                'name': to.name,
+            }
+        return response_ok(tariffication_objects=self.objects_info(tos, viewer), total=total)
+
+    @transaction()
+    @authenticate
     @detalize_error(HelixtariffObjectAlreadyExists, 'new_name')
     @detalize_error(TarifficationObjectNotFound, 'id')
     def modify_tariffication_object(self, data, session, curs=None):

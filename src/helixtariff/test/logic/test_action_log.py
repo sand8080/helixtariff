@@ -37,6 +37,20 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         req = {'session_id': self.sess_id, 'new_name': 'ttt_one', 'id': to_id}
         resp = self._logged_action(action, req)
 
+    def test_delete_tariffication_object(self):
+        action = 'add_tariffication_object'
+        req = {'session_id': self.sess_id, 'name': 'one'}
+        resp = self._logged_action(action, req)
+        to_id = resp['id']
+
+        action = 'delete_tariffication_object'
+        req = {'session_id': self.sess_id, 'id': to_id}
+        resp = self._logged_action(action, req)
+
+    def test_get_tariffication_object(self):
+        action = 'get_tariffication_objects'
+        self._not_logged_filtering_action(action, self.sess_id)
+
 
 #
 #    def test_unauthorized_tracking_action(self):
