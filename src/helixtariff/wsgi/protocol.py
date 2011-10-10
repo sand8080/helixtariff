@@ -3,7 +3,9 @@ from helixcore.json_validator import (Scheme, Text, Optional, AnyOf, DecimalText
     NonNegative, IsoDatetime)
 from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
     LOGIN_REQUEST, LOGIN_RESPONSE, LOGOUT_REQUEST, LOGOUT_RESPONSE,
-    AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE, RESPONSE_STATUS_ONLY)
+    AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE, RESPONSE_STATUS_ONLY,
+    GET_ACTION_LOGS_REQUEST, GET_ACTION_LOGS_RESPONSE,
+    GET_ACTION_LOGS_SELF_REQUEST, GET_ACTION_LOGS_SELF_RESPONSE)
 
 
 ADD_TARIFFICATION_OBJECT_REQUEST = dict(
@@ -405,6 +407,14 @@ protocol = [
 
     ApiCall('modify_tariffication_object_request', Scheme(MODIFY_TARIFFICATION_OBJECT_REQUEST)),
     ApiCall('modify_tariffication_object_response', Scheme(MODIFY_TARIFFICATION_OBJECT_RESPONSE)),
+
+    # action log
+    ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
+    ApiCall('get_action_logs_response', Scheme(GET_ACTION_LOGS_RESPONSE)),
+
+    ApiCall('get_action_logs_self_request', Scheme(GET_ACTION_LOGS_SELF_REQUEST)),
+    ApiCall('get_action_logs_self_response', Scheme(GET_ACTION_LOGS_SELF_RESPONSE)),
+
 #
 #    ApiCall('delete_service_type_request', Scheme(DELETE_SERVICE_TYPE)),
 #    ApiCall('delete_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),

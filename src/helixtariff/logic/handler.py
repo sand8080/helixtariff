@@ -13,7 +13,7 @@ from helixcore.db.wrapper import ObjectCreationError
 from helixtariff.db.dataobject import TarifficationObject
 from helixtariff.error import HelixtariffObjectAlreadyExists
 from helixcore.error import DataIntegrityError
-from helixtariff.db.filters import TarifficationObjectFilter
+from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter)
 
 
 
@@ -90,6 +90,33 @@ class Handler(AbstractHandler):
             raise HelixtariffObjectAlreadyExists('Tariffication object %s already exists' %
                 data.get('new_name'))
         return response_ok()
+
+    @transaction()
+    @authenticate
+    def get_action_logs(self, data, session, curs=None):
+        return self._get_action_logs(data, session, curs)
+
+    @transaction()
+    @authenticate
+    def get_action_logs_self(self, data, session, curs=None):
+        data['filter_params']['user_id'] = session.user_id
+        return self._get_action_logs(data, session, curs)
+
+    def _get_action_logs(self, data, session, curs):
+        f_params = data['filter_params']
+        u_id = f_params.pop('user_id', None)
+        if u_id:
+            f_params[('subject_users_ids', 'actor_user_id')] = (u_id, u_id)
+        f = ActionLogFilter(session.environment_id, f_params,
+            data['paging_params'], data.get('ordering_params'))
+        action_logs, total = f.filter_counted(curs)
+        def viewer(obj):
+            result = obj.to_dict()
+            result.pop('environment_id', None)
+            result['request_date'] = '%s' % result['request_date']
+            return result
+        return response_ok(action_logs=self.objects_info(action_logs, viewer),
+            total=total)
 
 #    def get_fields_for_update(self, data, prefix_of_new='new_'):
 #        '''

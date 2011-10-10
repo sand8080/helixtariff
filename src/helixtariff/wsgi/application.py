@@ -7,7 +7,8 @@ from helixtariff.db.dataobject import ActionLog
 
 class HelixtariffApplication(Application):
     def __init__(self, h, p, l):
-        tracking_api_calls = ()
+        tracking_api_calls = ('add_tariffication_object',
+            'modify_tariffication_object')
         super(HelixtariffApplication, self).__init__(h, p, l, tracking_api_calls)
 
     @transaction()
