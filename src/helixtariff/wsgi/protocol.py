@@ -62,25 +62,19 @@ DELETE_TARIFFICATION_OBJECT_REQUEST = dict(
 
 DELETE_TARIFFICATION_OBJECT_RESPONSE = RESPONSE_STATUS_ONLY
 
-#VIEW_SERVICE_TYPES = AUTH_INFO
-#
-#VIEW_SERVICE_TYPES_RESPONSE = AnyOf(
-#    dict(RESPONSE_STATUS_OK, service_types=[Text()]),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#VIEW_SERVICE_TYPES_DETAILED = VIEW_SERVICE_TYPES
-#
-#VIEW_SERVICE_TYPES_DETAILED_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        service_types=[
-#            {'name': Text(), 'service_sets': [Text()]}
-#        ]
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
+ADD_TARIFF_REQUEST = dict(
+    {
+        'name': Text(),
+        'parent_tariff_id': AnyOf(None, int),
+        'tariffication_objects_ids': [int],
+        'type': AnyOf('public', 'personal', 'archive'),
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+ADD_TARIFF_RESPONSE = ADDING_OBJECT_RESPONSE
+
+
 ## --- service set ---
 #ADD_SERVICE_SET = dict(
 #    {
@@ -154,17 +148,8 @@ DELETE_TARIFFICATION_OBJECT_RESPONSE = RESPONSE_STATUS_ONLY
 #)
 #
 #
-## --- tariff ---
-#ADD_TARIFF = dict(
-#    {
-#        'name': Text(),
-#        'parent_tariff': NullableText,
-#        'service_set': Text(),
-#        'in_archive': bool,
-#    },
-#    **AUTH_INFO
-#)
-#
+
+
 #MODIFY_TARIFF = dict(
 #    {
 #        'name': Text(),
@@ -235,8 +220,8 @@ DELETE_TARIFFICATION_OBJECT_RESPONSE = RESPONSE_STATUS_ONLY
 #    ),
 #    RESPONSE_STATUS_ERROR
 #)
-#
-#
+
+
 ## --- rule ---
 #SAVE_DRAFT_RULE = dict(
 #    {
@@ -440,6 +425,10 @@ protocol = [
 
     ApiCall('delete_tariffication_object_request', Scheme(DELETE_TARIFFICATION_OBJECT_REQUEST)),
     ApiCall('delete_tariffication_object_response', Scheme(DELETE_TARIFFICATION_OBJECT_RESPONSE)),
+
+    # tariff
+    ApiCall('add_tariff_request', Scheme(ADD_TARIFF_REQUEST)),
+    ApiCall('add_tariff_response', Scheme(ADD_TARIFF_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
