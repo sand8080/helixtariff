@@ -114,6 +114,7 @@ class Handler(AbstractHandler):
     def delete_tariffication_object(self, data, session, curs=None):
         f = TarifficationObjectFilter(session, {'id': data.get('id')}, {}, None)
         mapping.delete(curs, f.filter_one_obj(curs))
+        # TODO: remove from tariffs, rules?
         return response_ok()
 
     @transaction()

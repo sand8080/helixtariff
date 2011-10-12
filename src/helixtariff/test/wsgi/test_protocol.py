@@ -8,6 +8,7 @@ from helixcore.test.utils_for_testing import ProtocolTester
 
 from helixtariff.test.root_test import RootTestCase
 from helixtariff.wsgi.protocol import protocol
+from helixtariff.db.dataobject import Tariff
 
 
 class ProtocolTestCase(RootTestCase, ProtocolTester):
@@ -138,6 +139,35 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'type': 'public', 'status': 'archive'})
 
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
+        self.validate_error_response(a_name)
+
+    def test_get_tariffs(self):
+        a_name = 'get_tariffs'
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {}, 'paging_params': {},})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {'id': 1, 'ids': [1, 2], 'name': 't',
+            'type': Tariff.TYPE_PERSONAL, 'status': Tariff.STATUS_ARCHIVE},
+            'paging_params': {'limit': 0}})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'tariffs': []})
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'tariffs': [
+                {'id': 1, 'name': 't0', 'parent_tariffs': [{'id': 1, 'name': 'pt0'}],
+                'tariffication_objects': [{'id': 1, 'name': 'item0', 'tariff_id': 2}],
+                'type': Tariff.TYPE_PUBLIC, 'status': Tariff.STATUS_ACTIVE}
+        ]})
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'tariffs': [
+                {'id': 1, 'name': 't0', 'parent_tariffs': [{'id': 2, 'name': 'pt2'}, {'id': 3, 'name': 'pt3'}],
+                'tariffication_objects': [{'id': 1, 'name': 'item0', 'tariff_id': 2}],
+                'type': Tariff.TYPE_PUBLIC, 'status': Tariff.STATUS_ACTIVE},
+                {'id': 1, 'name': 't0', 'parent_tariffs': [{'id': 1, 'name': 'pt0'}],
+                'tariffication_objects': [{'id': 1, 'name': 'item0', 'tariff_id': 2},
+                    {'id': 2, 'name': 'item2', 'tariff_id': 3}],
+                'type': Tariff.TYPE_PUBLIC, 'status': Tariff.STATUS_ACTIVE},
+        ]})
         self.validate_error_response(a_name)
 
 

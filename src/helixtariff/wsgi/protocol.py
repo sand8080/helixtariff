@@ -1,6 +1,6 @@
 from helixcore.server.api import ApiCall
-from helixcore.json_validator import (Scheme, Text, Optional, AnyOf, DecimalText,
-    NonNegative, IsoDatetime)
+from helixcore.json_validator import (Scheme, Text, Optional, AnyOf,
+    NonNegative, ArbitraryDict)
 from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
     LOGIN_REQUEST, LOGIN_RESPONSE, LOGOUT_REQUEST, LOGOUT_RESPONSE,
     AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE, RESPONSE_STATUS_ONLY,
@@ -62,10 +62,14 @@ DELETE_TARIFFICATION_OBJECT_REQUEST = dict(
 
 DELETE_TARIFFICATION_OBJECT_RESPONSE = RESPONSE_STATUS_ONLY
 
+TariffParentIdValidator = AnyOf(None, int)
+TariffTypeValidator = AnyOf('public', 'personal')
+TariffStatusValidator = AnyOf('active', 'archive', 'inactive')
+
 ADD_TARIFF_REQUEST = dict(
     {
         'name': Text(),
-        'parent_tariff_id': AnyOf(None, int),
+        'parent_tariff_id': TariffParentIdValidator,
         'tariffication_objects_ids': [int],
         'type': AnyOf('public', 'personal'),
         'status': AnyOf('active', 'archive', 'inactive'),
@@ -74,6 +78,54 @@ ADD_TARIFF_REQUEST = dict(
 )
 
 ADD_TARIFF_RESPONSE = ADDING_OBJECT_RESPONSE
+
+GET_TARIFFS_REQUEST = dict(
+    {
+        'filter_params': {
+            Optional('id'): int,
+            Optional('ids'): [int],
+            Optional('name'): Text(),
+            Optional('type'): TariffTypeValidator,
+            Optional('status'): TariffStatusValidator,
+        },
+        'paging_params': REQUEST_PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('id', '-id')]
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+TARIFF_INFO = {
+    'id': int,
+    'name': Text(),
+    'parent_tariffs': [{'id': int, 'name': Text()}],
+    'tariffication_objects': [{'id': int, 'name': Text(), 'tariff_id': int}],
+    'type': TariffTypeValidator,
+    'status': TariffStatusValidator,
+}
+
+GET_TARIFFS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'tariffs': [TARIFF_INFO],
+            'total': NonNegative(int),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
+#MODIFY_TARIFF_REQUEST = dict(
+#    {
+#        'new_name': Text(),
+#        'parent_tariff_id': AnyOf(None, int),
+#        'tariffication_objects_ids': [int],
+#        'type': AnyOf('public', 'personal'),
+#        'status': AnyOf('active', 'archive', 'inactive'),
+#    },
+#    **AUTHORIZED_REQUEST_AUTH_INFO
+#)
+#
+#MODIFY_TARIFF_RESPONSE = ADDING_OBJECT_RESPONSE
 
 
 ## --- service set ---
@@ -430,6 +482,9 @@ protocol = [
     # tariff
     ApiCall('add_tariff_request', Scheme(ADD_TARIFF_REQUEST)),
     ApiCall('add_tariff_response', Scheme(ADD_TARIFF_RESPONSE)),
+
+    ApiCall('get_tariffs_request', Scheme(GET_TARIFFS_REQUEST)),
+    ApiCall('get_tariffs_response', Scheme(GET_TARIFFS_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
