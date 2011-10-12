@@ -6,44 +6,37 @@ from helixcore.error import RequestProcessingError
 
 
 class TarifficationObjectTestCase(ActorLogicTestCase):
-    def test_add_tariffication_object(self):
+    def _add_tariffication_object(self, name):
         sess = self.login_actor()
-        req = {'session_id': sess.session_id, 'name': 'Product one'}
+        req = {'session_id': sess.session_id, 'name': name}
         resp = self.add_tariffication_object(**req)
         self.check_response_ok(resp)
+        return resp['id']
 
-        req = {'session_id': sess.session_id, 'name': u'маринад'}
-        resp = self.add_tariffication_object(**req)
-        self.check_response_ok(resp)
+    def test_add_tariffication_object(self):
+        self._add_tariffication_object('Product one')
+        self._add_tariffication_object(u'маринад')
 
-        # checking unique environment_id, name constraint
-        req = {'session_id': sess.session_id, 'name': u'маринад'}
-        self.assertRaises(RequestProcessingError, self.add_tariffication_object, **req)
+    def test_add_tariffication_object_duplication(self):
+        name = u'тесто'
+        self._add_tariffication_object(name)
+        self.assertRaises(RequestProcessingError, self._add_tariffication_object, name)
 
     def test_get_tariffication_objects(self):
-        sess = self.login_actor()
         prods = ['one', 'two', 'three']
         for prod in prods:
-            req = {'session_id': sess.session_id, 'name': prod}
-            resp = self.add_tariffication_object(**req)
-            self.check_response_ok(resp)
+            self._add_tariffication_object(prod)
 
-        req = {'session_id': sess.session_id, 'filter_params': {},
-            'paging_params': {}}
-        resp = self.get_tariffication_objects(**req)
-        self.check_response_ok(resp)
+        resp = self._get_tariffication_objects()
         self.assertEquals(len(prods), resp['total'])
         for d in resp['tariffication_objects']:
             self.assertTrue(d['name'] in prods)
 
     def test_modify_tariffication_object(self):
-        sess = self.login_actor()
         name ='one'
-        req = {'session_id': sess.session_id, 'name': name}
-        resp = self.add_tariffication_object(**req)
-        self.check_response_ok(resp)
-        to_id = resp['id']
+        to_id = self._add_tariffication_object(name)
 
+        sess = self.login_actor()
         new_name = 'new_%s' % name
         req = {'session_id': sess.session_id, 'id': to_id,
             'new_name': new_name}
@@ -52,25 +45,22 @@ class TarifficationObjectTestCase(ActorLogicTestCase):
 
         resp = self._get_tariffication_objects(id=to_id)
         tos_data = resp['tariffication_objects']
-        self.assertEquals(1, len(tos_data))
+        self.assertEquals(1, resp['total'])
         self.assertEquals(new_name, tos_data[0]['name'])
 
     def test_delete_tariffication_object(self):
-        sess = self.login_actor()
-        req = {'session_id': sess.session_id, 'name': 'one'}
-        resp = self.add_tariffication_object(**req)
-        self.check_response_ok(resp)
-        to_id = resp['id']
+        to_id = self._add_tariffication_object('one')
 
         resp = self._get_tariffication_objects()
-        tos_num = len(resp['tariffication_objects'])
+        tos_num = resp['total']
 
+        sess = self.login_actor()
         req = {'session_id': sess.session_id, 'id': to_id}
         resp = self.delete_tariffication_object(**req)
         self.check_response_ok(resp)
 
         resp = self._get_tariffication_objects()
-        new_tos_num = len(resp['tariffication_objects'])
+        new_tos_num = resp['total']
         self.assertEquals(tos_num - 1, new_tos_num)
 
         resp = self._get_tariffication_objects(id=to_id)
