@@ -10,11 +10,13 @@ from helixtariff.conf import settings
 from helixtariff.conf.db import transaction
 from helixcore.actions.handler import detalize_error, AbstractHandler
 from helixcore.db.wrapper import ObjectCreationError
-from helixtariff.db.dataobject import TarifficationObject
-from helixtariff.error import HelixtariffObjectAlreadyExists,\
-    TarifficationObjectNotFound
+from helixtariff.db.dataobject import TarifficationObject, Tariff
+from helixtariff.error import (HelixtariffObjectAlreadyExists,
+    TarifficationObjectNotFound, TariffNotFound)
 from helixcore.error import DataIntegrityError
-from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter)
+from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
+    TariffFilter)
+from helixcore.db.filters import build_index
 
 
 
@@ -71,7 +73,7 @@ class Handler(AbstractHandler):
 
     @transaction()
     @authenticate
-    @detalize_error(ObjectCreationError, ['environment_id', 'name'])
+    @detalize_error(ObjectCreationError, ['name'])
     def add_tariffication_object(self, data, session, curs=None):
         to_data = {'environment_id': session.environment_id,
             'name': data['name']}
@@ -141,267 +143,9 @@ class Handler(AbstractHandler):
         return response_ok(action_logs=self.objects_info(action_logs, viewer),
             total=total)
 
-#    def get_fields_for_update(self, data, prefix_of_new='new_'):
-#        '''
-#        If data contains fields with previx == prefix_of_new,
-#        such fields will be added into result dict:
-#            {'field': 'new_field'}
-#        '''
-#        result = {}
-#        for f in data.keys():
-#            if f.startswith(prefix_of_new):
-#                result[f[len(prefix_of_new):]] = f
-#        return result
-#
-#    def update_obj(self, curs, data, load_obj_func):
-#        to_update = self.get_fields_for_update(data)
-#        if len(to_update):
-#            obj = load_obj_func()
-#            for f, new_f in to_update.items():
-#                setattr(obj, f, data[new_f])
-#            mapping.update(curs, obj)
-#
-#    # operator
 #    @transaction()
-#    @detalize_error(OperatorAlreadyExists, RequestProcessingError.Category.data_integrity, 'login')
-#    def add_operator(self, data, curs=None):
-#        data['password'] = security.encrypt_password(data['password'])
-#        data.pop('custom_operator_info', None)
-#        try:
-#            mapping.insert(curs, Operator(**data))
-#        except ObjectCreationError:
-#            raise OperatorAlreadyExists(data['login'])
-#        return response_ok()
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(DataIntegrityError, RequestProcessingError.Category.data_integrity, 'new_login')
-#    def modify_operator(self, data, operator, curs=None):
-#        if 'new_password' in data:
-#            data['new_password'] = security.encrypt_password(data['new_password'])
-#        loader = partial(selector.get_operator, curs, operator.id, for_update=True)
-#        self.update_obj(curs, data, loader)
-#        return response_ok()
-#
-#    # server_type
-#    @transaction()
-#    @authentificate
-#    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'name')
-#    def add_service_type(self, data, _, curs=None):
-#        mapping.insert(curs, ServiceType(**data))
-#        return response_ok()
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.auth, 'name')
-#    def modify_service_type(self, data, operator, curs=None):
-#        name = data['name']
-#        loader = partial(selector.get_service_type, curs, operator, name, for_update=True)
-#        self.update_obj(curs, data, loader)
-#        return response_ok()
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.auth, 'name')
-#    @detalize_error(ServiceTypeUsed, RequestProcessingError.Category.auth, 'name')
-#    def delete_service_type(self, data, operator, curs=None):
-#        st_name = data['name']
-#        t = selector.get_service_type(curs, operator, st_name, for_update=True)
-#        ss_ids = selector.get_service_sets_ids_by_service_type(curs, t)
-#        if ss_ids:
-#            ss_names_idx = selector.get_service_sets_names_indexed_by_id(curs, operator)
-#            ss_names = [ss_names_idx[idx] for idx in ss_ids]
-#            raise ServiceTypeUsed('''Service type '%s' used in service sets %s''' %
-#                (st_name, ss_names))
-#        mapping.delete(curs, t)
-#        return response_ok()
-#
-#    @transaction()
-#    @authentificate
-#    def view_service_types(self, _, operator, curs=None):
-#        service_types = selector.get_service_types(curs, operator)
-#        return response_ok(
-#            service_types=[t.name for t in service_types]
-#        )
-#
-#    @transaction()
-#    @authentificate
-#    def view_service_types_detailed(self, _, operator, curs=None):
-#        service_types = selector.get_service_types(curs, operator)
-#        # {service_type_id: [service_set_id, ...]}
-#        st_info_idx = {}
-#        for row in selector.get_service_set_rows_by_service_types(curs, service_types):
-#            st_id = row.service_type_id
-#            if st_id not in st_info_idx:
-#                st_info_idx[st_id] = []
-#            st_info_idx[st_id].append(row.service_set_id)
-#
-#        ss_names_idx = selector.get_service_sets_names_indexed_by_id(curs, operator)
-#        st_info_list = []
-#        for service_type in service_types:
-#            ss_ids = st_info_idx.get(service_type.id, [])
-#            ss_names = sorted([ss_names_idx[ss_id] for ss_id in ss_ids])
-#            st_info_list.append(
-#                {'name': service_type.name, 'service_sets': ss_names}
-#            )
-#        return response_ok(service_types=st_info_list)
-#
-#    def _set_service_types_to_service_set(self, curs, operator, service_set, service_types_names):
-#        curs.execute(*mapping.Delete(ServiceSetRow.table, cond=Eq('service_set_id', service_set.id)).glue())
-#        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, operator)
-#        st_ids_idx = dict([(v, k) for (k, v) in st_names_idx.items()])
-#
-#        not_found_st_names = filter(lambda x: x not in st_ids_idx, service_types_names)
-#        if not_found_st_names:
-#            raise ServiceTypeNotFound(', '.join(not_found_st_names))
-#
-#        ids_to_set = [st_ids_idx[n] for n in service_types_names]
-#
-#        for t_id in ids_to_set:
-#            mapping.insert(curs, ServiceSetRow(service_set_id=service_set.id, service_type_id=t_id))
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'name')
-#    def add_service_set(self, data, operator, curs=None):
-#        service_types_names = data['service_types']
-#        del data['service_types']
-#        service_set = ServiceSet(**data)
-#        mapping.insert(curs, service_set)
-#        self._set_service_types_to_service_set(curs, operator, service_set, service_types_names)
-#        return response_ok()
-#
-#    def _check_types_not_used(self, curs, operator, service_sets_ids, service_types_names):
-#        service_types_names_idx = selector.get_service_types_names_indexed_by_id(curs, operator)
-#        service_types_ids_idx = dict([(v, k) for (k, v) in service_types_names_idx.items()])
-#        tariffs = selector.get_tariffs_binded_with_service_sets(curs, operator, service_sets_ids)
-#        cond_t_ids = In('tariff_id', [t.id for t in tariffs])
-#        cond_st_ids = In('service_type_id', [service_types_ids_idx[n] for n in service_types_names])
-#        rules = mapping.get_list(curs, Rule, cond=And(cond_t_ids, cond_st_ids))
-#        if rules:
-#            tariffs_names_idx = dict([(t.id, t.name) for t in tariffs])
-#            usage = {}
-#            for r in rules:
-#                tariff_name = tariffs_names_idx[r.tariff_id]
-#                if tariff_name not in usage:
-#                    usage[tariff_name] = []
-#                usage[tariff_name].append(service_types_names_idx[r.service_type_id])
-#            raise ServiceTypeUsed('Service types %s used in %s' % (service_types_names, usage))
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.auth, 'name')
-#    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_integrity, 'service_types')
-#    def modify_service_set(self, data, operator, curs=None):
-#        name = data['name']
-#        service_set = selector.get_service_set_by_name(curs, operator, name, for_update=True)
-#        def loader():
-#            return service_set
-#        if 'new_service_types' in data:
-#            service_types = selector.get_service_types_by_service_set(curs, operator, service_set.name)
-#            old_service_types_names = [t.name for t in service_types]
-#            service_types_names = data['new_service_types']
-#            service_types_names_to_check = list(set(old_service_types_names) - set(service_types_names))
-#            self._check_types_not_used(curs, operator, [service_set.id], service_types_names_to_check)
-#            del data['new_service_types']
-#            self._set_service_types_to_service_set(curs, operator, service_set, service_types_names)
-#        self.update_obj(curs, data, loader)
-#        return response_ok()
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.auth, 'name')
-#    @detalize_error(ServiceSetUsed, RequestProcessingError.Category.auth, 'name')
-#    def delete_service_set(self, data, operator, curs=None):
-#        ss_name = data['name']
-#        service_set = selector.get_service_set_by_name(curs, operator, ss_name, for_update=True)
-#        if selector.get_service_set_rows(curs, [service_set.id]):
-#            raise ServiceSetNotEmpty(service_set.name)
-#        used_in_tariffs = selector.get_tariffs_binded_with_service_sets(curs, operator, [service_set.id])
-#        if used_in_tariffs:
-#            raise ServiceSetUsed(used_in_tariffs)
-#        mapping.delete(curs, service_set)
-#        return response_ok()
-#
-#    def _get_service_set_info(self, curs, operator, service_set_name):
-#        service_set = selector.get_service_set_by_name(curs, operator, service_set_name)
-#        service_types = selector.get_service_types_by_service_set(curs, operator, service_set.name)
-#        return service_set, service_types
-#
-#    def _get_service_sets_types_dict(self, curs, operator):
-#        '''
-#        @return: dictionary {service_set_name: [types_names]}
-#        '''
-#        t_names = selector.get_service_types_names_indexed_by_id(curs, operator)
-#        ss_names = selector.get_service_sets_names_indexed_by_id(curs, operator)
-#        ss_rows = selector.get_service_set_rows(curs, ss_names.keys())
-#        service_sets_info = {}
-#        for n in ss_names.values():
-#            service_sets_info[n] = list()
-#        for ss_row in ss_rows:
-#            ss_name = ss_names[ss_row.service_set_id]
-#            t_name = t_names[ss_row.service_type_id]
-#            service_sets_info[ss_name].append(t_name)
-#        for l in service_sets_info.values():
-#            l.sort()
-#        return service_sets_info
-#
-#    @transaction()
-#    @authentificate
-#    def get_service_set(self, data, operator, curs=None):
-#        name = data['name']
-#        service_set, service_types = self._get_service_set_info(curs, operator, name)
-#        return response_ok(
-#            name=service_set.name,
-#            service_types=sorted([t.name for t in service_types])
-#        )
-#
-#    @transaction()
-#    @authentificate
-#    def get_service_set_detailed(self, data, operator, curs=None):
-#        ss_name = data['name']
-#        ss, s_types = self._get_service_set_info(curs, operator, ss_name)
-#        ts = selector.get_tariffs_binded_with_service_sets(curs, operator, [ss.id])
-#        return response_ok(
-#            name=ss.name,
-#            service_types=sorted([st.name for st in s_types]),
-#            tariffs=sorted([t.name for t in ts])
-#        )
-#
-#    @transaction()
-#    @authentificate
-#    def view_service_sets(self, _, operator, curs=None):
-#        ss_types = self._get_service_sets_types_dict(curs, operator)
-#        result = []
-#        for n in sorted(ss_types.keys()):
-#            result.append({'name': n, 'service_types': sorted(ss_types[n])})
-#        return response_ok(service_sets=result)
-#
-#    @transaction()
-#    @authentificate
-#    def view_service_sets_detailed(self, _, operator, curs=None):
-#        ss_names_idx = selector.get_service_sets_names_indexed_by_id(curs, operator)
-#        ss_ids_idx = dict([(v, k) for (k, v) in ss_names_idx.items()])
-#        ss_with_types = self._get_service_sets_types_dict(curs, operator)
-#        ss_ids = [ss_ids_idx[n] for n in sorted(ss_with_types.keys())]
-#        tariffs = selector.get_tariffs_binded_with_service_sets(curs, operator, ss_ids)
-#        result = []
-#        for ss_id in ss_ids:
-#            ss_name = ss_names_idx[ss_id]
-#            result.append({
-#                'name': ss_name,
-#                'service_types': sorted(ss_with_types[ss_name]),
-#                'tariffs': sorted([t.name for t in filter(lambda x: x.service_set_id == ss_id, tariffs)]),
-#            })
-#        return response_ok(service_sets=result)
-#
-#    # tariff
-#    @transaction()
-#    @authentificate
-#    @detalize_error(ObjectCreationError, RequestProcessingError.Category.data_integrity, 'name')
-#    @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.data_integrity, 'service_set')
-#    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_integrity, 'parent_tariff')
-#    def add_tariff(self, data, operator, curs=None):
+#    @authenticate
+#    def add_tariff(self, data, session, curs=None):
 #        service_set = selector.get_service_set_by_name(curs, operator, data['service_set'])
 #        del data['service_set']
 #        data['service_set_id'] = service_set.id
@@ -414,6 +158,37 @@ class Handler(AbstractHandler):
 #        data['parent_id'] = parent_id
 #        mapping.insert(curs, Tariff(**data))
 #        return response_ok()
+
+
+    def _filter_exist_tariffication_objects_ids(self, curs, session, tos_ids):
+        to_f = TarifficationObjectFilter(session, {}, {}, None)
+        tos = to_f.filter_objs(curs)
+        exist_tos_idx = build_index(tos)
+        exist_tos_ids = exist_tos_idx.keys()
+        return filter(lambda x: x in exist_tos_ids, tos_ids)
+
+    @transaction()
+    @authenticate
+    @detalize_error(TariffNotFound, ['parent_tariff_id'])
+    @detalize_error(ObjectCreationError, ['name'])
+    def add_tariff(self, data, session, curs=None):
+        # checking parent tariff exist
+        pt_id = data['parent_tariff_id']
+        if pt_id:
+            t_f = TariffFilter(session, {'id': pt_id}, {}, None)
+            t_f.filter_one_obj(curs)
+
+        tos_ids = self._filter_exist_tariffication_objects_ids(curs, session, data['tariffication_objects_ids'])
+        t_data = {'environment_id': session.environment_id,
+            'parent_tariff_id': pt_id, 'name': data['name'],
+            'tariffication_objects_ids': tos_ids, 'type': data['type'],
+            'status': data['status']}
+        t = Tariff(**t_data)
+
+        mapping.insert(curs, t)
+        return response_ok(id=t.id)
+
+
 #
 #    def _get_new_parent_id(self, curs, operator, tariff_name, new_parent_name):
 #        if new_parent_name is None:

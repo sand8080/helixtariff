@@ -67,7 +67,8 @@ ADD_TARIFF_REQUEST = dict(
         'name': Text(),
         'parent_tariff_id': AnyOf(None, int),
         'tariffication_objects_ids': [int],
-        'type': AnyOf('public', 'personal', 'archive'),
+        'type': AnyOf('public', 'personal'),
+        'status': AnyOf('active', 'archive', 'inactive'),
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )

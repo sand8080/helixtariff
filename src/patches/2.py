@@ -10,6 +10,13 @@ def apply(curs):
         )
     ''')
 
+    print 'Creating index tariffication_object_environment_id_idx on tariffication_object (environment_id)'
+    curs.execute(
+    '''
+        CREATE INDEX tariffication_object_environment_id_idx ON tariffication_object (environment_id)
+    '''
+    )
+
     print 'Creating unique index tariffication_object_environment_id_name_idx on tariffication_object'
     curs.execute(
     '''
@@ -20,8 +27,11 @@ def apply(curs):
 
 def revert(curs):
     print 'Creating unique index tariffication_object_environment_id_name_idx on tariffication_object'
-    curs.execute('DROP INDEX tariffication_object_environment_id_name_idx')
+    curs.execute('DROP INDEX IF EXISTS tariffication_object_environment_id_name_idx')
+
+    print 'Dropping index tariffication_object_environment_id_idx on tariff'
+    curs.execute('DROP INDEX IF EXISTS tariffication_object_environment_id_idx')
 
     print 'Dropping table tariffication_object'
-    curs.execute('DROP TABLE tariffication_object')
+    curs.execute('DROP TABLE IF EXISTS tariffication_object')
 

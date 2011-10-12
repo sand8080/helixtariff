@@ -3,7 +3,7 @@ from helixcore.db.filters import (InSessionFilter, EnvironmentObjectsFilter)
 
 from helixtariff.db.dataobject import (TarifficationObject, ActionLog)
 from helixcore.db.wrapper import ObjectNotFound, SelectedMoreThanOneRow
-from helixtariff.error import TarifficationObjectNotFound
+from helixtariff.error import TarifficationObjectNotFound, TariffNotFound
 
 
 class TarifficationObjectFilter(InSessionFilter):
@@ -23,6 +23,25 @@ class TarifficationObjectFilter(InSessionFilter):
                 for_update=for_update)
         except (ObjectNotFound, SelectedMoreThanOneRow):
             raise TarifficationObjectNotFound(**self.filter_params)
+
+
+class TariffFilter(InSessionFilter):
+    cond_map = [
+        ('id', 'id', Eq),
+        ('ids', 'id', In),
+        ('name', 'name', Like),
+    ]
+
+    def __init__(self, session, filter_params, paging_params, ordering_params):
+        super(TariffFilter, self).__init__(session, filter_params,
+            paging_params, ordering_params, TarifficationObject)
+
+    def filter_one_obj(self, curs, for_update=False):
+        try:
+            return super(TariffFilter, self).filter_one_obj(curs,
+                for_update=for_update)
+        except (ObjectNotFound, SelectedMoreThanOneRow):
+            raise TariffNotFound(**self.filter_params)
 
 
 class ActionLogFilter(EnvironmentObjectsFilter):
