@@ -89,7 +89,7 @@ GET_TARIFFS_REQUEST = dict(
             Optional('status'): TariffStatusValidator,
         },
         'paging_params': REQUEST_PAGING_PARAMS,
-        Optional('ordering_params'): [AnyOf('id', '-id')]
+        Optional('ordering_params'): [AnyOf('id', '-id', 'name', '-name')]
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
@@ -97,7 +97,7 @@ GET_TARIFFS_REQUEST = dict(
 TARIFF_INFO = {
     'id': int,
     'name': Text(),
-    'parent_tariffs': [{'id': int, 'name': Text()}],
+    'parent_tariffs': [{'id': int, 'name': Text(), 'status': TariffStatusValidator}],
     'tariffication_objects': [{'id': int, 'name': Text(), 'tariff_id': int}],
     'type': TariffTypeValidator,
     'status': TariffStatusValidator,

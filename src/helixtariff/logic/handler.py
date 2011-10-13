@@ -168,6 +168,20 @@ class Handler(AbstractHandler):
         exist_tos_ids = exist_tos_idx.keys()
         return filter(lambda x: x in exist_tos_ids, tos_ids)
 
+#    def _get_tariffication_objects_tariffs_data(self, leaf_tariff, tariffs_chain_data):
+#        result = []
+#        tariffs_idx = build_index(tariffs)
+#        while True:
+#            pt_id = leaf_tariff.parent_tariff_id
+#            if pt_id:
+#                parent_tariff = tariffs_idx[leaf_tariff.parent_tariff_id]
+#                result.append({'id': parent_tariff.id, 'name': parent_tariff.name,
+#                    'status': parent_tariff.status})
+#                leaf_tariff = parent_tariff
+#            else:
+#                break
+#        return result
+
     @transaction()
     @authenticate
     @detalize_error(TariffNotFound, ['parent_tariff_id'])
@@ -189,6 +203,60 @@ class Handler(AbstractHandler):
         mapping.insert(curs, t)
         return response_ok(id=t.id)
 
+    def _tariffs_chain_data(self, tariffs_idx, leaf_tariff):
+        result = [{'id': leaf_tariff.id, 'name': leaf_tariff.name,
+            'status': leaf_tariff.status}]
+        while True:
+            pt_id = leaf_tariff.parent_tariff_id
+            if pt_id:
+                parent_tariff = tariffs_idx[leaf_tariff.parent_tariff_id]
+                result.append({'id': parent_tariff.id, 'name': parent_tariff.name,
+                    'status': parent_tariff.status})
+                leaf_tariff = parent_tariff
+            else:
+                break
+        return result
+
+    def _tariffications_objects_chain_data(self, ts_idx, tos_idx, ts_chain_data):
+        result = []
+        processed_tos_ids = set()
+        for t_data in ts_chain_data:
+            t_id = t_data['id']
+            t = ts_idx[t_id]
+            tos_to_process = t.tariffication_objects_ids
+            for to_id in tos_to_process:
+                if to_id not in processed_tos_ids:
+                    to = tos_idx[to_id]
+                    to_data = {'id': to.id, 'name': to.name,
+                        'tariff_id': t.id}
+                    result.append(to_data)
+                    processed_tos_ids.add(to_id)
+        return result
+
+    @transaction()
+    @authenticate
+    def get_tariffs(self, data, session, curs=None):
+        t_f = TariffFilter(session, data['filter_params'],
+            data['paging_params'], data.get('ordering_params'))
+        ts, total = t_f.filter_counted(curs)
+
+        all_ts_f = TariffFilter(session, {}, {}, None)
+        all_ts = all_ts_f.filter_objs(curs)
+        all_ts_idx = build_index(all_ts)
+
+        all_to_f = TarifficationObjectFilter(session, {}, {}, None)
+        all_tos = all_to_f.filter_objs(curs)
+        all_tos_idx = build_index(all_tos)
+        def viewer(t):
+            ts_chain_data = self._tariffs_chain_data(all_ts_idx, t)
+            to_data = self._tariffications_objects_chain_data(all_ts_idx,
+                all_tos_idx, ts_chain_data)
+            return {
+                'id': t.id, 'name': t.name, 'type': t.type, 'status': t.status,
+                'parent_tariffs': ts_chain_data[1:],
+                'tariffication_objects': to_data,
+            }
+        return response_ok(tariffs=self.objects_info(ts, viewer), total=total)
 
 #
 #    def _get_new_parent_id(self, curs, operator, tariff_name, new_parent_name):

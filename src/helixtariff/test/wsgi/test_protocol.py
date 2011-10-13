@@ -154,16 +154,20 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'tariffs': []})
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
             'tariffs': [
-                {'id': 1, 'name': 't0', 'parent_tariffs': [{'id': 1, 'name': 'pt0'}],
+                {'id': 1, 'name': 't0', 'parent_tariffs': [{'id': 1, 'name': 'pt0',
+                    'status': Tariff.STATUS_ACTIVE}],
                 'tariffication_objects': [{'id': 1, 'name': 'item0', 'tariff_id': 2}],
                 'type': Tariff.TYPE_PUBLIC, 'status': Tariff.STATUS_ACTIVE}
         ]})
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
             'tariffs': [
-                {'id': 1, 'name': 't0', 'parent_tariffs': [{'id': 2, 'name': 'pt2'}, {'id': 3, 'name': 'pt3'}],
+                {'id': 1, 'name': 't0', 'parent_tariffs': [{'id': 2, 'name': 'pt2',
+                    'status': Tariff.STATUS_ACTIVE}, {'id': 3, 'name': 'pt3',
+                    'status': Tariff.STATUS_ARCHIVE}],
                 'tariffication_objects': [{'id': 1, 'name': 'item0', 'tariff_id': 2}],
                 'type': Tariff.TYPE_PUBLIC, 'status': Tariff.STATUS_ACTIVE},
-                {'id': 1, 'name': 't0', 'parent_tariffs': [{'id': 1, 'name': 'pt0'}],
+                {'id': 1, 'name': 't0', 'parent_tariffs': [{'id': 1, 'name': 'pt0',
+                    'status': Tariff.STATUS_ACTIVE}],
                 'tariffication_objects': [{'id': 1, 'name': 'item0', 'tariff_id': 2},
                     {'id': 2, 'name': 'item2', 'tariff_id': 3}],
                 'type': Tariff.TYPE_PUBLIC, 'status': Tariff.STATUS_ACTIVE},

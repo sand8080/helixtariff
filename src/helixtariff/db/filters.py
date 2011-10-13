@@ -1,7 +1,7 @@
 from helixcore.db.sql import (Eq, Like, MoreEq, LessEq, Any, In)
 from helixcore.db.filters import (InSessionFilter, EnvironmentObjectsFilter)
 
-from helixtariff.db.dataobject import (TarifficationObject, ActionLog)
+from helixtariff.db.dataobject import (TarifficationObject, ActionLog, Tariff)
 from helixcore.db.wrapper import ObjectNotFound, SelectedMoreThanOneRow
 from helixtariff.error import TarifficationObjectNotFound, TariffNotFound
 
@@ -34,7 +34,7 @@ class TariffFilter(InSessionFilter):
 
     def __init__(self, session, filter_params, paging_params, ordering_params):
         super(TariffFilter, self).__init__(session, filter_params,
-            paging_params, ordering_params, TarifficationObject)
+            paging_params, ordering_params, Tariff)
 
     def filter_one_obj(self, curs, for_update=False):
         try:
