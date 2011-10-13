@@ -24,12 +24,20 @@ class TariffTestCase(ActorLogicTestCase):
         self._add_tariff(name)
         self._add_tariff(name)
 
-#    def test_add_parent_tariff(self):
-#        t_id = self._add_tariff('tariff parent')
-#        self._add_tariff('tariff child', t_id)
-#
-#        # TODO: implement checking by get action
-#
+    def test_add_parent_tariff(self):
+        t_id = self._add_tariff('tariff parent')
+        tch_id = self._add_tariff('tariff child', t_id)
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'filter_params': {'id': tch_id},
+            'paging_params': {}}
+        resp = self.get_tariffs(**req)
+        self.check_response_ok(resp)
+        t_data = resp['tariffs'][0]
+        pts_data = t_data['parent_tariffs']
+        self.assertEquals(1, len(pts_data))
+        self.assertEquals(t_id, pts_data[0]['id'])
+
+
     def test_add_wrong_parent_tariff(self):
         self.assertRaises(RequestProcessingError, self._add_tariff, 'tariff one',
             {'parent_tariff_id': 4444})
