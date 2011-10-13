@@ -59,7 +59,10 @@ class TariffTestCase(ActorLogicTestCase):
         self.assertEquals(t_id_1, t_data['id'])
         self.assertEquals(name_1, t_data['name'])
         pts = t_data['parent_tariffs']
+        pts_0 = pts[0]
         self.assertEquals(1, len(pts))
+        self.assertEquals(t_id_0, pts_0['id'])
+        self.assertEquals(name_0, pts_0['name'])
 
 
 if __name__ == '__main__':
