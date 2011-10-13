@@ -1,6 +1,6 @@
 from helixcore.server.api import ApiCall
 from helixcore.json_validator import (Scheme, Text, Optional, AnyOf,
-    NonNegative, ArbitraryDict)
+    NonNegative)
 from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
     LOGIN_REQUEST, LOGIN_RESPONSE, LOGOUT_REQUEST, LOGOUT_RESPONSE,
     AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE, RESPONSE_STATUS_ONLY,
@@ -70,7 +70,6 @@ ADD_TARIFF_REQUEST = dict(
     {
         'name': Text(),
         'parent_tariff_id': TariffParentIdValidator,
-        'tariffication_objects_ids': [int],
         'type': AnyOf('public', 'personal'),
         'status': AnyOf('active', 'archive', 'inactive'),
     },

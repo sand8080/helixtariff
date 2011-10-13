@@ -193,11 +193,9 @@ class Handler(AbstractHandler):
             t_f = TariffFilter(session, {'id': pt_id}, {}, None)
             t_f.filter_one_obj(curs)
 
-        tos_ids = self._filter_exist_tariffication_objects_ids(curs, session, data['tariffication_objects_ids'])
         t_data = {'environment_id': session.environment_id,
             'parent_tariff_id': pt_id, 'name': data['name'],
-            'tariffication_objects_ids': tos_ids, 'type': data['type'],
-            'status': data['status']}
+            'type': data['type'], 'status': data['status']}
         t = Tariff(**t_data)
 
         mapping.insert(curs, t)

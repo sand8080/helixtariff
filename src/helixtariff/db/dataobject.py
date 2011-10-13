@@ -15,7 +15,7 @@ class Tariff(Mapped):
     STATUS_INACTIVE = 'inactive'
 
     __slots__ = ['id', 'environment_id', 'name', 'parent_tariff_id',
-        'tariffication_objects_ids', 'type', 'status']
+        'type', 'status']
     table = 'tariff'
 
 

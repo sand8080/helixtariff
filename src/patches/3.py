@@ -8,7 +8,6 @@ def apply(curs): #IGNORE:W0622
             environment_id integer NOT NULL,
             parent_tariff_id integer,
             FOREIGN KEY (parent_tariff_id) REFERENCES tariff(id),
-            tariffication_objects_ids integer[],
             name varchar NOT NULL,
             type varchar NOT NULL CHECK(type in ('public', 'personal')),
             status varchar NOT NULL CHECK(status in ('active', 'archive', 'inactive'))
@@ -22,10 +21,10 @@ def apply(curs): #IGNORE:W0622
     '''
     )
 
-    print 'Creating unique index tariff_environment_id_name_type_idx on tariff (environment_id, name, type)'
+    print 'Creating index tariff_environment_id_name_type_idx on tariff (environment_id, name, type)'
     curs.execute(
     '''
-        CREATE UNIQUE INDEX tariff_environment_id_name_type_idx ON tariff (environment_id, name, type)
+        CREATE INDEX tariff_environment_id_name_type_idx ON tariff (environment_id, name, type)
     '''
     )
 
@@ -40,7 +39,7 @@ def revert(curs):
     print 'Dropping index tariff_parent_tariff_id_idx on tariff'
     curs.execute('DROP INDEX IF EXISTS tariff_parent_tariff_id_idx')
 
-    print 'Dropping unique index tariff_environment_id_name_type_idx on tariff'
+    print 'Dropping index tariff_environment_id_name_type_idx on tariff'
     curs.execute('DROP INDEX IF EXISTS tariff_environment_id_name_type_idx')
 
     print 'Dropping index tariff_environment_id_idx on tariff'
