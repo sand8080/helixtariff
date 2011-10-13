@@ -215,21 +215,21 @@ class Handler(AbstractHandler):
                 break
         return result
 
-    def _tariffications_objects_chain_data(self, ts_idx, tos_idx, ts_chain_data):
-        result = []
-        processed_tos_ids = set()
-        for t_data in ts_chain_data:
-            t_id = t_data['id']
-            t = ts_idx[t_id]
-            tos_to_process = t.tariffication_objects_ids
-            for to_id in tos_to_process:
-                if to_id not in processed_tos_ids:
-                    to = tos_idx[to_id]
-                    to_data = {'id': to.id, 'name': to.name,
-                        'tariff_id': t.id}
-                    result.append(to_data)
-                    processed_tos_ids.add(to_id)
-        return result
+#    def _tariffications_objects_chain_data(self, ts_idx, tos_idx, ts_chain_data):
+#        result = []
+#        processed_tos_ids = set()
+#        for t_data in ts_chain_data:
+#            t_id = t_data['id']
+#            t = ts_idx[t_id]
+#            tos_to_process = t.tariffication_objects_ids
+#            for to_id in tos_to_process:
+#                if to_id not in processed_tos_ids:
+#                    to = tos_idx[to_id]
+#                    to_data = {'id': to.id, 'name': to.name,
+#                        'tariff_id': t.id}
+#                    result.append(to_data)
+#                    processed_tos_ids.add(to_id)
+#        return result
 
     @transaction()
     @authenticate
@@ -242,18 +242,16 @@ class Handler(AbstractHandler):
         all_ts = all_ts_f.filter_objs(curs)
         all_ts_idx = build_index(all_ts)
 
-        all_to_f = TarifficationObjectFilter(session, {}, {}, None)
-        all_tos = all_to_f.filter_objs(curs)
-        all_tos_idx = build_index(all_tos)
+#        all_to_f = TarifficationObjectFilter(session, {}, {}, None)
+#        all_tos = all_to_f.filter_objs(curs)
+#        all_tos_idx = build_index(all_tos)
+
         def viewer(t):
             ts_chain_data = self._tariffs_chain_data(all_ts_idx, t)
-            to_data = self._tariffications_objects_chain_data(all_ts_idx,
-                all_tos_idx, ts_chain_data)
-            return {
-                'id': t.id, 'name': t.name, 'type': t.type, 'status': t.status,
-                'parent_tariffs': ts_chain_data[1:],
-                'tariffication_objects': to_data,
-            }
+#            to_data = self._tariffications_objects_chain_data(all_ts_idx,
+#                all_tos_idx, ts_chain_data)
+            return {'id': t.id, 'name': t.name, 'type': t.type,
+                'status': t.status, 'parent_tariffs': ts_chain_data[1:]}
         return response_ok(tariffs=self.objects_info(ts, viewer), total=total)
 
 #

@@ -97,7 +97,6 @@ TARIFF_INFO = {
     'id': int,
     'name': Text(),
     'parent_tariffs': [{'id': int, 'name': Text(), 'status': TariffStatusValidator}],
-    'tariffication_objects': [{'id': int, 'name': Text(), 'tariff_id': int}],
     'type': TariffTypeValidator,
     'status': TariffStatusValidator,
 }
