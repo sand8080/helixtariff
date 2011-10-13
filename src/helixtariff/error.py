@@ -33,24 +33,9 @@ class TariffNotFound(HelixtariffObjectNotFound):
         self.code = error_code.HELIXTARIFF_TARIFF_NOT_FOUND
 
 
-#class OperatorAlreadyExists(ActionNotAllowedError, HelixtariffError):
-#    def __init__(self, login):
-#        super(OperatorAlreadyExists, self).__init__("Operator '%s' already exists" % login)
-#
-#
-#class TariffCycleError(HelixtariffError):
-#    pass
-#
-#
-#class ObjectNotFound(HelixtariffError):
-#    pass
-#
-#
-#class TariffNotFound(ObjectNotFound):
-#    def __init__(self, name):
-#        super(TariffNotFound, self).__init__("Tariff '%s' not found" % name)
-#
-#
+class TariffCycleError(HelixtariffError):
+    code = error_code.HELIXTARIFF_TARIFF_CYCLE
+
 #class RuleNotFound(ObjectNotFound):
 #    pass
 #

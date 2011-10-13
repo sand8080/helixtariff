@@ -144,44 +144,6 @@ class Handler(AbstractHandler):
         return response_ok(action_logs=self.objects_info(action_logs, viewer),
             total=total)
 
-#    @transaction()
-#    @authenticate
-#    def add_tariff(self, data, session, curs=None):
-#        service_set = selector.get_service_set_by_name(curs, operator, data['service_set'])
-#        del data['service_set']
-#        data['service_set_id'] = service_set.id
-#        parent_tariff = data['parent_tariff']
-#        if parent_tariff is None:
-#            parent_id = None
-#        else:
-#            parent_id = selector.get_tariff(curs, operator, parent_tariff).id
-#        del data['parent_tariff']
-#        data['parent_id'] = parent_id
-#        mapping.insert(curs, Tariff(**data))
-#        return response_ok()
-
-
-    def _filter_exist_tariffication_objects_ids(self, curs, session, tos_ids):
-        to_f = TarifficationObjectFilter(session, {}, {}, None)
-        tos = to_f.filter_objs(curs)
-        exist_tos_idx = build_index(tos)
-        exist_tos_ids = exist_tos_idx.keys()
-        return filter(lambda x: x in exist_tos_ids, tos_ids)
-
-#    def _get_tariffication_objects_tariffs_data(self, leaf_tariff, tariffs_chain_data):
-#        result = []
-#        tariffs_idx = build_index(tariffs)
-#        while True:
-#            pt_id = leaf_tariff.parent_tariff_id
-#            if pt_id:
-#                parent_tariff = tariffs_idx[leaf_tariff.parent_tariff_id]
-#                result.append({'id': parent_tariff.id, 'name': parent_tariff.name,
-#                    'status': parent_tariff.status})
-#                leaf_tariff = parent_tariff
-#            else:
-#                break
-#        return result
-
     @transaction()
     @authenticate
     @detalize_error(TariffNotFound, ['parent_tariff_id'])
@@ -215,6 +177,7 @@ class Handler(AbstractHandler):
                 break
         return result
 
+#    Useful for price plan calculation
 #    def _tariffications_objects_chain_data(self, ts_idx, tos_idx, ts_chain_data):
 #        result = []
 #        processed_tos_ids = set()
@@ -230,6 +193,13 @@ class Handler(AbstractHandler):
 #                    result.append(to_data)
 #                    processed_tos_ids.add(to_id)
 #        return result
+#
+#    def _filter_exist_tariffication_objects_ids(self, curs, session, tos_ids):
+#        to_f = TarifficationObjectFilter(session, {}, {}, None)
+#        tos = to_f.filter_objs(curs)
+#        exist_tos_idx = build_index(tos)
+#        exist_tos_ids = exist_tos_idx.keys()
+#        return filter(lambda x: x in exist_tos_ids, tos_ids)
 
     @transaction()
     @authenticate
@@ -242,17 +212,33 @@ class Handler(AbstractHandler):
         all_ts = all_ts_f.filter_objs(curs)
         all_ts_idx = build_index(all_ts)
 
-#        all_to_f = TarifficationObjectFilter(session, {}, {}, None)
-#        all_tos = all_to_f.filter_objs(curs)
-#        all_tos_idx = build_index(all_tos)
-
         def viewer(t):
             ts_chain_data = self._tariffs_chain_data(all_ts_idx, t)
-#            to_data = self._tariffications_objects_chain_data(all_ts_idx,
-#                all_tos_idx, ts_chain_data)
             return {'id': t.id, 'name': t.name, 'type': t.type,
                 'status': t.status, 'parent_tariffs': ts_chain_data[1:]}
         return response_ok(tariffs=self.objects_info(ts, viewer), total=total)
+
+
+    @transaction()
+    @authenticate
+    @detalize_error(HelixtariffObjectAlreadyExists, 'new_name')
+    @detalize_error(TarifficationObjectNotFound, 'id')
+    def modify_tariff(self, data, session, curs=None):
+        f = TariffFilter(session, {'id': data.get('id')}, {}, None)
+        loader = partial(f.filter_one_obj, curs, for_update=True)
+
+        # checking tariff inheritance cycle
+
+        # checking inactivation possible
+
+
+        try:
+            self.update_obj(curs, data, loader)
+        except DataIntegrityError:
+            raise HelixtariffObjectAlreadyExists('Tariff %s already exists' %
+                data.get('new_name'))
+        return response_ok()
+
 
 #
 #    def _get_new_parent_id(self, curs, operator, tariff_name, new_parent_name):

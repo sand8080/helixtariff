@@ -172,7 +172,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
 
     def test_modify_tariff(self):
         a_name = 'modify_tariff'
-        self.api.validate_request(a_name, {'session_id': 's',
+        self.api.validate_request(a_name, {'session_id': 's', 'id': 1,
             'new_name': 'n', 'new_status': Tariff.STATUS_ARCHIVE,
             'new_type': Tariff.TYPE_PERSONAL, 'new_parent_tariff_id': 1})
         self.validate_status_response(a_name)

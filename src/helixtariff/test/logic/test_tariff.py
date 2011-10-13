@@ -21,8 +21,7 @@ class TariffTestCase(ActorLogicTestCase):
     def test_add_tariff_duplication(self):
         name = 'tariff one'
         self._add_tariff(name)
-        self._add_tariff(name)
-        self._add_tariff(name)
+        self.assertRaises(RequestProcessingError, self._add_tariff, name)
 
     def test_add_parent_tariff(self):
         t_id = self._add_tariff('tariff parent')

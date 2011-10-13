@@ -21,10 +21,10 @@ def apply(curs): #IGNORE:W0622
     '''
     )
 
-    print 'Creating index tariff_environment_id_name_type_idx on tariff (environment_id, name, type)'
+    print 'Creating unique index tariff_environment_id_name_type_idx on tariff (environment_id, name, type)'
     curs.execute(
     '''
-        CREATE INDEX tariff_environment_id_name_type_idx ON tariff (environment_id, name, type)
+        CREATE UNIQUE INDEX tariff_environment_id_name_type_idx ON tariff (environment_id, name, type)
     '''
     )
 
@@ -39,7 +39,7 @@ def revert(curs):
     print 'Dropping index tariff_parent_tariff_id_idx on tariff'
     curs.execute('DROP INDEX IF EXISTS tariff_parent_tariff_id_idx')
 
-    print 'Dropping index tariff_environment_id_name_type_idx on tariff'
+    print 'Dropping unique index tariff_environment_id_name_type_idx on tariff'
     curs.execute('DROP INDEX IF EXISTS tariff_environment_id_name_type_idx')
 
     print 'Dropping index tariff_environment_id_idx on tariff'
