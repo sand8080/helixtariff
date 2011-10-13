@@ -112,18 +112,17 @@ GET_TARIFFS_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-#MODIFY_TARIFF_REQUEST = dict(
-#    {
-#        'new_name': Text(),
-#        'parent_tariff_id': AnyOf(None, int),
-#        'tariffication_objects_ids': [int],
-#        'type': AnyOf('public', 'personal'),
-#        'status': AnyOf('active', 'archive', 'inactive'),
-#    },
-#    **AUTHORIZED_REQUEST_AUTH_INFO
-#)
-#
-#MODIFY_TARIFF_RESPONSE = ADDING_OBJECT_RESPONSE
+MODIFY_TARIFF_REQUEST = dict(
+    {
+        'new_name': Text(),
+        'new_parent_tariff_id': TariffParentIdValidator,
+        'new_type': TariffTypeValidator,
+        'new_status': TariffStatusValidator,
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+MODIFY_TARIFF_RESPONSE = RESPONSE_STATUS_ONLY
 
 
 ## --- service set ---
@@ -483,6 +482,9 @@ protocol = [
 
     ApiCall('get_tariffs_request', Scheme(GET_TARIFFS_REQUEST)),
     ApiCall('get_tariffs_response', Scheme(GET_TARIFFS_RESPONSE)),
+
+    ApiCall('modify_tariff_request', Scheme(MODIFY_TARIFF_REQUEST)),
+    ApiCall('modify_tariff_response', Scheme(MODIFY_TARIFF_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
