@@ -178,6 +178,11 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'new_type': Tariff.TYPE_PERSONAL, 'new_parent_tariff_id': 1})
         self.validate_status_response(a_name)
 
+    def test_delete_tariff(self):
+        a_name = 'delete_tariff'
+        self.api.validate_request(a_name, {'session_id': 's', 'id': 1})
+        self.validate_status_response(a_name)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -125,6 +125,13 @@ MODIFY_TARIFF_REQUEST = dict(
 
 MODIFY_TARIFF_RESPONSE = RESPONSE_STATUS_ONLY
 
+DELETE_TARIFF_REQUEST = dict(
+    {'id': int},
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+DELETE_TARIFF_RESPONSE = RESPONSE_STATUS_ONLY
+
 
 ## --- service set ---
 #ADD_SERVICE_SET = dict(
@@ -486,6 +493,9 @@ protocol = [
 
     ApiCall('modify_tariff_request', Scheme(MODIFY_TARIFF_REQUEST)),
     ApiCall('modify_tariff_response', Scheme(MODIFY_TARIFF_RESPONSE)),
+
+    ApiCall('delete_tariff_request', Scheme(DELETE_TARIFF_REQUEST)),
+    ApiCall('delete_tariff_response', Scheme(DELETE_TARIFF_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
