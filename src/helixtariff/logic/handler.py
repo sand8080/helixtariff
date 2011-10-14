@@ -9,10 +9,11 @@ from helixcore.server.response import response_ok
 from helixtariff.conf import settings
 from helixtariff.conf.db import transaction
 from helixcore.actions.handler import detalize_error, AbstractHandler
-from helixcore.db.wrapper import ObjectCreationError
+from helixcore.db.wrapper import ObjectCreationError, ObjectDeletionError
 from helixtariff.db.dataobject import TarifficationObject, Tariff
 from helixtariff.error import (HelixtariffObjectAlreadyExists,
-    TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected)
+    TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected,
+    TariffUsed)
 from helixcore.error import DataIntegrityError
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
     TariffFilter)
@@ -114,7 +115,6 @@ class Handler(AbstractHandler):
     def delete_tariffication_object(self, data, session, curs=None):
         f = TarifficationObjectFilter(session, {'id': data.get('id')}, {}, None)
         mapping.delete(curs, f.filter_one_obj(curs))
-        # TODO: remove from tariffs, rules?
         return response_ok()
 
     @transaction()
@@ -249,144 +249,18 @@ class Handler(AbstractHandler):
                 data.get('new_name'))
         return response_ok()
 
+    @transaction()
+    @authenticate
+    @detalize_error(TariffNotFound, 'id')
+    @detalize_error(TariffUsed, 'id')
+    def delete_tariff(self, data, session, curs=None):
+        f = TariffFilter(session, {'id': data['id']}, {}, None)
+        try:
+            mapping.delete(curs, f.filter_one_obj(curs))
+        except ObjectDeletionError:
+            raise TariffUsed('Tariff %s used' % data['id'])
+        return response_ok()
 
-#
-#    def _get_new_parent_id(self, curs, operator, tariff_name, new_parent_name):
-#        if new_parent_name is None:
-#            return None
-#        tariffs_names_idx = selector.get_tariffs_names_indexed_by_id(curs, operator)
-#        tariffs_ids_idx = dict([(v, k) for (k, v) in tariffs_names_idx.iteritems()])
-#
-#        if tariff_name not in tariffs_ids_idx:
-#            raise TariffNotFound(tariff_name)
-#        tariff_id = tariffs_ids_idx[tariff_name]
-#
-#        if new_parent_name not in tariffs_ids_idx:
-#            raise TariffNotFound(new_parent_name)
-#        new_parent_id = tariffs_ids_idx[new_parent_name]
-#
-#        parents_ids_idx = selector.get_tariffs_parent_ids_indexed_by_id(curs, operator)
-#        parents_ids_idx[tariff_id] = new_parent_id
-#        self._calculate_tariffs_chain(
-#            tariff_id,
-#            tariffs_names_idx,
-#            parents_ids_idx
-#        )
-#        return new_parent_id
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_integrity, 'name')
-#    @detalize_error(TariffCycleError, RequestProcessingError.Category.data_integrity, 'parent_tariff')
-#    @detalize_error(ServiceSetNotFound, RequestProcessingError.Category.data_integrity, 'service_set')
-#    def modify_tariff(self, data, operator, curs=None):
-#        t_name = data['name']
-#        t = selector.get_tariff(curs, operator, t_name, for_update=True)
-#        if 'new_parent_tariff' in data:
-#            new_p_name = data['new_parent_tariff']
-#            try:
-#                data['new_parent_id'] = self._get_new_parent_id(curs, operator, t_name, new_p_name)
-#            except TariffNotFound, e:
-#                raise RequestProcessingError(RequestProcessingError.Category.data_integrity,
-#                    e.message, details={'parent_tariff': e.message})
-#            del data['new_parent_tariff']
-#        if 'new_service_set' in data:
-#            new_ss = selector.get_service_set_by_name(curs, operator, data['new_service_set'])
-#            st_names_idx = selector.get_service_types_names_indexed_by_id(curs, operator)
-#            old_st_ids = selector.get_service_types_ids(curs, [t.service_set_id])
-#            new_st_ids = selector.get_service_types_ids(curs, [new_ss.id])
-#            st_names_to_check = [st_names_idx[idx] for idx in set(old_st_ids) - set(new_st_ids)]
-#            self._check_types_not_used(curs, operator, [new_ss.id], st_names_to_check)
-#            data['new_service_set_id'] = new_ss.id
-#            del data['new_service_set']
-#        def loader():
-#            return t
-#        self.update_obj(curs, data, loader)
-#        return response_ok()
-#
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(TariffUsed, RequestProcessingError.Category.data_integrity, 'name')
-#    def delete_tariff(self, data, operator, curs=None):
-#        t_name = data['name']
-#        t = selector.get_tariff(curs, operator, t_name, for_update=True)
-#        childs = selector.get_child_tariffs(curs, t)
-#        if childs:
-#            ch_names = [ch.name for ch in childs]
-#            raise TariffUsed("Tariff '%s' is parent of %s" % (t.name, ', '.join(ch_names)))
-#        rules = selector.get_rules(curs, t, [Rule.TYPE_ACTUAL, Rule.TYPE_DRAFT])
-#        undel_rules = filter(lambda x: x.type == Rule.TYPE_ACTUAL and x.enabled, rules)
-#        if undel_rules:
-#            st_names_idx = selector.get_service_sets_names_indexed_by_id(curs, operator)
-#            st_names = [st_names_idx[r.service_type_id] for r in undel_rules]
-#            raise TariffUsed("In tariff '%s' defined undeletable rules for services %s" %
-#                (t.name, ', '.join(st_names)))
-#        else:
-#            mapping.delete_objects(curs, rules)
-#        mapping.delete(curs, t)
-#        return response_ok()
-#
-#    def _get_tariffs_data(self, curs, operator, tariffs):
-#        ss_names = selector.get_service_sets_names_indexed_by_id(curs, operator)
-#        t_names_idx = selector.get_tariffs_names_indexed_by_id(curs, operator)
-#        pt_ids_idx = selector.get_tariffs_parent_ids_indexed_by_id(curs, operator)
-#
-#        result = []
-#        for tariff in tariffs:
-#            t_chain = self._calculate_tariffs_chain(tariff.id, t_names_idx, pt_ids_idx)
-#            _, t_names = map(list, zip(*t_chain))
-#            try:
-#                pt_name = t_names[1]
-#            except IndexError:
-#                pt_name = None
-#
-#            result.append(
-#                {
-#                    'name': tariff.name,
-#                    'service_set': ss_names.get(tariff.service_set_id),
-#                    'tariffs_chain': t_names,
-#                    'parent_tariff': pt_name,
-#                    'in_archive': tariff.in_archive,
-#                }
-#            )
-#        return result
-#
-#    def _tariffs_chain_names(self, tariff_id, tariffs_ids, tariffs_names):
-#        return tariffs_names[:tariffs_ids.index(tariff_id) + 1]
-#
-#    @transaction()
-#    @authentificate
-#    def get_tariff(self, data, operator, curs=None):
-#        tariff = selector.get_tariff(curs, operator, data['name'])
-#        tariffs_data = self._get_tariffs_data(curs, operator, [tariff])
-#        return response_ok(**tariffs_data[0])
-#
-#    @transaction()
-#    @authentificate
-#    def get_tariff_detailed(self, data, operator, curs=None):
-#        tariff = selector.get_tariff(curs, operator, data['name'])
-#        tariffs_data = self._get_tariffs_data(curs, operator, [tariff])
-#        tariff_data = tariffs_data[0]
-#        types = selector.get_service_types_by_service_set(curs, operator, tariff_data['service_set'])
-#        tariff_data['service_types'] = sorted([t.name for t in types])
-#        return response_ok(**tariff_data)
-#
-#    @transaction()
-#    @authentificate
-#    def view_tariffs(self, _, operator, curs=None):
-#        tariffs = mapping.get_list(curs, Tariff, cond=Eq('operator_id', operator.id))
-#        return response_ok(tariffs=self._get_tariffs_data(curs, operator, tariffs))
-#
-#    @transaction()
-#    @authentificate
-#    def view_tariffs_detailed(self, _, operator, curs=None):
-#        tariffs = mapping.get_list(curs, Tariff, cond=Eq('operator_id', operator.id))
-#        service_sets_types = self._get_service_sets_types_dict(curs, operator)
-#        tariffs_data = self._get_tariffs_data(curs, operator, tariffs)
-#        for d in tariffs_data:
-#            d['service_types'] = service_sets_types[d['service_set']]
-#        return response_ok(tariffs=tariffs_data)
 #
 #    # rule
 #    def _check_service_type_in_service_set(self, curs, service_type, service_set):
@@ -641,20 +515,3 @@ class Handler(AbstractHandler):
 #
 #            prices.append(p_info)
 #        return response_ok(**response)
-#
-#    @transaction()
-#    @authentificate
-#    def view_action_logs(self, data, operator, curs=None):
-#        al_info = []
-#        action_logs = selector.get_action_logs(curs, operator, data['filter_params'])
-#        for action_log in action_logs:
-#            al_info.append({
-#                'custom_operator_info': action_log.custom_operator_info,
-#                'action': action_log.action,
-#                'request_date': action_log.request_date.isoformat(),
-#                'remote_addr': action_log.remote_addr,
-#                'request': action_log.request,
-#                'response': action_log.response,
-#            })
-#        total = selector.get_action_logs_count(curs, operator, data['filter_params'])
-#        return response_ok(total=int(total), action_logs=al_info)

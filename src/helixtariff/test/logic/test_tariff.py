@@ -105,6 +105,33 @@ class TariffTestCase(ActorLogicTestCase):
             'new_parent_tariff_id': cht_id}
         self.assertRaises(RequestProcessingError, self.modify_tariff, **req)
 
+    def test_delete_tariff(self):
+        sess = self.login_actor()
+
+        t_id = self._add_tariff('t')
+        req = {'session_id': sess.session_id, 'filter_params': {'id': t_id},
+            'paging_params': {}}
+        resp = self.get_tariffs(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(1, resp['total'])
+
+        req = {'session_id': sess.session_id, 'id': t_id}
+        resp = self.delete_tariff(**req)
+        self.check_response_ok(resp)
+        req = {'session_id': sess.session_id, 'filter_params': {'id': t_id},
+            'paging_params': {}}
+        resp = self.get_tariffs(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(0, resp['total'])
+
+    def test_delete_used_tariff_failed(self):
+        pt_id = self._add_tariff('pt')
+        self._add_tariff('cht', parent_tariff_id=pt_id)
+
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'id': pt_id}
+        self.assertRaises(RequestProcessingError, self.delete_tariff, **req)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,5 @@
 from helixtariff import error_code
-from helixcore.db.wrapper import ObjectCreationError, ObjectNotFound
+from helixcore.db.wrapper import (ObjectCreationError, ObjectNotFound)
 from helixcore import security
 
 
@@ -35,6 +35,11 @@ class TariffNotFound(HelixtariffObjectNotFound):
 
 class TariffCycleDetected(HelixtariffError):
     code = error_code.HELIXTARIFF_TARIFF_CYCLE_DETECTED
+
+
+class TariffUsed(HelixtariffError):
+    code = error_code.HELIXTARIFF_TARIFF_USED
+
 
 #class RuleNotFound(ObjectNotFound):
 #    pass
