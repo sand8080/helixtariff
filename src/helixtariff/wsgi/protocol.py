@@ -115,10 +115,10 @@ GET_TARIFFS_RESPONSE = AnyOf(
 MODIFY_TARIFF_REQUEST = dict(
     {
         'id': int,
-        'new_name': Text(),
-        'new_parent_tariff_id': TariffParentIdValidator,
-        'new_type': TariffTypeValidator,
-        'new_status': TariffStatusValidator,
+        Optional('new_name'): Text(),
+        Optional('new_parent_tariff_id'): TariffParentIdValidator,
+        Optional('new_type'): TariffTypeValidator,
+        Optional('new_status'): TariffStatusValidator,
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )

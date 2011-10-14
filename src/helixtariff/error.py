@@ -33,8 +33,8 @@ class TariffNotFound(HelixtariffObjectNotFound):
         self.code = error_code.HELIXTARIFF_TARIFF_NOT_FOUND
 
 
-class TariffCycleError(HelixtariffError):
-    code = error_code.HELIXTARIFF_TARIFF_CYCLE
+class TariffCycleDetected(HelixtariffError):
+    code = error_code.HELIXTARIFF_TARIFF_CYCLE_DETECTED
 
 #class RuleNotFound(ObjectNotFound):
 #    pass

@@ -12,7 +12,7 @@ from helixcore.actions.handler import detalize_error, AbstractHandler
 from helixcore.db.wrapper import ObjectCreationError
 from helixtariff.db.dataobject import TarifficationObject, Tariff
 from helixtariff.error import (HelixtariffObjectAlreadyExists,
-    TarifficationObjectNotFound, TariffNotFound)
+    TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected)
 from helixcore.error import DataIntegrityError
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
     TariffFilter)
@@ -166,6 +166,7 @@ class Handler(AbstractHandler):
     def _tariffs_chain_data(self, tariffs_idx, leaf_tariff):
         result = [{'id': leaf_tariff.id, 'name': leaf_tariff.name,
             'status': leaf_tariff.status}]
+        chain_tariffs_ids = set([leaf_tariff.id])
         while True:
             pt_id = leaf_tariff.parent_tariff_id
             if pt_id:
@@ -173,6 +174,10 @@ class Handler(AbstractHandler):
                 result.append({'id': parent_tariff.id, 'name': parent_tariff.name,
                     'status': parent_tariff.status})
                 leaf_tariff = parent_tariff
+
+                if pt_id in chain_tariffs_ids:
+                    raise TariffCycleDetected('Tariffs chain detected: %s' % result)
+                chain_tariffs_ids.add(pt_id)
             else:
                 break
         return result
@@ -223,17 +228,22 @@ class Handler(AbstractHandler):
     @authenticate
     @detalize_error(HelixtariffObjectAlreadyExists, 'new_name')
     @detalize_error(TarifficationObjectNotFound, 'id')
+    @detalize_error(TariffCycleDetected, 'new_parent_name')
     def modify_tariff(self, data, session, curs=None):
         f = TariffFilter(session, {'id': data.get('id')}, {}, None)
         loader = partial(f.filter_one_obj, curs, for_update=True)
 
-        # checking tariff inheritance cycle
-
-        # checking inactivation possible
-
-
         try:
-            self.update_obj(curs, data, loader)
+            updated_objs = self.update_obj(curs, data, loader)
+            t = updated_objs[0]
+
+            # checking tariff cycle
+            all_ts_f = TariffFilter(session, {}, {}, None)
+            all_ts = all_ts_f.filter_objs(curs)
+            all_ts_idx = build_index(all_ts)
+
+            self._tariffs_chain_data(all_ts_idx, t)
+
         except DataIntegrityError:
             raise HelixtariffObjectAlreadyExists('Tariff %s already exists' %
                 data.get('new_name'))
