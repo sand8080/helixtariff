@@ -9,7 +9,7 @@ class HelixtariffApplication(Application):
     def __init__(self, h, p, l):
         tracking_api_calls = ('add_tariffication_object',
             'modify_tariffication_object', 'delete_tariffication_object',
-            'add_tariff')
+            'add_tariff', 'modify_tariff', 'delete_tariff')
         super(HelixtariffApplication, self).__init__(h, p, l, tracking_api_calls)
 
     @transaction()
