@@ -27,6 +27,15 @@ class ActionLog(Mapped):
     table = 'action_log'
 
 
+class Rule(Mapped):
+    STATUS_ACTIVE = 'active'
+    STATUS_INACTIVE = 'inactive'
+
+    __slots__ = ['id', 'environment_id', 'tariff_id', 'status',
+        'tariffication_object_id', 'rule', 'draft_rule']
+    table = 'rule'
+
+
 #class ServiceSet(Mapped):
 #    __slots__ = ['id', 'operator_id', 'name']
 #    table = 'service_set'
@@ -38,10 +47,5 @@ class ActionLog(Mapped):
 #
 #
 #
-#class Rule(Mapped):
-#    __slots__ = ['id', 'operator_id', 'type', 'enabled', 'tariff_id', 'service_type_id', 'rule']
-#    table = 'rule'
-#    TYPE_DRAFT = 'draft'
-#    TYPE_ACTUAL = 'actual'
 
 

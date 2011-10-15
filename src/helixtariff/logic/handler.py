@@ -10,7 +10,7 @@ from helixtariff.conf import settings
 from helixtariff.conf.db import transaction
 from helixcore.actions.handler import detalize_error, AbstractHandler
 from helixcore.db.wrapper import ObjectCreationError, ObjectDeletionError
-from helixtariff.db.dataobject import TarifficationObject, Tariff
+from helixtariff.db.dataobject import TarifficationObject, Tariff, Rule
 from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected,
     TariffUsed)
@@ -260,6 +260,38 @@ class Handler(AbstractHandler):
         except ObjectDeletionError:
             raise TariffUsed('Tariff %s used' % data['id'])
         return response_ok()
+
+    @transaction()
+    @authenticate
+#    @detalize_error(TariffNotFound, 'rules')
+#    @detalize_error(TarifficationObjectNotFound, 'rules')
+    def save_rules(self, data, session, curs=None):
+        rules = data['rules']
+        ids = []
+        if not rules:
+            return response_ok(ids=ids)
+
+        all_t_f = TariffFilter(session, {}, {}, None)
+        all_ts = all_t_f.filter_objs(curs)
+        all_ts_idx = build_index(all_ts)
+
+        all_to_f = TarifficationObjectFilter(session, {}, {}, None)
+        all_tos = all_to_f.filter_objs(curs)
+        all_tos_idx = build_index(all_tos)
+
+        for rule_data in rules:
+            r = Rule(environment_id=session.environment_id, **rule_data)
+            if r.tariff_id not in all_ts_idx:
+                raise TariffNotFound('Tariff %s not found' % r.tariff_id)
+            if r.tariffication_object_id not in all_tos_idx:
+                raise TarifficationObjectNotFound('Tariffication object %s not found' %
+                    r.tariffication_object_id)
+            mapping.save(curs, r)
+#            try:
+#            except ObjectCreationError:
+#                raise
+            ids.append(r.id)
+        return response_ok(ids=ids)
 
 #
 #    # rule

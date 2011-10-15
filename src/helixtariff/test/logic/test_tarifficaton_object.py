@@ -6,13 +6,6 @@ from helixcore.error import RequestProcessingError
 
 
 class TarifficationObjectTestCase(ActorLogicTestCase):
-    def _add_tariffication_object(self, name):
-        sess = self.login_actor()
-        req = {'session_id': sess.session_id, 'name': name}
-        resp = self.add_tariffication_object(**req)
-        self.check_response_ok(resp)
-        return resp['id']
-
     def test_add_tariffication_object(self):
         self._add_tariffication_object('Product one')
         self._add_tariffication_object(u'маринад')
