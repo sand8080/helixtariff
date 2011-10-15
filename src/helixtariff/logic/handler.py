@@ -13,10 +13,10 @@ from helixcore.db.wrapper import ObjectCreationError, ObjectDeletionError
 from helixtariff.db.dataobject import TarifficationObject, Tariff, Rule
 from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected,
-    TariffUsed)
+    TariffUsed, RuleAlreadyExsits, RuleNotFound)
 from helixcore.error import DataIntegrityError
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
-    TariffFilter)
+    TariffFilter, RuleFilter)
 from helixcore.db.filters import build_index
 
 
@@ -263,8 +263,10 @@ class Handler(AbstractHandler):
 
     @transaction()
     @authenticate
-#    @detalize_error(TariffNotFound, 'rules')
-#    @detalize_error(TarifficationObjectNotFound, 'rules')
+    @detalize_error(RuleAlreadyExsits, 'rules')
+    @detalize_error(RuleNotFound, 'rules')
+    @detalize_error(TariffNotFound, 'rules')
+    @detalize_error(TarifficationObjectNotFound, 'rules')
     def save_rules(self, data, session, curs=None):
         rules = data['rules']
         ids = []
@@ -279,271 +281,24 @@ class Handler(AbstractHandler):
         all_tos = all_to_f.filter_objs(curs)
         all_tos_idx = build_index(all_tos)
 
+        all_r_f = RuleFilter(session, {}, {}, None)
+        all_rs = all_r_f.filter_objs(curs)
+        all_rs_idx = build_index(all_rs)
+
         for rule_data in rules:
             r = Rule(environment_id=session.environment_id, **rule_data)
+            rule_id = rule_data.get('id')
+            if rule_id not in all_rs_idx:
+                raise RuleNotFound(id=rule_id)
             if r.tariff_id not in all_ts_idx:
-                raise TariffNotFound('Tariff %s not found' % r.tariff_id)
+                raise TariffNotFound(rule_id=rule_id, tariff_id=r.tariff_id)
             if r.tariffication_object_id not in all_tos_idx:
-                raise TarifficationObjectNotFound('Tariffication object %s not found' %
-                    r.tariffication_object_id)
-            mapping.save(curs, r)
-#            try:
-#            except ObjectCreationError:
-#                raise
+                raise TarifficationObjectNotFound(rule_id=rule_id,
+                    tariffication_object_id=r.tariffication_object_id)
+            # TODO: add draft rule checking
+            try:
+                mapping.save(curs, r)
+            except ObjectCreationError:
+                raise RuleAlreadyExsits(r)
             ids.append(r.id)
         return response_ok(ids=ids)
-
-#
-#    # rule
-#    def _check_service_type_in_service_set(self, curs, service_type, service_set):
-#        if service_type.id not in selector.get_service_types_ids(curs, [service_set.id]):
-#            raise ServiceTypeNotInServiceSet(service_type.name, service_set.name)
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(RuleError, RequestProcessingError.Category.data_invalid, 'rule')
-#    @detalize_error(PriceProcessingError, RequestProcessingError.Category.data_invalid, 'rule')
-#    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
-#    @detalize_error(ServiceTypeNotInServiceSet, RequestProcessingError.Category.data_invalid, 'service_type')
-#    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-#    def save_draft_rule(self, data, operator, curs=None):
-#        r_text = data['rule']
-#        st_name = data['service_type']
-#        enabled = data['enabled']
-#        t_name = data['tariff']
-#
-#        tariff = selector.get_tariff(curs, operator, t_name)
-#        service_set = selector.get_service_set(curs, tariff.service_set_id)
-#        service_type = selector.get_service_type(curs, operator, st_name)
-#
-#        self._check_service_type_in_service_set(curs, service_type, service_set)
-#        RuleChecker().check(r_text)
-#
-#        data['tariff_id'] = tariff.id
-#        data['service_type_id'] = service_type.id
-#        del data['tariff']
-#        del data['service_type']
-#        try:
-#            rule = selector.get_rule(curs, tariff, service_type, Rule.TYPE_DRAFT, for_update=True)
-#            rule.enabled = enabled
-#            rule.rule = r_text
-#            mapping.update(curs, rule)
-#        except RuleNotFound:
-#            data['type'] = Rule.TYPE_DRAFT
-#            mapping.insert(curs, Rule(**data))
-#        return response_ok()
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(RuleNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
-#    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
-#    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-#    def delete_draft_rule(self, data, operator, curs=None):
-#        t_name = data['tariff']
-#        st_name = data['service_type']
-#
-#        tariff = selector.get_tariff(curs, operator, t_name)
-#        service_type = selector.get_service_type(curs, operator, st_name)
-#        rule = selector.get_rule(curs, tariff, service_type, Rule.TYPE_DRAFT, for_update=True)
-#        mapping.delete(curs, rule)
-#
-#        return response_ok()
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-#    def make_draft_rules_actual(self, data, operator, curs=None):
-#        t_name = data['tariff']
-#        tariff = selector.get_tariff(curs, operator, t_name)
-#        all_rules = selector.get_rules(curs, tariff, [Rule.TYPE_DRAFT, Rule.TYPE_ACTUAL], for_update=True)
-#        draft_rules = filter(lambda x: x.type == Rule.TYPE_DRAFT, all_rules)
-#        draft_st_ids = [r.service_type_id for r in draft_rules]
-#        deleting_rules = filter(lambda x: x.type == Rule.TYPE_ACTUAL and x.service_type_id in draft_st_ids, all_rules)
-#        q_del = mapping.Delete(Rule.table, cond=In('id', [r.id for r in deleting_rules]))
-#        curs.execute(*q_del.glue())
-#        q_upd = mapping.Update(Rule.table, {'type': Rule.TYPE_ACTUAL}, cond=In('id', [r.id for r in draft_rules]))
-#        curs.execute(*q_upd.glue())
-#        return response_ok()
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
-#    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-#    def modify_actual_rule(self, data, operator, curs=None):
-#        t_name = data['tariff']
-#        st_name = data['service_type']
-#        tariff = selector.get_tariff(curs, operator, t_name)
-#        service_type = selector.get_service_type(curs, operator, st_name)
-#        loader = partial(selector.get_rule, curs, tariff, service_type, rule_type=Rule.TYPE_ACTUAL,
-#            for_update=True)
-#        self.update_obj(curs, data, loader)
-#        return response_ok()
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
-#    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-#    @detalize_error(RuleNotFound, RequestProcessingError.Category.data_invalid, 'type')
-#    def get_rule(self, data, operator, curs=None):
-#        t_name = data['tariff']
-#        st_name = data['service_type']
-#        rule_type = data['type']
-#        tariff = selector.get_tariff(curs, operator, t_name)
-#        service_type = selector.get_service_type(curs, operator, st_name)
-#        rule = selector.get_rule(curs, tariff, service_type, rule_type)
-#        return response_ok(tariff=tariff.name, service_type=service_type.name, rule=rule.rule,
-#            type=rule.type, enabled=rule.enabled)
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-#    def view_rules(self, data, operator, curs=None):
-#        t_name = data['tariff']
-#        tariff = selector.get_tariff(curs, operator, t_name)
-#        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, operator)
-#        rules = []
-#        for rule in selector.get_rules(curs, tariff, [Rule.TYPE_ACTUAL, Rule.TYPE_DRAFT]):
-#            rules.append({
-#                'service_type': st_names_idx[rule.service_type_id],
-#                'rule': rule.rule,
-#                'type': rule.type,
-#                'enabled': rule.enabled,
-#            })
-#        return response_ok(tariff=tariff.name, rules=rules)
-#
-#    # price
-#    def _calculate_tariffs_chain(self, tariff_id, tariffs_names_idx, parents_names_idx):
-#        '''
-#        @return: tariffs chain for tariff.name as [(tariff_id, tariff_name)]
-#        '''
-#        tariffs_chain = []
-#        tariffs_ids_set = set()
-#        while True:
-#            if tariff_id is None:
-#                break
-#            if tariff_id in tariffs_ids_set:
-#                raise TariffCycleError('Tariff cycle found in chain: %s' %
-#                    ', '.join([n for (_, n) in tariffs_chain]))
-#            tariffs_chain.append((tariff_id, tariffs_names_idx[tariff_id]))
-#            tariffs_ids_set.add(tariff_id)
-#            tariff_id = parents_names_idx[tariff_id]
-#        return tariffs_chain
-#
-#    def _get_tariffs_chain(self, curs, operator, tariff_name):
-#        '''
-#        @return: tariffs chain for tariff_name as [(tariff_id, tariff_name)]
-#        '''
-#        return self._calculate_tariffs_chain(
-#            selector.get_tariff(curs, operator, tariff_name).id,
-#            selector.get_tariffs_names_indexed_by_id(curs, operator),
-#            selector.get_tariffs_parent_ids_indexed_by_id(curs, operator)
-#        )
-#
-#    def _find_nearest_rules_pair(self, indexed_rules, tariffs_ids, service_type_id):
-#        '''
-#        Finds first rules implementation in tariffs listed in tariffs_ids.
-#        @return: (actual_rule, drart_rule)
-#        '''
-#        def find_rule(rule_type):
-#            for t_id in tariffs_ids:
-#                k = (t_id, service_type_id, rule_type)
-#                if k in indexed_rules:
-#                    return indexed_rules[k]
-#            return None
-#        return  find_rule(Rule.TYPE_ACTUAL), find_rule(Rule.TYPE_DRAFT)
-#
-#    def _get_price_info(self, rule, ctx, t_ids, t_names):
-#        if rule is None:
-#            return {
-#                'price': None,
-#                'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
-#                'tariffs_chain': t_names,
-#            }
-#        elif not rule.enabled:
-#            return {
-#                'price': None,
-#                'price_calculation': PRICE_CALC_RULE_DISABLED,
-#                'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
-#            }
-#
-#        try:
-#            price = engine.process(RequestPrice(rule, ctx)).price
-#            return {
-#                'price': format_price(price),
-#                'price_calculation': PRICE_CALC_NORMAL,
-#                'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
-#            }
-#        except (PriceProcessingError, RuleError):
-#            return {
-#                'price': None,
-#                'price_calculation': PRICE_CALC_PRICE_UNDEFINED,
-#                'tariffs_chain': self._tariffs_chain_names(rule.tariff_id, t_ids, t_names),
-#            }
-#
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-#    @detalize_error(ServiceTypeNotFound, RequestProcessingError.Category.data_invalid, 'service_type')
-#    def get_price(self, data, operator, curs=None):
-#        t_name = data['tariff']
-#        ctx = data.get('context', {})
-#        st_name = data['service_type']
-#
-#        t_chain = self._get_tariffs_chain(curs, operator, t_name)
-#        t_ids, t_names = map(list, zip(*t_chain))
-#
-#        st = selector.get_service_type(curs, operator, st_name)
-#        rules_idx = selector.get_rules_indexed_by_tariff_service_type_ids(curs, operator, t_ids,
-#            [st.id])
-#        response = {}
-#        response['tariff'] = t_name
-#        response['service_type'] = st_name
-#        response['context'] = ctx
-#
-#        actual_rule, draft_rule = self._find_nearest_rules_pair(rules_idx, t_ids, st.id)
-#
-#        actual_r_info = self._get_price_info(actual_rule, ctx, t_ids, t_names)
-#        response.update(actual_r_info)
-#
-#        draft_r_info = self._get_price_info(draft_rule, ctx, t_ids, t_names).items()
-#        draft_r_info = dict([('draft_%s' % k, v) for (k, v) in draft_r_info])
-#        response.update(draft_r_info)
-#
-#        return response_ok(**response)
-#
-#    @transaction()
-#    @authentificate
-#    @detalize_error(TariffNotFound, RequestProcessingError.Category.data_invalid, 'tariff')
-#    def view_prices(self, data, operator, curs=None):
-#        t_name = data['tariff']
-#        ctx = data.get('context', {})
-#
-#        t_chain = self._get_tariffs_chain(curs, operator, t_name)
-#        t_ids, t_names = map(list, zip(*t_chain))
-#
-#        ss_ids = selector.get_service_sets_ids(curs, t_ids)
-#        st_ids = selector.get_service_types_ids(curs, ss_ids)
-#
-#        rules_idx = selector.get_rules_indexed_by_tariff_service_type_ids(curs, operator, t_ids, st_ids)
-#        st_names_idx = selector.get_service_types_names_indexed_by_id(curs, operator)
-#
-#        response = {}
-#        response['tariff'] = t_name
-#        response['context'] = ctx
-#        response['prices'] = []
-#
-#        prices = response['prices']
-#        for st_id in st_ids:
-#            p_info = {'service_type': st_names_idx[st_id]}
-#            actual_rule, draft_rule = self._find_nearest_rules_pair(rules_idx, t_ids, st_id)
-#
-#            actual_r_info = self._get_price_info(actual_rule, ctx, t_ids, t_names)
-#            p_info.update(actual_r_info)
-#
-#            draft_r_info = self._get_price_info(draft_rule, ctx, t_ids, t_names).items()
-#            draft_r_info = dict([('draft_%s' % k, v) for (k, v) in draft_r_info])
-#            p_info.update(draft_r_info)
-#
-#            prices.append(p_info)
-#        return response_ok(**response)

@@ -1,7 +1,8 @@
 from helixcore.db.sql import (Eq, Like, MoreEq, LessEq, Any, In)
 from helixcore.db.filters import (InSessionFilter, EnvironmentObjectsFilter)
 
-from helixtariff.db.dataobject import (TarifficationObject, ActionLog, Tariff)
+from helixtariff.db.dataobject import (TarifficationObject, ActionLog, Tariff,
+    Rule)
 from helixcore.db.wrapper import ObjectNotFound, SelectedMoreThanOneRow
 from helixtariff.error import TarifficationObjectNotFound, TariffNotFound
 
@@ -42,6 +43,27 @@ class TariffFilter(InSessionFilter):
                 for_update=for_update)
         except (ObjectNotFound, SelectedMoreThanOneRow):
             raise TariffNotFound(**self.filter_params)
+
+
+class RuleFilter(InSessionFilter):
+    cond_map = [
+        ('id', 'id', Eq),
+        ('ids', 'id', In),
+        ('tariff_id', 'tariff_id', Eq),
+        ('tariffication_object_id', 'tariffication_object_id', Eq),
+        ('tariffication_objects_ids', 'tariffication_objects_ids', In),
+    ]
+
+    def __init__(self, session, filter_params, paging_params, ordering_params):
+        super(RuleFilter, self).__init__(session, filter_params,
+            paging_params, ordering_params, Rule)
+
+    def filter_one_obj(self, curs, for_update=False):
+        try:
+            return super(RuleFilter, self).filter_one_obj(curs,
+                for_update=for_update)
+        except (ObjectNotFound, SelectedMoreThanOneRow):
+            raise RuleNotFound(**self.filter_params)
 
 
 class ActionLogFilter(EnvironmentObjectsFilter):

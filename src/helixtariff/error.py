@@ -41,7 +41,12 @@ class TariffUsed(HelixtariffError):
     code = error_code.HELIXTARIFF_TARIFF_USED
 
 
-class RuleSavingError(HelixtariffObjectAlreadyExists):
+class RuleAlreadyExsits(HelixtariffObjectAlreadyExists):
     def __init__(self, rule):
-        super(RuleSavingError, self).__init__('Rule %s saving error' % rule)
-        self.code = error_code.HELIXTARIFF_OBJECT_ALREADY_EXISTS
+        super(RuleAlreadyExsits, self).__init__('%s already exists' % rule)
+        self.code = error_code.HELIXTARIFF_RULE_ALREADY_EXISTS
+
+class RuleNotFound(HelixtariffObjectNotFound):
+    def __init__(self, **kwargs):
+        super(RuleNotFound, self).__init__('Rule', **kwargs)
+        self.code = error_code.HELIXTARIFF_RULE_NOT_FOUND

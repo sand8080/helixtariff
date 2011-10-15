@@ -32,7 +32,45 @@ class RuleTestCase(ActorLogicTestCase):
         resp = self.save_rules(**req)
         self.check_response_ok(resp)
         r_id_0 = resp['ids'][0]
+        # TODO: add checking by get operation
 
+    def test_saving_rule_duplicate_failed(self):
+        to_id = self._add_tariffication_object('to0')
+        t_id = self._add_tariff('t')
+
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'rules': [{
+            'tariff_id': t_id, 'tariffication_object_id': to_id,
+            'draft_rule': 'price = 10', 'status': Rule.STATUS_ACTIVE}]}
+        resp = self.save_rules(**req)
+        self.check_response_ok(resp)
+
+        self.assertRaises(RequestProcessingError, self.save_rules, **req)
+
+    def test_saving_rule_with_wrong_tariff_failed(self):
+        to_id = self._add_tariffication_object('to0')
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'rules': [{
+            'tariff_id': 555, 'tariffication_object_id': to_id,
+            'draft_rule': 'price = 10', 'status': Rule.STATUS_ACTIVE}]}
+        self.assertRaises(RequestProcessingError, self.save_rules, **req)
+
+    def test_saving_rule_with_wrong_tariffication_object_failed(self):
+        t_id = self._add_tariff('t0')
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'rules': [{
+            'tariff_id': t_id, 'tariffication_object_id': 555,
+            'draft_rule': 'price = 10', 'status': Rule.STATUS_ACTIVE}]}
+        self.assertRaises(RequestProcessingError, self.save_rules, **req)
+
+    def test_saving_rule_with_wrong_id(self):
+        to_id = self._add_tariffication_object('to0')
+        t_id = self._add_tariff('t0')
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'rules': [{'id': 555,
+            'tariff_id': t_id, 'tariffication_object_id': to_id,
+            'draft_rule': 'price = 10', 'status': Rule.STATUS_ACTIVE}]}
+        self.assertRaises(RequestProcessingError, self.save_rules, **req)
 
 
 if __name__ == '__main__':
