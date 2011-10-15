@@ -6,7 +6,14 @@ from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
     AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE, RESPONSE_STATUS_ONLY,
     GET_ACTION_LOGS_REQUEST, GET_ACTION_LOGS_RESPONSE,
     GET_ACTION_LOGS_SELF_REQUEST, GET_ACTION_LOGS_SELF_RESPONSE,
-    REQUEST_PAGING_PARAMS, RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
+    REQUEST_PAGING_PARAMS, RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR,
+    ADDING_OBJECTS_RESPONSE)
+
+
+TariffParentIdValidator = AnyOf(None, int)
+TariffTypeValidator = AnyOf('public', 'personal')
+TariffStatusValidator = AnyOf('active', 'archive', 'inactive')
+RuleStatusValidator = AnyOf('active', 'inactive')
 
 
 ADD_TARIFFICATION_OBJECT_REQUEST = dict(
@@ -61,10 +68,6 @@ DELETE_TARIFFICATION_OBJECT_REQUEST = dict(
 )
 
 DELETE_TARIFFICATION_OBJECT_RESPONSE = RESPONSE_STATUS_ONLY
-
-TariffParentIdValidator = AnyOf(None, int)
-TariffTypeValidator = AnyOf('public', 'personal')
-TariffStatusValidator = AnyOf('active', 'archive', 'inactive')
 
 ADD_TARIFF_REQUEST = dict(
     {
@@ -132,6 +135,20 @@ DELETE_TARIFF_REQUEST = dict(
 
 DELETE_TARIFF_RESPONSE = RESPONSE_STATUS_ONLY
 
+SAVE_RULES_REQUEST = dict(
+    {'rules':[
+        {
+            Optional('id'): int,
+            'tariff_id': int,
+            'tariffication_object_id': int,
+            'draft_rule': Text(),
+            'status': RuleStatusValidator,
+        }
+    ]},
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+SAVE_RULES_RESPONSE = ADDING_OBJECTS_RESPONSE
 
 ## --- service set ---
 #ADD_SERVICE_SET = dict(
@@ -497,94 +514,16 @@ protocol = [
     ApiCall('delete_tariff_request', Scheme(DELETE_TARIFF_REQUEST)),
     ApiCall('delete_tariff_response', Scheme(DELETE_TARIFF_RESPONSE)),
 
+    # rules
+
+    ApiCall('save_rules_request', Scheme(SAVE_RULES_REQUEST)),
+    ApiCall('save_rules_response', Scheme(SAVE_RULES_RESPONSE)),
+
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
     ApiCall('get_action_logs_response', Scheme(GET_ACTION_LOGS_RESPONSE)),
 
     ApiCall('get_action_logs_self_request', Scheme(GET_ACTION_LOGS_SELF_REQUEST)),
     ApiCall('get_action_logs_self_response', Scheme(GET_ACTION_LOGS_SELF_RESPONSE)),
-
-#
-#    ApiCall('delete_service_type_request', Scheme(DELETE_SERVICE_TYPE)),
-#    ApiCall('delete_service_type_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('view_service_types_request', Scheme(VIEW_SERVICE_TYPES)),
-#    ApiCall('view_service_types_response', Scheme(VIEW_SERVICE_TYPES_RESPONSE)),
-#
-#    ApiCall('view_service_types_detailed_request', Scheme(VIEW_SERVICE_TYPES_DETAILED)),
-#    ApiCall('view_service_types_detailed_response', Scheme(VIEW_SERVICE_TYPES_DETAILED_RESPONSE)),
-#
-#    # service set
-#    ApiCall('add_service_set_request', Scheme(ADD_SERVICE_SET)),
-#    ApiCall('add_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('modify_service_set_request', Scheme(MODIFY_SERVICE_SET)),
-#    ApiCall('modify_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('delete_service_set_request', Scheme(DELETE_SERVICE_SET)),
-#    ApiCall('delete_service_set_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('get_service_set_request', Scheme(GET_SERVICE_SET)),
-#    ApiCall('get_service_set_response', Scheme(GET_SERVICE_SET_RESPONSE)),
-#
-#    ApiCall('get_service_set_detailed_request', Scheme(GET_SERVICE_SET_DETAILED)),
-#    ApiCall('get_service_set_detailed_response', Scheme(GET_SERVICE_SET_DETAILED_RESPONSE)),
-#
-#    ApiCall('view_service_sets_request', Scheme(VIEW_SERVICE_SETS)),
-#    ApiCall('view_service_sets_response', Scheme(VIEW_SERVICE_SETS_RESPONSE)),
-#
-#    ApiCall('view_service_sets_detailed_request', Scheme(VIEW_SERVICE_SETS_DETAILED)),
-#    ApiCall('view_service_sets_detailed_response', Scheme(VIEW_SERVICE_SETS_DETAILED_RESPONSE)),
-#
-#    # tariff
-#    ApiCall('add_tariff_request', Scheme(ADD_TARIFF)),
-#    ApiCall('add_tariff_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('modify_tariff_request', Scheme(MODIFY_TARIFF)),
-#    ApiCall('modify_tariff_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('delete_tariff_request', Scheme(DELETE_TARIFF)),
-#    ApiCall('delete_tariff_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('get_tariff_request', Scheme(GET_TARIFF)),
-#    ApiCall('get_tariff_response', Scheme(GET_TARIFF_RESPONSE)),
-#
-#    ApiCall('get_tariff_detailed_request', Scheme(GET_TARIFF_DETAILED)),
-#    ApiCall('get_tariff_detailed_response', Scheme(GET_TARIFF_DETAILED_RESPONSE)),
-#
-#    ApiCall('view_tariffs_request', Scheme(VIEW_TARIFFS)),
-#    ApiCall('view_tariffs_response', Scheme(VIEW_TARIFFS_RESPONSE)),
-#
-#    ApiCall('view_tariffs_detailed_request', Scheme(VIEW_TARIFFS_DETAILED)),
-#    ApiCall('view_tariffs_detailed_response', Scheme(VIEW_TARIFFS_DETAILED_RESPONSE)),
-#
-#    # rule
-#    ApiCall('save_draft_rule_request', Scheme(SAVE_DRAFT_RULE)),
-#    ApiCall('save_draft_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('delete_draft_rule_request', Scheme(DELETE_DRAFT_RULE)),
-#    ApiCall('delete_draft_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('make_draft_rules_actual_request', Scheme(MAKE_DRAFT_RULES_ACTUAL)),
-#    ApiCall('make_draft_rules_actual_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('modify_actual_rule_request', Scheme(MODIFY_ACTUAL_RULE)),
-#    ApiCall('modify_actual_rule_response', Scheme(RESPONSE_STATUS_ONLY)),
-#
-#    ApiCall('get_rule_request', Scheme(GET_RULE)),
-#    ApiCall('get_rule_response', Scheme(GET_RULE_RESPONSE)),
-#
-#    ApiCall('view_rules_request', Scheme(VIEW_RULES)),
-#    ApiCall('view_rules_response', Scheme(VIEW_RULES_RESPONSE)),
-#
-#    # price
-#    ApiCall('get_price_request', Scheme(GET_PRICE)),
-#    ApiCall('get_price_response', Scheme(GET_PRICE_RESPONSE)),
-#
-#    ApiCall('view_prices_request', Scheme(VIEW_PRICES)),
-#    ApiCall('view_prices_response', Scheme(VIEW_PRICES_RESPONSE)),
-#
-#    ApiCall('view_action_logs_request', Scheme(VIEW_ACTION_LOGS)),
-#    ApiCall('view_action_logs_response', Scheme(VIEW_ACTION_LOGS_RESPONSE)),
 
 ]
