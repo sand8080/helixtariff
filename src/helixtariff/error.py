@@ -46,7 +46,16 @@ class RuleAlreadyExsits(HelixtariffObjectAlreadyExists):
         super(RuleAlreadyExsits, self).__init__('%s already exists' % rule)
         self.code = error_code.HELIXTARIFF_RULE_ALREADY_EXISTS
 
+
 class RuleNotFound(HelixtariffObjectNotFound):
     def __init__(self, **kwargs):
         super(RuleNotFound, self).__init__('Rule', **kwargs)
         self.code = error_code.HELIXTARIFF_RULE_NOT_FOUND
+
+
+class RuleProcessingError(HelixtariffError):
+    code = error_code.HELIXTARIFF_RULE_PROCESSING_ERROR
+
+
+class RuleCheckingError(HelixtariffError):
+    code = error_code.HELIXTARIFF_RULE_CHECKING_ERROR
