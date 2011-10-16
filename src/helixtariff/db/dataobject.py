@@ -34,18 +34,3 @@ class Rule(Mapped):
     __slots__ = ['id', 'environment_id', 'tariff_id', 'status',
         'tariffication_object_id', 'rule', 'draft_rule']
     table = 'rule'
-
-
-#class ServiceSet(Mapped):
-#    __slots__ = ['id', 'operator_id', 'name']
-#    table = 'service_set'
-#
-#
-#class ServiceSetRow(Mapped):
-#    __slots__ = ['id', 'service_type_id', 'service_set_id']
-#    table = 'service_set_row'
-#
-#
-#
-
-

@@ -18,6 +18,7 @@ from helixcore.error import DataIntegrityError
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
     TariffFilter, RuleFilter)
 from helixcore.db.filters import build_index
+from helixtariff.rulesengine.checker import RuleChecker
 
 
 
@@ -295,7 +296,10 @@ class Handler(AbstractHandler):
             if r.tariffication_object_id not in all_tos_idx:
                 raise TarifficationObjectNotFound(rule_id=rule_id,
                     tariffication_object_id=r.tariffication_object_id)
-            # TODO: add draft rule checking
+
+            checker = RuleChecker()
+            checker.check(r.draft_rule)
+
             try:
                 mapping.save(curs, r)
             except ObjectCreationError:
