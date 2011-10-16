@@ -1,63 +1,63 @@
-from decimal import Decimal
 import unittest
 
 from helixtariff.rulesengine import engine
-from helixtariff.rulesengine.interaction import RequestPrice, PriceProcessingError
-from helixtariff.test.logic.actor_logic_test import ActorLogicTestCase
+from helixtariff.rulesengine.engine import RequestPrice
+from helixtariff.test.root_test import RootTestCase
+from helixtariff.error import RuleCheckingError, RuleProcessingError
 
 
-class EngineTestCase(ActorLogicTestCase):
-    def setUp(self):
-        super(EngineTestCase, self).setUp()
-        self.add_tariff(self.ss_name, self.t_name, False, None)
+class EngineTestCase(RootTestCase):
+    def test_request_creation(self):
+        req = RequestPrice('')
+        self.assertEquals(1, req.objects_num)
+        self.assertEquals('', req.rule)
 
-#    def test_request_price_not_modified(self):
-#        st_name = self.st_names[0]
-#        self.save_draft_rule(self.t_name, st_name, 'price = 1.0', True)
-#        operator = self.get_operator_by_login(self.test_login)
-#        tariff = self.get_tariff(operator, self.t_name)
-#        service_type = self.get_service_type(operator, st_name)
-#        rule = self.get_rule(tariff, service_type, Rule.TYPE_DRAFT)
-#        rule.rule = ''
-#        request = RequestPrice(rule)
-#        self.assertRaises(PriceProcessingError, engine.process, request)
+        req = RequestPrice('', objects_num=2, some_param='q')
+        self.assertEquals(2, req.objects_num)
+        self.assertEquals('q', req.some_param)
+        self.assertEquals('', req.rule)
 
-    def test_request_price(self):
-        r_text = '''
-request.check_period(min_period=1, max_period=3)
-price = 15.019
+    def test_process(self):
+        r = 'price = 15.019'
+        req = RequestPrice(r)
+        resp = engine.process(req)
+        self.assertEquals('15.019', resp.price)
 
-if request.user_id == 34:
-    price = 10.00
+    def test_process_datetime(self):
+        r = '''
+import datetime
+
+if datetime.datetime.now() >= datetime.datetime(year=2011, month=10, day=16):
+    price = 15.50
+else:
+    price = 10
 '''
-#        operator = self.get_operator_by_login(self.test_login)
-#        st_name = self.st_names[0]
-#        self.save_draft_rule(self.t_name, st_name, r_text, True)
-#        tariff = self.get_tariff(operator, self.t_name)
-#        service_type = self.get_service_type(operator, st_name)
-#        rule = self.get_rule(tariff, service_type, Rule.TYPE_DRAFT)
-#
-#        response = engine.process(RequestPrice(rule, context={'period': 1}))
-#        self.assertEqual(Decimal('15.019'), Decimal(response.price))
-#
-#        response = engine.process(RequestPrice(rule, context={'period': 2}))
-#        self.assertEqual(Decimal('25.019'), Decimal(response.price))
-#
-#        response = engine.process(RequestPrice(rule, context={'period': 3}))
-#        self.assertEqual(Decimal('35.019'), Decimal(response.price))
-#
-#        response = engine.process(RequestPrice(rule, context={'period': 1, 'customer_id': 'lucky'}))
-#        self.assertEqual(Decimal('10.00'), Decimal(response.price))
-#
-#        response = engine.process(RequestPrice(rule, context={'period': 2, 'customer_id': 'lucky'}))
-#        self.assertEqual(Decimal('20.00'), Decimal(response.price))
-#
-#        response = engine.process(RequestPrice(rule, context={'period': 3, 'customer_id': 'lucky'}))
-#        self.assertEqual(Decimal('30.00'), Decimal(response.price))
-#
-#        self.assertRaises(PriceProcessingError, engine.process,
-#            RequestPrice(rule, context={'period': 4}))
+        req = RequestPrice(r)
+        resp = engine.process(req)
+        self.assertEquals('15.5', resp.price)
 
+    def test_process_rules_for_number_of_objects(self):
+        r = '''
+price = 350
+if request.objects_num > 1:
+    price += 150 * (request.objects_num - 1)
+'''
+        req = RequestPrice(r)
+        resp = engine.process(req)
+        self.assertEquals('350', resp.price)
+
+        req = RequestPrice(r, objects_num=2)
+        resp = engine.process(req)
+        self.assertEquals('500', resp.price)
+
+    def test_process_wrong_rules_failed(self):
+        r = 'price = a'
+        req = RequestPrice(r)
+        self.assertRaises(RuleCheckingError, engine.process, req)
+
+        r = 'price = "a"'
+        req = RequestPrice(r)
+        self.assertRaises(RuleProcessingError, engine.process, req)
 
 if __name__ == '__main__':
     unittest.main()

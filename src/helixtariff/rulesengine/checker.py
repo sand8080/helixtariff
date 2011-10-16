@@ -7,6 +7,7 @@ from helixtariff.error import RuleCheckingError, RuleProcessingError
 class RuleChecker(object):
     def __init__(self):
         self.accepted_names = set([
+            'import', 'from',
             'datetime', 'now', 'year', 'month', 'day',
             'if', 'else', 'and', 'not', 'in', 'None', 'for', 'get',
             'response', 'request',

@@ -5,12 +5,14 @@ from helixtariff.rulesengine.checker import RuleChecker
 
 
 class RequestPrice(object):
-    def __init__(self, rule, context=None):
-        context = {} if context is None else context
-        self.rule = rule
+    def __init__(self, rule_text, **kwargs):
+        self.rule = rule_text
         self.objects_num = 1
-        for k, v in context:
+        for k, v in kwargs.items():
             setattr(self, k, v)
+
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, self.__dict__)
 
 
 class ResponsePrice(object):
@@ -24,12 +26,15 @@ class ResponsePrice(object):
         except (TypeError, InvalidOperation), e:
             raise RuleProcessingError(e)
 
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, self.__dict__)
+
 
 def process(request):
     price = None
-    rule = request.rule.rule
     checker = RuleChecker()
-    checker.check(rule)
-    exec rule
+    checker.check(request.rule)
+    exec request.rule
     return ResponsePrice(price)
 
+\
