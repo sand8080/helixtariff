@@ -32,5 +32,5 @@ class Rule(Mapped):
     STATUS_INACTIVE = 'inactive'
 
     __slots__ = ['id', 'environment_id', 'tariff_id', 'status',
-        'tariffication_object_id', 'rule', 'draft_rule']
+        'tariffication_object_id', 'rule', 'draft_rule', 'view_order']
     table = 'rule'

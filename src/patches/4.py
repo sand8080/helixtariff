@@ -12,7 +12,8 @@ def apply(curs):
             FOREIGN KEY (tariffication_object_id) REFERENCES tariffication_object(id),
             rule varchar NULL,
             draft_rule varchar NOT NULL,
-            status varchar NOT NULL CHECK (status in ('active', 'inactive'))
+            status varchar NOT NULL CHECK (status in ('active', 'inactive')),
+            view_order int NOT NULL DEFAULT 0
         )
     ''')
 
@@ -39,12 +40,27 @@ def apply(curs):
     '''
     )
 
+    print 'Creating index rule_environment_id_tariff_id_view_order_idx on ' \
+        'rule (environment_id, tariff_id, view_order)'
+    curs.execute(
+    '''
+        CREATE INDEX rule_environment_id_tariff_id_view_order_idx ON
+        rule (environment_id, tariff_id, view_order)
+    '''
+    )
+
 def revert(curs):
+    print 'Dropping unique index rule_environment_id_tariff_id_view_order_idx on rule'
+    curs.execute('DROP INDEX IF EXISTS rule_environment_id_tariff_id_view_order_idx')
+
     print 'Dropping unique index rule_environment_id_tariff_id_tariffication_object_id_idx on rule'
     curs.execute('DROP INDEX IF EXISTS rule_environment_id_tariff_id_tariffication_object_id_idx')
 
-    print 'Dropping index rule_environment_id_tariff_id_idx on rule'
+    print 'Dropping unique index rule_environment_id_tariff_id_idx on rule'
     curs.execute('DROP INDEX IF EXISTS rule_environment_id_tariff_id_idx')
+
+    print 'Dropping index rule_environment_id_idx on rule'
+    curs.execute('DROP INDEX IF EXISTS rule_environment_id_idx')
 
     print 'Dropping table rule'
     curs.execute('DROP TABLE IF EXISTS rule')

@@ -21,7 +21,7 @@ class RuleTestCase(ActorLogicTestCase):
         to_id_1 = self._add_tariffication_object('to1')
         req = {'session_id': sess.session_id, 'tariff_id': t_id,
             'tariffication_object_id': to_id_1, 'draft_rule': 'price = 11',
-            'status': Rule.STATUS_ACTIVE}
+            'status': Rule.STATUS_ACTIVE, 'view_order': 2}
         resp = self.save_rule(**req)
         self.check_response_ok(resp)
         r_id_0 = resp['id']

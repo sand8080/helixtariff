@@ -141,6 +141,7 @@ SAVE_RULE_REQUEST = dict(
         'tariffication_object_id': int,
         'draft_rule': Text(),
         'status': RuleStatusValidator,
+        Optional('view_order'): int,
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )

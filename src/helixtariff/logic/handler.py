@@ -286,6 +286,7 @@ class Handler(AbstractHandler):
             'tariff_id': data['tariff_id'], 'status': data['status'],
             'tariffication_object_id': data['tariffication_object_id'],
             'draft_rule': data['draft_rule']}
+        r_data['view_order'] = data.get('view_order', 0)
         rule_id = data.get('id')
         if rule_id:
             r_data['id'] = r_data

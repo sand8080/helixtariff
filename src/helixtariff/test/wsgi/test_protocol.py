@@ -188,6 +188,10 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_request(a_name, {'session_id': 's', 'tariff_id': 1,
             'tariffication_object_id': 3, 'draft_rule': 'p',
             'status': Rule.STATUS_ACTIVE})
+        self.api.validate_request(a_name, {'session_id': 's', 'tariff_id': 1,
+            'tariffication_object_id': 3, 'draft_rule': 'p',
+            'status': Rule.STATUS_ACTIVE, 'view_order': 0})
+
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
         self.validate_error_response(a_name)
 
