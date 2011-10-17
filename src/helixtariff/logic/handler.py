@@ -13,7 +13,7 @@ from helixcore.db.wrapper import ObjectCreationError, ObjectDeletionError
 from helixtariff.db.dataobject import TarifficationObject, Tariff, Rule
 from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected,
-    TariffUsed, RuleAlreadyExsits, RuleNotFound)
+    TariffUsed, RuleAlreadyExsits, RuleNotFound, RuleCheckingError)
 from helixcore.error import DataIntegrityError
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
     TariffFilter, RuleFilter)
@@ -264,16 +264,12 @@ class Handler(AbstractHandler):
 
     @transaction()
     @authenticate
-    @detalize_error(RuleAlreadyExsits, 'rules')
-    @detalize_error(RuleNotFound, 'rules')
-    @detalize_error(TariffNotFound, 'rules')
-    @detalize_error(TarifficationObjectNotFound, 'rules')
-    def save_rules(self, data, session, curs=None):
-        rules = data['rules']
-        ids = []
-        if not rules:
-            return response_ok(ids=ids)
-
+    @detalize_error(RuleAlreadyExsits, ['tariff_id', 'tariffication_object_id'])
+    @detalize_error(RuleNotFound, 'id')
+    @detalize_error(TariffNotFound, 'tariff_id')
+    @detalize_error(TarifficationObjectNotFound, 'tariffication_object_id')
+    @detalize_error(RuleCheckingError, 'draft_rule')
+    def save_rule(self, data, session, curs=None):
         all_t_f = TariffFilter(session, {}, {}, None)
         all_ts = all_t_f.filter_objs(curs)
         all_ts_idx = build_index(all_ts)
@@ -286,23 +282,27 @@ class Handler(AbstractHandler):
         all_rs = all_r_f.filter_objs(curs)
         all_rs_idx = build_index(all_rs)
 
-        for rule_data in rules:
-            r = Rule(environment_id=session.environment_id, **rule_data)
-            rule_id = rule_data.get('id')
-            if rule_id not in all_rs_idx:
-                raise RuleNotFound(id=rule_id)
-            if r.tariff_id not in all_ts_idx:
-                raise TariffNotFound(rule_id=rule_id, tariff_id=r.tariff_id)
-            if r.tariffication_object_id not in all_tos_idx:
-                raise TarifficationObjectNotFound(rule_id=rule_id,
-                    tariffication_object_id=r.tariffication_object_id)
+        r_data = {'environment_id': session.environment_id,
+            'tariff_id': data['tariff_id'], 'status': data['status'],
+            'tariffication_object_id': data['tariffication_object_id'],
+            'draft_rule': data['draft_rule']}
+        rule_id = data.get('id')
+        if rule_id:
+            r_data['id'] = r_data
+        r = Rule(**r_data)
 
-            checker = RuleChecker()
-            checker.check(r.draft_rule)
+        if rule_id and rule_id not in all_rs_idx:
+            raise RuleNotFound(id=rule_id)
+        if r.tariff_id not in all_ts_idx:
+            raise TariffNotFound(rule_id=rule_id, tariff_id=r.tariff_id)
+        if r.tariffication_object_id not in all_tos_idx:
+            raise TarifficationObjectNotFound(rule_id=rule_id,
+                tariffication_object_id=r.tariffication_object_id)
+        checker = RuleChecker()
+        checker.check(r.draft_rule)
 
-            try:
-                mapping.save(curs, r)
-            except ObjectCreationError:
-                raise RuleAlreadyExsits(r)
-            ids.append(r.id)
-        return response_ok(ids=ids)
+        try:
+            mapping.save(curs, r)
+        except ObjectCreationError:
+            raise RuleAlreadyExsits(r)
+        return response_ok(id=r.id)

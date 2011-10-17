@@ -6,8 +6,7 @@ from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
     AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE, RESPONSE_STATUS_ONLY,
     GET_ACTION_LOGS_REQUEST, GET_ACTION_LOGS_RESPONSE,
     GET_ACTION_LOGS_SELF_REQUEST, GET_ACTION_LOGS_SELF_RESPONSE,
-    REQUEST_PAGING_PARAMS, RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR,
-    ADDING_OBJECTS_RESPONSE)
+    REQUEST_PAGING_PARAMS, RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
 
 
 TariffParentIdValidator = AnyOf(None, int)
@@ -135,20 +134,18 @@ DELETE_TARIFF_REQUEST = dict(
 
 DELETE_TARIFF_RESPONSE = RESPONSE_STATUS_ONLY
 
-SAVE_RULES_REQUEST = dict(
-    {'rules':[
-        {
-            Optional('id'): int,
-            'tariff_id': int,
-            'tariffication_object_id': int,
-            'draft_rule': Text(),
-            'status': RuleStatusValidator,
-        }
-    ]},
+SAVE_RULE_REQUEST = dict(
+    {
+        Optional('id'): int,
+        'tariff_id': int,
+        'tariffication_object_id': int,
+        'draft_rule': Text(),
+        'status': RuleStatusValidator,
+    },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-SAVE_RULES_RESPONSE = ADDING_OBJECTS_RESPONSE
+SAVE_RULE_RESPONSE = ADDING_OBJECT_RESPONSE
 
 ## --- service set ---
 #ADD_SERVICE_SET = dict(
@@ -516,8 +513,8 @@ protocol = [
 
     # rules
 
-    ApiCall('save_rules_request', Scheme(SAVE_RULES_REQUEST)),
-    ApiCall('save_rules_response', Scheme(SAVE_RULES_RESPONSE)),
+    ApiCall('save_rule_request', Scheme(SAVE_RULE_REQUEST)),
+    ApiCall('save_rule_response', Scheme(SAVE_RULE_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),

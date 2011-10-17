@@ -184,18 +184,11 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.validate_status_response(a_name)
 
     def test_save_rules(self):
-        a_name = 'save_rules'
-        self.api.validate_request(a_name, {'session_id': 's', 'rules': []})
-        self.api.validate_request(a_name, {'session_id': 's', 'rules': [
-            {'tariff_id': 1, 'tariffication_object_id': 3, 'draft_rule': 'p',
-            'status': Rule.STATUS_ACTIVE}]})
-        self.api.validate_request(a_name, {'session_id': 's', 'rules': [{'tariff_id': 1,
-            'tariffication_object_id': 3, 'draft_rule': 'p', 'status': Rule.STATUS_ACTIVE},
-            {'id': 1, 'tariff_id': 2, 'tariffication_object_id': 3, 'draft_rule': 'p',
-            'status': Rule.STATUS_INACTIVE}]})
-
-        self.api.validate_response(a_name, {'status': 'ok', 'ids': []})
-        self.api.validate_response(a_name, {'status': 'ok', 'ids': [1, 2, 3]})
+        a_name = 'save_rule'
+        self.api.validate_request(a_name, {'session_id': 's', 'tariff_id': 1,
+            'tariffication_object_id': 3, 'draft_rule': 'p',
+            'status': Rule.STATUS_ACTIVE})
+        self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
         self.validate_error_response(a_name)
 
 
