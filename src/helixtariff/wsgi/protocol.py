@@ -193,6 +193,13 @@ DELETE_RULE_REQUEST = dict(
 
 DELETE_RULE_RESPONSE = RESPONSE_STATUS_ONLY
 
+APPLY_DRAFT_RULES_REQUEST = dict(
+    {'tariff_id': int},
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+APPLY_DRAFT_RULE_RESPONSE = RESPONSE_STATUS_ONLY
+
 
 ## --- price ---
 #GET_PRICE = dict(
@@ -344,6 +351,9 @@ protocol = [
 
     ApiCall('delete_rule_request', Scheme(DELETE_RULE_REQUEST)),
     ApiCall('delete_rule_response', Scheme(DELETE_RULE_RESPONSE)),
+
+    ApiCall('apply_draft_rules_request', Scheme(APPLY_DRAFT_RULES_REQUEST)),
+    ApiCall('apply_draft_rules_response', Scheme(APPLY_DRAFT_RULE_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
