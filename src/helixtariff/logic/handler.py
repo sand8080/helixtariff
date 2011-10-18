@@ -224,7 +224,6 @@ class Handler(AbstractHandler):
                 'status': t.status, 'parent_tariffs': ts_chain_data[1:]}
         return response_ok(tariffs=self.objects_info(ts, viewer), total=total)
 
-
     @transaction()
     @authenticate
     @detalize_error(HelixtariffObjectAlreadyExists, 'new_name')
@@ -307,3 +306,30 @@ class Handler(AbstractHandler):
         except ObjectCreationError:
             raise RuleAlreadyExsits(r)
         return response_ok(id=r.id)
+
+    @transaction()
+    @authenticate
+    def get_rules(self, data, session, curs=None):
+        r_f = RuleFilter(session, data['filter_params'],
+            data['paging_params'], data.get('ordering_params'))
+        rs, total = r_f.filter_counted(curs)
+        if total:
+            all_to_f = TarifficationObjectFilter(session, {}, {}, None)
+            all_tos = all_to_f.filter_objs(curs)
+            all_tos_idx = build_index(all_tos)
+
+            all_ts_f = TariffFilter(session, {}, {}, None)
+            all_ts = all_ts_f.filter_objs(curs)
+            all_ts_idx = build_index(all_ts)
+        else:
+            all_tos_idx = {}
+            all_ts_idx = {}
+
+        def viewer(r):
+            t = all_ts_idx[r.tariff_id]
+            to = all_tos_idx[r.tariffication_object_id]
+            return {'id': r.id, 'tariff_id': t.id, 'tariff_name': t.name,
+                'tariffication_object_id': to.id, 'tariffication_object_name': to.name,
+                'status': r.status, 'rule': r.rule, 'draft_rule': r.draft_rule,
+                'view_order': r.view_order}
+        return response_ok(rules=self.objects_info(rs, viewer), total=total)

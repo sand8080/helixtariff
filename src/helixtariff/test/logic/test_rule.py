@@ -25,7 +25,7 @@ class RuleTestCase(ActorLogicTestCase):
         resp = self.save_rule(**req)
         self.check_response_ok(resp)
         r_id_0 = resp['id']
-#        # TODO: add checking by get operation
+        # TODO: add checking by get operation
 
     def test_saving_rule_duplicate_failed(self):
         to_id = self._add_tariffication_object('to0')
@@ -72,6 +72,54 @@ class RuleTestCase(ActorLogicTestCase):
             'tariff_id': t_id, 'tariffication_object_id': to_id,
             'draft_rule': 'price__ = 10', 'status': Rule.STATUS_ACTIVE}
         self.assertRaises(RequestProcessingError, self.save_rule, **req)
+
+    def test_get_rules(self):
+        to_name_0 = 'to 0'
+        to_id_0 = self._add_tariffication_object(to_name_0)
+        to_name_1 = 'to 1'
+        to_id_1 = self._add_tariffication_object(to_name_1)
+        t_name_0 = 'tariff_0'
+        t_id_0 = self._add_tariff(t_name_0)
+
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'tariff_id': t_id_0,
+            'tariffication_object_id': to_id_0, 'draft_rule': 'price = 10',
+            'status': Rule.STATUS_ACTIVE, 'view_order': 2}
+        resp = self.save_rule(**req)
+        self.check_response_ok(resp)
+        r_id_0 = resp['id']
+
+        req = {'session_id': sess.session_id, 'filter_params': {'id': r_id_0},
+            'paging_params': {}, 'ordering_params': ['view_order']}
+        resp = self.get_rules(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(1, resp['total'])
+        r_data = resp['rules'][0]
+        self.assertEquals(t_id_0, r_data['id'])
+        self.assertEquals(to_id_0, r_data['tariffication_object_id'])
+        self.assertEquals(to_name_0, r_data['tariffication_object_name'])
+        self.assertEquals(t_id_0, r_data['tariff_id'])
+        self.assertEquals(t_name_0, r_data['tariff_name'])
+        self.assertEquals(2, r_data['view_order'])
+        self.assertEquals(None, r_data['rule'])
+        self.assertNotEquals(None, r_data['draft_rule'])
+
+        # checking sorting by view_order
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'tariff_id': t_id_0,
+            'tariffication_object_id': to_id_1, 'draft_rule': 'price = 11',
+            'status': Rule.STATUS_ACTIVE, 'view_order': 1}
+        resp = self.save_rule(**req)
+        self.check_response_ok(resp)
+        r_id_1 = resp['id']
+
+        req = {'session_id': sess.session_id, 'filter_params': {'ids': [r_id_0, r_id_1]},
+            'paging_params': {}, 'ordering_params': ['view_order']}
+        resp = self.get_rules(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(2, resp['total'])
+        self.assertEquals(r_id_1, resp['rules'][0]['id'])
+        self.assertEquals(r_id_0, resp['rules'][1]['id'])
 
 
 if __name__ == '__main__':

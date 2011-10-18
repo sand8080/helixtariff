@@ -4,7 +4,8 @@ from helixcore.db.filters import (InSessionFilter, EnvironmentObjectsFilter)
 from helixtariff.db.dataobject import (TarifficationObject, ActionLog, Tariff,
     Rule)
 from helixcore.db.wrapper import ObjectNotFound, SelectedMoreThanOneRow
-from helixtariff.error import TarifficationObjectNotFound, TariffNotFound
+from helixtariff.error import TarifficationObjectNotFound, TariffNotFound,\
+    RuleNotFound
 
 
 class TarifficationObjectFilter(InSessionFilter):
