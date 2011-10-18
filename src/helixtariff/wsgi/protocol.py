@@ -186,6 +186,14 @@ GET_RULES_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
+DELETE_RULE_REQUEST = dict(
+    {'id': int},
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+DELETE_RULE_RESPONSE = RESPONSE_STATUS_ONLY
+
+
 ## --- price ---
 #GET_PRICE = dict(
 #    {
@@ -333,6 +341,9 @@ protocol = [
 
     ApiCall('get_rules_request', Scheme(GET_RULES_REQUEST)),
     ApiCall('get_rules_response', Scheme(GET_RULES_RESPONSE)),
+
+    ApiCall('delete_rule_request', Scheme(DELETE_RULE_REQUEST)),
+    ApiCall('delete_rule_response', Scheme(DELETE_RULE_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),

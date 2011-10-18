@@ -221,6 +221,11 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         })
         self.validate_error_response(a_name)
 
+    def test_delete_rule(self):
+        a_name = 'delete_rule'
+        self.api.validate_request(a_name, {'session_id': 's', 'id': 1})
+        self.validate_status_response(a_name)
+
 
 if __name__ == '__main__':
     unittest.main()
