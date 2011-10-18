@@ -333,3 +333,11 @@ class Handler(AbstractHandler):
                 'status': r.status, 'rule': r.rule, 'draft_rule': r.draft_rule,
                 'view_order': r.view_order}
         return response_ok(rules=self.objects_info(rs, viewer), total=total)
+
+    @transaction()
+    @authenticate
+    @detalize_error(RuleNotFound, 'id')
+    def delete_rule(self, data, session, curs=None):
+        f = RuleFilter(session, {'id': data['id']}, {}, None)
+        mapping.delete(curs, f.filter_one_obj(curs))
+        return response_ok()

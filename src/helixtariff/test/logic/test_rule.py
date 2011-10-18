@@ -16,7 +16,6 @@ class RuleTestCase(ActorLogicTestCase):
             'status': Rule.STATUS_ACTIVE}
         resp = self.save_rule(**req)
         self.check_response_ok(resp)
-        r_id_0 = resp['id']
 
         to_id_1 = self._add_tariffication_object('to1')
         req = {'session_id': sess.session_id, 'tariff_id': t_id,
@@ -24,8 +23,6 @@ class RuleTestCase(ActorLogicTestCase):
             'status': Rule.STATUS_ACTIVE, 'view_order': 2}
         resp = self.save_rule(**req)
         self.check_response_ok(resp)
-        r_id_0 = resp['id']
-        # TODO: add checking by get operation
 
     def test_saving_rule_duplicate_failed(self):
         to_id = self._add_tariffication_object('to0')
@@ -105,7 +102,6 @@ class RuleTestCase(ActorLogicTestCase):
         self.assertNotEquals(None, r_data['draft_rule'])
 
         # checking sorting by view_order
-        sess = self.login_actor()
         req = {'session_id': sess.session_id, 'tariff_id': t_id_0,
             'tariffication_object_id': to_id_1, 'draft_rule': 'price = 11',
             'status': Rule.STATUS_ACTIVE, 'view_order': 1}
@@ -120,6 +116,27 @@ class RuleTestCase(ActorLogicTestCase):
         self.assertEquals(2, resp['total'])
         self.assertEquals(r_id_1, resp['rules'][0]['id'])
         self.assertEquals(r_id_0, resp['rules'][1]['id'])
+
+    def test_delete_rule(self):
+        t_id = self._add_tariff('t')
+        to_id = self._add_tariffication_object('to')
+
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'tariff_id': t_id,
+            'tariffication_object_id': to_id, 'draft_rule': 'price = 10',
+            'status': Rule.STATUS_ACTIVE}
+        resp = self.save_rule(**req)
+        self.check_response_ok(resp)
+        r_id = resp['id']
+
+        req = {'session_id': sess.session_id, 'id': t_id}
+        resp = self.delete_rule(**req)
+        self.check_response_ok(resp)
+        req = {'session_id': sess.session_id, 'filter_params': {'id': r_id},
+            'paging_params': {}}
+        resp = self.get_rules(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(0, resp['total'])
 
 
 if __name__ == '__main__':
