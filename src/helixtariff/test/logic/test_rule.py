@@ -138,6 +138,22 @@ class RuleTestCase(ActorLogicTestCase):
         self.check_response_ok(resp)
         self.assertEquals(0, resp['total'])
 
+    def test_apply_draft_rule(self):
+        t_id = self._add_tariff('t')
+        to_id = self._add_tariffication_object('to')
+
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'tariff_id': t_id,
+            'tariffication_object_id': to_id, 'draft_rule': 'price = 10',
+            'status': Rule.STATUS_ACTIVE}
+        resp = self.save_rule(**req)
+        self.check_response_ok(resp)
+        r_id = resp['id']
+
+        req = {'session_id': sess.session_id, 'tariff_id': t_id}
+        resp = self.apply_draft_rules(**req)
+        self.check_response_ok(resp)
+
 
 if __name__ == '__main__':
     unittest.main()

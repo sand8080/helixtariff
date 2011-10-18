@@ -341,3 +341,17 @@ class Handler(AbstractHandler):
         f = RuleFilter(session, {'id': data['id']}, {}, None)
         mapping.delete(curs, f.filter_one_obj(curs))
         return response_ok()
+
+    @transaction()
+    @authenticate
+    @detalize_error(TariffNotFound, 'id')
+    def apply_draft_rules(self, data, session, curs=None):
+        f = RuleFilter(session, {'tariff_id': data['tariff_id']}, {}, ['id'])
+        rs = f.filter_objs(curs, for_update=True)
+        checker = RuleChecker()
+        for r in rs:
+            checker.check(r.draft_rule)
+            r.rule = r.draft_rule
+            r.rule = None
+            mapping.update(curs, r)
+        return response_ok()
