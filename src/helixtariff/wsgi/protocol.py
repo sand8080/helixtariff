@@ -1,6 +1,6 @@
 from helixcore.server.api import ApiCall
 from helixcore.json_validator import (Scheme, Text, Optional, AnyOf,
-    NonNegative)
+    NonNegative, NullableText)
 from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
     LOGIN_REQUEST, LOGIN_RESPONSE, LOGOUT_REQUEST, LOGOUT_RESPONSE,
     AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE, RESPONSE_STATUS_ONLY,
@@ -148,229 +148,44 @@ SAVE_RULE_REQUEST = dict(
 
 SAVE_RULE_RESPONSE = ADDING_OBJECT_RESPONSE
 
-## --- service set ---
-#ADD_SERVICE_SET = dict(
-#    {
-#        'name': Text(),
-#        'service_types': [Text()],
-#    },
-#    **AUTH_INFO
-#)
-#
-#MODIFY_SERVICE_SET = dict(
-#    {
-#        'name': Text(),
-#        Optional('new_name'): Text(),
-#        Optional('new_service_types'): [Text()],
-#    },
-#    **AUTH_INFO
-#)
-#
-#DELETE_SERVICE_SET = dict(
-#    {'name': Text()},
-#    **AUTH_INFO
-#)
-#
-#SERVICE_SET_INFO = dict({
-#    'name': Text(),
-#    'service_types': [Text()],
-#})
-#
-#GET_SERVICE_SET = dict(
-#    {'name': Text()},
-#    **AUTH_INFO
-#)
-#
-#GET_SERVICE_SET_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **SERVICE_SET_INFO
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#VIEW_SERVICE_SETS = AUTH_INFO
-#
-#VIEW_SERVICE_SETS_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **{'service_sets': [SERVICE_SET_INFO]}
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#GET_SERVICE_SET_DETAILED = GET_SERVICE_SET
-#SERVICE_SET_INFO_DETAILED = dict({'tariffs': [Text()]}, **SERVICE_SET_INFO)
-#
-#GET_SERVICE_SET_DETAILED_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **SERVICE_SET_INFO_DETAILED
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#VIEW_SERVICE_SETS_DETAILED = VIEW_SERVICE_SETS
-#
-#VIEW_SERVICE_SETS_DETAILED_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **{'service_sets': [SERVICE_SET_INFO_DETAILED]}
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#
+GET_RULES_REQUEST = dict(
+    {
+        'filter_params': {
+            Optional('id'): int,
+            Optional('ids'): [int],
+            Optional('tariff_id'): int,
+            Optional('tariffication_object_id'): int,
+            Optional('status'): RuleStatusValidator,
+        },
+        'paging_params': REQUEST_PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('id', '-id', 'view_order', '-view_order')]
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
 
+RULE_INFO = {
+    'id': int,
+    'tariff_id': int,
+    'tariff_name': Text(),
+    'status': RuleStatusValidator,
+    'tariffication_object_id': id,
+    'tariffication_object_name': Text(),
+    'rule': NullableText(),
+    'draft_rule': NullableText(),
+    'view_order': int,
+}
 
-#MODIFY_TARIFF = dict(
-#    {
-#        'name': Text(),
-#        Optional('new_name'): Text(),
-#        Optional('new_parent_tariff'): NullableText,
-#        Optional('new_in_archive'): bool,
-#        Optional('new_service_set'): Text(),
-#    },
-#    **AUTH_INFO
-#)
-#
-#DELETE_TARIFF = dict(
-#    {'name': Text()},
-#    **AUTH_INFO
-#)
-#
-#TARIFF_INFO = {
-#    'name': Text(),
-#    'service_set': Text(),
-#    'parent_tariff': NullableText,
-#    'tariffs_chain': [Text()],
-#    'in_archive': bool,
-#}
-#
-#GET_TARIFF = dict(
-#    {'name': Text()},
-#    **AUTH_INFO
-#)
-#
-#GET_TARIFF_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **TARIFF_INFO
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#GET_TARIFF_DETAILED = GET_TARIFF
-#
-#DETAILED_TARIFF_INFO = dict(
-#    {'service_types': [Text()]},
-#    **TARIFF_INFO
-#)
-#
-#GET_TARIFF_DETAILED_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **DETAILED_TARIFF_INFO
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#VIEW_TARIFFS = AUTH_INFO
-#
-#VIEW_TARIFFS_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **{'tariffs': [TARIFF_INFO]}
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#VIEW_TARIFFS_DETAILED = VIEW_TARIFFS
-#VIEW_TARIFFS_DETAILED_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **{'tariffs': [DETAILED_TARIFF_INFO]}
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
+GET_RULES_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'rules': [RULE_INFO],
+            'total': NonNegative(int),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
 
-
-## --- rule ---
-#SAVE_DRAFT_RULE = dict(
-#    {
-#        'tariff': Text(),
-#        'service_type': Text(),
-#        'rule': Text(),
-#        'enabled': bool,
-#    },
-#    **AUTH_INFO
-#)
-#
-#DELETE_DRAFT_RULE = dict(
-#    {
-#        'tariff': Text(),
-#        'service_type': Text(),
-#    },
-#    **AUTH_INFO
-#)
-#
-#MAKE_DRAFT_RULES_ACTUAL = dict(
-#    {'tariff': Text()},
-#    **AUTH_INFO
-#)
-#
-#MODIFY_ACTUAL_RULE = dict(
-#    {
-#        'tariff': Text(),
-#        'service_type': Text(),
-#        'new_enabled': bool,
-#    },
-#    **AUTH_INFO
-#)
-#
-#RULE_TYPES = AnyOf(Rule.TYPE_ACTUAL, Rule.TYPE_DRAFT)
-#
-#GET_RULE = dict(
-#    {
-#        'tariff': Text(),
-#        'service_type': Text(),
-#        'type': RULE_TYPES
-#    },
-#    **AUTH_INFO
-#)
-#
-#RULE_INFO = {
-#    'service_type': Text(),
-#    'rule': Text(),
-#    'type': RULE_TYPES,
-#    'enabled': bool,
-#}
-#
-#GET_RULE_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **dict({'tariff': Text()}, **RULE_INFO)
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#VIEW_RULES = dict(
-#    {'tariff': Text()},
-#    **AUTH_INFO
-#)
-#
-#VIEW_RULES_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **{
-#            'tariff': Text(),
-#            'rules': [RULE_INFO],
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#
 ## --- price ---
 #GET_PRICE = dict(
 #    {
@@ -513,9 +328,11 @@ protocol = [
     ApiCall('delete_tariff_response', Scheme(DELETE_TARIFF_RESPONSE)),
 
     # rules
-
     ApiCall('save_rule_request', Scheme(SAVE_RULE_REQUEST)),
     ApiCall('save_rule_response', Scheme(SAVE_RULE_RESPONSE)),
+
+    ApiCall('get_rules_request', Scheme(GET_RULES_REQUEST)),
+    ApiCall('get_rules_response', Scheme(GET_RULES_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),

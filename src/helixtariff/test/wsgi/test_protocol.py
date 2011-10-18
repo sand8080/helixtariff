@@ -195,6 +195,32 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
         self.validate_error_response(a_name)
 
+    def test_get_rules(self):
+        a_name = 'get_rules'
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {}, 'paging_params': {},})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {'id': 1, 'ids': [1, 2],
+            'tariff_id': 1, 'tariffication_object_id': 1,
+            'status': Rule.STATUS_ACTIVE},
+            'paging_params': {'limit': 0}})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'rules': []})
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'rules': [
+                {'id': 1, 'tariff_id': 1, 'tariff_name': 't0',
+                'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
+                'rule': None, 'draft_rule': 'rule', 'status': Rule.STATUS_ACTIVE,
+                'view_order': 0},
+                {'id': 1, 'tariff_id': 1, 'tariff_name': 't0',
+                'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
+                'rule': 'tt', 'draft_rule': None, 'status': Rule.STATUS_ACTIVE,
+                'view_order': 1}
+            ]
+        })
+        self.validate_error_response(a_name)
+
 
 if __name__ == '__main__':
     unittest.main()
