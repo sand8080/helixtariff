@@ -1,6 +1,6 @@
 from helixcore.server.api import ApiCall
 from helixcore.json_validator import (Scheme, Text, Optional, AnyOf,
-    NonNegative, NullableText)
+    NonNegative, NullableText, DecimalText, Positive)
 from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
     LOGIN_REQUEST, LOGIN_RESPONSE, LOGOUT_REQUEST, LOGOUT_RESPONSE,
     AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE, RESPONSE_STATUS_ONLY,
@@ -200,107 +200,50 @@ APPLY_DRAFT_RULES_REQUEST = dict(
 
 APPLY_DRAFT_RULE_RESPONSE = RESPONSE_STATUS_ONLY
 
+PRICE_CALCULATION_CONTEXT = {
+    Optional('objects_num'): Positive(int),
+}
 
-## --- price ---
-#GET_PRICE = dict(
-#    {
-#        'tariff': Text(),
-#        'service_type': Text(),
-#        Optional('context'): FlatDict(),
-#    },
-#    **AUTH_INFO
-#)
-#
-#PRICE_CALC_NORMAL = 'normal'
-#PRICE_CALC_SERVICE_TYPE_DISABLED = 'service_type_disabled'
-#PRICE_CALC_PRICE_UNDEFINED = 'price_undefined'
-#PRICE_CALC_RULE_DISABLED = 'rule_disabled'
-#PRICE_CALCULATION = AnyOf(
-#    PRICE_CALC_NORMAL,
-#    PRICE_CALC_SERVICE_TYPE_DISABLED,
-#    PRICE_CALC_PRICE_UNDEFINED,
-#    PRICE_CALC_RULE_DISABLED,
-#)
-#
-#PRICE_INFO= {
-#    'service_type': Text(),
-#    'tariffs_chain': [Text()],
-#    'price': AnyOf(DecimalText(), None),
-#    'price_calculation': PRICE_CALCULATION,
-#    'draft_tariffs_chain': [Text()],
-#    'draft_price': AnyOf(DecimalText(), None),
-#    'draft_price_calculation': PRICE_CALCULATION,
-#}
-#
-#GET_PRICE_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **dict(
-#            {
-#                'tariff': Text(),
-#                'context': FlatDict(),
-#            },
-#            **PRICE_INFO
-#        )
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#VIEW_PRICES = dict(
-#    {
-#        'tariff': Text(),
-#        Optional('context'): FlatDict(),
-#    },
-#    **AUTH_INFO
-#)
-#
-#VIEW_PRICES_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **{
-#            'tariff': Text(),
-#            'context': FlatDict(),
-#            'prices': [PRICE_INFO],
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
-#
-#
-## --- action log ---
-#VIEW_ACTION_LOGS = dict(
-#    {
-#        'filter_params': {
-#            Optional('action'): Text(),
-#            Optional('limit'): NonNegative(int),
-#            Optional('offset'): NonNegative(int),
-#            Optional('from_date'): IsoDatetime(),
-#            Optional('to_date'): IsoDatetime(),
-#        },
-#    },
-#    **AUTH_INFO
-#)
-#
-#ACTION_LOG_INFO = {
-#    'custom_operator_info': NullableText,
-#    'action': Text(),
-#    'request_date': IsoDatetime(),
-#    'remote_addr': NullableText,
-#    'request': Text(),
-#    'response': Text(),
-#}
-#
-#
-#VIEW_ACTION_LOGS_RESPONSE = AnyOf(
-#    dict(
-#        RESPONSE_STATUS_OK,
-#        **{
-#            'total': NonNegative(int),
-#            'action_logs': [ACTION_LOG_INFO],
-#        }
-#    ),
-#    RESPONSE_STATUS_ERROR
-#)
+GET_PRICES_REQUEST = dict(
+    {
+        'filter_params': {
+            Optional('user_ids'): [int],
+            Optional('tariff_ids'): [int],
+            Optional('tariffication_object_ids'): [int],
+            Optional('calculation_contexts'): [PRICE_CALCULATION_CONTEXT],
+        },
+        'paging_params': REQUEST_PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('id', '-id', 'view_order', '-view_order')]
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+PRICE_INFO = {
+    'tariffication_object_id': int,
+    'tariffication_object_name': Text(),
+    'rule_id': int,
+    'rule': Text(),
+    'rule_from_tariff_id': int,
+    'rule_from_tariff_name': Text(),
+    'price': DecimalText(),
+    'draft_rule': Text(),
+    'draft_rule_id': int,
+    'draft_rule_from_tariff_id': int,
+    'draft_rule_from_tariff_name': Text(),
+    'draft_price': DecimalText(),
+    Optional('calculation_context'): PRICE_CALCULATION_CONTEXT
+}
+
+GET_PRICES_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'prices': [PRICE_INFO],
+            'total': NonNegative(int),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
 
 
 protocol = [
@@ -354,6 +297,10 @@ protocol = [
 
     ApiCall('apply_draft_rules_request', Scheme(APPLY_DRAFT_RULES_REQUEST)),
     ApiCall('apply_draft_rules_response', Scheme(APPLY_DRAFT_RULE_RESPONSE)),
+
+    # pricing
+    ApiCall('get_prices_request', Scheme(GET_PRICES_REQUEST)),
+    ApiCall('get_prices_response', Scheme(GET_PRICES_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
