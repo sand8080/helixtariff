@@ -70,6 +70,14 @@ class RuleTestCase(ActorLogicTestCase):
             'draft_rule': 'price__ = 10', 'status': Rule.STATUS_ACTIVE}
         self.assertRaises(RequestProcessingError, self.save_rule, **req)
 
+    def _get_rules(self, ids):
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'filter_params': {'ids': ids},
+            'paging_params': {}, 'ordering_params': ['view_order']}
+        resp = self.get_rules(**req)
+        self.check_response_ok(resp)
+        return resp['rules']
+
     def test_get_rules(self):
         to_name_0 = 'to 0'
         to_id_0 = self._add_tariffication_object(to_name_0)
@@ -86,12 +94,9 @@ class RuleTestCase(ActorLogicTestCase):
         self.check_response_ok(resp)
         r_id_0 = resp['id']
 
-        req = {'session_id': sess.session_id, 'filter_params': {'id': r_id_0},
-            'paging_params': {}, 'ordering_params': ['view_order']}
-        resp = self.get_rules(**req)
-        self.check_response_ok(resp)
-        self.assertEquals(1, resp['total'])
-        r_data = resp['rules'][0]
+        rs_data = self._get_rules([r_id_0])
+        r_data = rs_data[0]
+        self.assertEquals(1, len(rs_data))
         self.assertEquals(t_id_0, r_data['id'])
         self.assertEquals(to_id_0, r_data['tariffication_object_id'])
         self.assertEquals(to_name_0, r_data['tariffication_object_name'])
@@ -132,19 +137,17 @@ class RuleTestCase(ActorLogicTestCase):
         req = {'session_id': sess.session_id, 'id': t_id}
         resp = self.delete_rule(**req)
         self.check_response_ok(resp)
-        req = {'session_id': sess.session_id, 'filter_params': {'id': r_id},
-            'paging_params': {}}
-        resp = self.get_rules(**req)
-        self.check_response_ok(resp)
-        self.assertEquals(0, resp['total'])
+        rs_data = self._get_rules([r_id])
+        self.assertEquals(0, len(rs_data))
 
     def test_apply_draft_rule(self):
         t_id = self._add_tariff('t')
         to_id = self._add_tariffication_object('to')
 
         sess = self.login_actor()
+        r = 'price = 10'
         req = {'session_id': sess.session_id, 'tariff_id': t_id,
-            'tariffication_object_id': to_id, 'draft_rule': 'price = 10',
+            'tariffication_object_id': to_id, 'draft_rule': r,
             'status': Rule.STATUS_ACTIVE}
         resp = self.save_rule(**req)
         self.check_response_ok(resp)
@@ -153,6 +156,38 @@ class RuleTestCase(ActorLogicTestCase):
         req = {'session_id': sess.session_id, 'tariff_id': t_id}
         resp = self.apply_draft_rules(**req)
         self.check_response_ok(resp)
+
+        rs_data = self._get_rules([r_id])
+        self.assertEquals(1, len(rs_data))
+        r_data = rs_data[0]
+        self.assertEquals(r, r_data['rule'])
+        self.assertEquals(None, r_data['draft_rule'])
+
+    def test_apply_draft_rule_with_empty_draft_rule(self):
+        t_id = self._add_tariff('t')
+        to_id = self._add_tariffication_object('to')
+
+        sess = self.login_actor()
+        r = 'price = 10'
+        req = {'session_id': sess.session_id, 'tariff_id': t_id,
+            'tariffication_object_id': to_id, 'draft_rule': r,
+            'status': Rule.STATUS_ACTIVE}
+        resp = self.save_rule(**req)
+        self.check_response_ok(resp)
+        r_id = resp['id']
+
+        req = {'session_id': sess.session_id, 'tariff_id': t_id}
+        resp = self.apply_draft_rules(**req)
+        self.check_response_ok(resp)
+        req = {'session_id': sess.session_id, 'tariff_id': t_id}
+        resp = self.apply_draft_rules(**req)
+        self.check_response_ok(resp)
+
+        rs_data = self._get_rules([r_id])
+        self.assertEquals(1, len(rs_data))
+        r_data = rs_data[0]
+        self.assertEquals(r, r_data['rule'])
+        self.assertEquals(None, r_data['draft_rule'])
 
 
 if __name__ == '__main__':

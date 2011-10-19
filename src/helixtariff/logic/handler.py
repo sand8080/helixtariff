@@ -344,14 +344,19 @@ class Handler(AbstractHandler):
 
     @transaction()
     @authenticate
-    @detalize_error(TariffNotFound, 'id')
+    @detalize_error(TariffNotFound, 'tariff_id')
+    @detalize_error(RuleCheckingError, 'tariff_id')
     def apply_draft_rules(self, data, session, curs=None):
+        t_f = TariffFilter(session, {'id': data['tariff_id']}, {}, None)
+        t_f.filter_one_obj(curs)
+
         f = RuleFilter(session, {'tariff_id': data['tariff_id']}, {}, ['id'])
         rs = f.filter_objs(curs, for_update=True)
         checker = RuleChecker()
         for r in rs:
-            checker.check(r.draft_rule)
-            r.rule = r.draft_rule
-            r.rule = None
-            mapping.update(curs, r)
+            if r.draft_rule:
+                checker.check(r.draft_rule)
+                r.rule = r.draft_rule
+                r.draft_rule = None
+                mapping.update(curs, r)
         return response_ok()

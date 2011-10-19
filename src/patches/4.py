@@ -10,8 +10,8 @@ def apply(curs):
             FOREIGN KEY (tariff_id) REFERENCES tariff(id),
             tariffication_object_id integer NOT NULL,
             FOREIGN KEY (tariffication_object_id) REFERENCES tariffication_object(id),
-            rule varchar NULL,
-            draft_rule varchar NOT NULL,
+            rule varchar,
+            draft_rule varchar,
             status varchar NOT NULL CHECK (status in ('active', 'inactive')),
             view_order int NOT NULL DEFAULT 0
         )
