@@ -245,6 +245,23 @@ GET_PRICES_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
+GET_PRICE_REQUEST = dict(
+    {
+        'tariff_id': int,
+        'tariffication_object_id': int,
+        Optional('calculation_context'): PRICE_CALCULATION_CONTEXT,
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+GET_PRICE_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **PRICE_INFO
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 
 protocol = [
 
@@ -299,6 +316,9 @@ protocol = [
     ApiCall('apply_draft_rules_response', Scheme(APPLY_DRAFT_RULE_RESPONSE)),
 
     # pricing
+    ApiCall('get_price_request', Scheme(GET_PRICE_REQUEST)),
+    ApiCall('get_price_response', Scheme(GET_PRICE_RESPONSE)),
+
     ApiCall('get_prices_request', Scheme(GET_PRICES_REQUEST)),
     ApiCall('get_prices_response', Scheme(GET_PRICES_RESPONSE)),
 

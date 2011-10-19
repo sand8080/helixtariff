@@ -274,6 +274,19 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         })
         self.validate_error_response(a_name)
 
+    def test_get_price(self):
+        a_name = 'get_price'
+        self.api.validate_request(a_name, {'session_id': 's',
+            'tariff_id': 1, 'tariffication_object_id': 3})
+
+        self.api.validate_response(a_name, {'status': 'ok',
+            'rule_id': 1, 'rule': 'r', 'price': '10.1',
+            'rule_from_tariff_id': 1, 'rule_from_tariff_name': 't0',
+            'draft_rule_id': 1, 'draft_rule': 'r', 'draft_price': '11',
+            'draft_rule_from_tariff_id': 1, 'draft_rule_from_tariff_name': 't0',
+            'tariffication_object_id': 2, 'tariffication_object_name': 'to0'
+        })
+        self.validate_error_response(a_name)
 
 if __name__ == '__main__':
     unittest.main()
