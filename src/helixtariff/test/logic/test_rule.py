@@ -140,7 +140,7 @@ class RuleTestCase(ActorLogicTestCase):
         rs_data = self._get_rules([r_id])
         self.assertEquals(0, len(rs_data))
 
-    def test_apply_draft_rule(self):
+    def test_apply_draft_rules(self):
         t_id = self._add_tariff('t')
         to_id = self._add_tariffication_object('to')
 
@@ -163,7 +163,7 @@ class RuleTestCase(ActorLogicTestCase):
         self.assertEquals(r, r_data['rule'])
         self.assertEquals(None, r_data['draft_rule'])
 
-    def test_apply_draft_rule_with_empty_draft_rule(self):
+    def test_apply_draft_rules_with_empty_draft_rule(self):
         t_id = self._add_tariff('t')
         to_id = self._add_tariffication_object('to')
 
@@ -188,6 +188,11 @@ class RuleTestCase(ActorLogicTestCase):
         r_data = rs_data[0]
         self.assertEquals(r, r_data['rule'])
         self.assertEquals(None, r_data['draft_rule'])
+
+    def test_apply_draft_rules_with_wrong_tariff(self):
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'tariff_id': 777}
+        self.assertRaises(RequestProcessingError, self.apply_draft_rules, **req)
 
 
 if __name__ == '__main__':
