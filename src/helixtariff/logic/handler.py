@@ -271,7 +271,7 @@ class Handler(AbstractHandler):
         r_data['view_order'] = data.get('view_order', 0)
         rule_id = data.get('id')
         if rule_id:
-            r_data['id'] = r_data
+            r_data['id'] = rule_id
         r = Rule(**r_data)
 
         if rule_id and rule_id not in all_rs_idx:

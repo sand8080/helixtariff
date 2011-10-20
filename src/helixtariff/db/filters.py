@@ -55,6 +55,7 @@ class RuleFilter(InSessionFilter):
         ('tariff_ids', 'tariff_id', In),
         ('tariffication_object_id', 'tariffication_object_id', Eq),
         ('tariffication_object_ids', 'tariffication_object_id', In),
+        ('status', 'status', Eq),
     ]
 
     def __init__(self, session, filter_params, paging_params, ordering_params):

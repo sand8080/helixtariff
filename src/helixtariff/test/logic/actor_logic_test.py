@@ -4,7 +4,7 @@ from helixcore.test.logic.access_granted import (GRANTED_ENV_ID,
     GRANTED_USER_ID)
 
 from helixtariff.test.logic.logic_test import LogicTestCase
-from helixtariff.db.dataobject import Tariff
+from helixtariff.db.dataobject import Tariff, Rule
 
 
 class ActorLogicTestCase(LogicTestCase):
@@ -37,3 +37,41 @@ class ActorLogicTestCase(LogicTestCase):
         resp = self.add_tariffication_object(**req)
         self.check_response_ok(resp)
         return resp['id']
+
+    def _save_rule(self, t_id, to_id, rule, status=Rule.STATUS_ACTIVE, id=None,
+        view_order=None):
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'tariff_id': t_id,
+            'tariffication_object_id': to_id, 'draft_rule': rule,
+            'status': status}
+        if id is not None:
+            req['id'] = id
+        if view_order is not None:
+            req['view_order'] = view_order
+        resp = self.save_rule(**req)
+        self.check_response_ok(resp)
+        return resp['id']
+
+    def _get_rules(self, ids):
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'filter_params': {'ids': ids},
+            'paging_params': {}, 'ordering_params': ['view_order']}
+        resp = self.get_rules(**req)
+        self.check_response_ok(resp)
+        return resp['rules']
+
+    def _get_price(self, t_id, to_id, calculation_ctx=None):
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'tariff_id': t_id,
+            'tariffication_object_id': to_id}
+        if calculation_ctx is not None:
+            req['calculation_context'] = calculation_ctx
+        resp = self.get_price(**req)
+        self.check_response_ok(resp)
+        return resp
+
+    def _apply_draft_rules(self, t_id):
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'tariff_id': t_id}
+        resp = self.apply_draft_rules(**req)
+        self.check_response_ok(resp)
