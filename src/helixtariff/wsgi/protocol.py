@@ -204,6 +204,14 @@ PRICE_CALCULATION_CONTEXT = {
     Optional('objects_num'): Positive(int),
 }
 
+PRICE_INFO = {
+    'tariffication_object_id': int,
+    'tariffication_object_name': Text(),
+    'rule_from_tariff_id': int,
+    'rule_from_tariff_name': Text(),
+    'price': DecimalText(),
+}
+
 GET_PRICES_REQUEST = dict(
     {
         'filter_params': {
@@ -217,22 +225,6 @@ GET_PRICES_REQUEST = dict(
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
-
-PRICE_INFO = {
-    'tariffication_object_id': int,
-    'tariffication_object_name': Text(),
-    'rule_id': int,
-    'rule': Text(),
-    'rule_from_tariff_id': int,
-    'rule_from_tariff_name': Text(),
-    'price': DecimalText(),
-    'draft_rule': Text(),
-    'draft_rule_id': int,
-    'draft_rule_from_tariff_id': int,
-    'draft_rule_from_tariff_name': Text(),
-    'draft_price': DecimalText(),
-    Optional('calculation_context'): PRICE_CALCULATION_CONTEXT
-}
 
 GET_PRICES_RESPONSE = AnyOf(
     dict(
@@ -249,6 +241,7 @@ GET_PRICE_REQUEST = dict(
     {
         'tariff_id': int,
         'tariffication_object_id': int,
+        Optional('user_id'): int,
         Optional('calculation_context'): PRICE_CALCULATION_CONTEXT,
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
@@ -257,10 +250,21 @@ GET_PRICE_REQUEST = dict(
 GET_PRICE_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
-        **PRICE_INFO
+        **{
+            'price': DecimalText(),
+            'rule_id': int,
+            'tariffication_object_id': int,
+            'tariffication_object_name': Text(),
+            'rule_from_tariff_id': int,
+            'rule_from_tariff_name': Text(),
+            Optional('calculation_context'): PRICE_CALCULATION_CONTEXT
+        }
     ),
     RESPONSE_STATUS_ERROR
 )
+
+GET_DRAFT_PRICE_REQUEST = GET_PRICE_REQUEST
+GET_DRAFT_PRICE_RESPONSE = GET_PRICE_RESPONSE
 
 
 protocol = [
@@ -318,6 +322,9 @@ protocol = [
     # pricing
     ApiCall('get_price_request', Scheme(GET_PRICE_REQUEST)),
     ApiCall('get_price_response', Scheme(GET_PRICE_RESPONSE)),
+
+    ApiCall('get_draft_price_request', Scheme(GET_DRAFT_PRICE_REQUEST)),
+    ApiCall('get_draft_price_response', Scheme(GET_DRAFT_PRICE_RESPONSE)),
 
     ApiCall('get_prices_request', Scheme(GET_PRICES_REQUEST)),
     ApiCall('get_prices_response', Scheme(GET_PRICES_RESPONSE)),

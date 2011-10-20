@@ -36,5 +36,3 @@ def process(request):
     checker.check(request.rule)
     exec request.rule
     return ResponsePrice(price)
-
-\

@@ -13,12 +13,15 @@ from helixcore.db.wrapper import ObjectCreationError, ObjectDeletionError
 from helixtariff.db.dataobject import TarifficationObject, Tariff, Rule
 from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected,
-    TariffUsed, RuleAlreadyExsits, RuleNotFound, RuleCheckingError)
+    TariffUsed, RuleAlreadyExsits, RuleNotFound, RuleCheckingError,
+    PriceNotFound, RuleProcessingError)
 from helixcore.error import DataIntegrityError
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
     TariffFilter, RuleFilter)
 from helixcore.db.filters import build_index
 from helixtariff.rulesengine.checker import RuleChecker
+from helixtariff.rulesengine import engine
+from helixtariff.rulesengine.engine import RequestPrice
 
 
 
@@ -165,6 +168,10 @@ class Handler(AbstractHandler):
         return response_ok(id=t.id)
 
     def _tariffs_chain_data(self, tariffs_idx, leaf_tariff):
+        '''
+        returns list of dicts: [{'id': 1, 'name': 'a',
+            'status': 'active'}]
+        '''
         result = [{'id': leaf_tariff.id, 'name': leaf_tariff.name,
             'status': leaf_tariff.status}]
         chain_tariffs_ids = set([leaf_tariff.id])
@@ -182,30 +189,6 @@ class Handler(AbstractHandler):
             else:
                 break
         return result
-
-#    Useful for price plan calculation
-#    def _tariffications_objects_chain_data(self, ts_idx, tos_idx, ts_chain_data):
-#        result = []
-#        processed_tos_ids = set()
-#        for t_data in ts_chain_data:
-#            t_id = t_data['id']
-#            t = ts_idx[t_id]
-#            tos_to_process = t.tariffication_objects_ids
-#            for to_id in tos_to_process:
-#                if to_id not in processed_tos_ids:
-#                    to = tos_idx[to_id]
-#                    to_data = {'id': to.id, 'name': to.name,
-#                        'tariff_id': t.id}
-#                    result.append(to_data)
-#                    processed_tos_ids.add(to_id)
-#        return result
-#
-#    def _filter_exist_tariffication_objects_ids(self, curs, session, tos_ids):
-#        to_f = TarifficationObjectFilter(session, {}, {}, None)
-#        tos = to_f.filter_objs(curs)
-#        exist_tos_idx = build_index(tos)
-#        exist_tos_ids = exist_tos_idx.keys()
-#        return filter(lambda x: x in exist_tos_ids, tos_ids)
 
     @transaction()
     @authenticate
@@ -359,4 +342,134 @@ class Handler(AbstractHandler):
                 r.rule = r.draft_rule
                 r.draft_rule = None
                 mapping.update(curs, r)
+        return response_ok()
+
+#    Useful for price plan calculation
+#    def _tariffications_objects_chain_data(self, ts_idx, tos_idx, ts_chain_data):
+#        result = []
+#        processed_tos_ids = set()
+#        for t_data in ts_chain_data:
+#            t_id = t_data['id']
+#            t = ts_idx[t_id]
+#            tos_to_process = t.tariffication_objects_ids
+#            for to_id in tos_to_process:
+#                if to_id not in processed_tos_ids:
+#                    to = tos_idx[to_id]
+#                    to_data = {'id': to.id, 'name': to.name,
+#                        'tariff_id': t.id}
+#                    result.append(to_data)
+#                    processed_tos_ids.add(to_id)
+#        return result
+#
+#    def _filter_exist_tariffication_objects_ids(self, curs, session, tos_ids):
+#        to_f = TarifficationObjectFilter(session, {}, {}, None)
+#        tos = to_f.filter_objs(curs)
+#        exist_tos_idx = build_index(tos)
+#        exist_tos_ids = exist_tos_idx.keys()
+#        return filter(lambda x: x in exist_tos_ids, tos_ids)
+
+    def _calculate_rule_info(self, rule, tariff, calculation_ctx):
+        req = RequestPrice(rule.rule, **calculation_ctx)
+        resp = engine.process(req)
+        return {
+            'id': rule.id, 'rule_from_tariff_id': tariff.id,
+            'rule_from_tariff_name': tariff.name,
+            'price': resp.price
+        }
+
+    def _price_info(self, session, curs, data, rule_field_name):
+        if 'user_id' in data:
+            # TODO: handle after user tariffs implementation
+            raise NotImplementedError('user_id not handled in get_price yet')
+        t_id = data['tariff_id']
+        to_id = data['tariffication_object_id']
+
+        # Getting required data for price calculation
+        to_f = TarifficationObjectFilter(session, {'id': to_id}, {}, None)
+        to = to_f.filter_one_obj(curs)
+
+        # TODO: handle user tariffs
+        ts_f = TariffFilter(session, {}, {}, None)
+        ts = ts_f.filter_objs(curs)
+        ts_idx = build_index(ts)
+
+        if t_id not in ts_idx:
+            raise TariffNotFound(tariff_id=t_id)
+
+        t = ts_idx[t_id]
+        ts_chain_data = self._tariffs_chain_data(ts_idx, t)
+        ts_ids = [t_data['id'] for t_data in ts_chain_data]
+
+        # Fetching active rules
+        r_f = RuleFilter(session, {'tariff_ids': ts_ids,
+            'tariffication_object_id': to_id, 'status': Rule.STATUS_ACTIVE}, {}, None)
+        rs = r_f.filter_objs(curs)
+        rs_tariff_id_idx = build_index(rs, 'tariff_id')
+
+        # Generation price info
+        calculation_ctx = data.get('calculation_context', {})
+        price_info = {}
+
+        for cur_t_id in ts_ids:
+            cur_t = ts_idx[cur_t_id]
+            # Ignoring inactive tariffs
+            if cur_t.status == Tariff.STATUS_INACTIVE:
+                continue
+            # Processing current rule
+            cur_r = rs_tariff_id_idx.get(cur_t_id)
+            if cur_r:
+                raw_rule = getattr(cur_r, rule_field_name, None)
+                if raw_rule:
+                    resp = engine.process(RequestPrice(raw_rule, **calculation_ctx))
+                    price_info = {
+                        'price': resp.price,
+                        'rule_id': cur_r.id,
+                        'tariffication_object_id': to.id,
+                        'tariffication_object_name': to.name,
+                        'rule_from_tariff_id': cur_t.id,
+                        'rule_from_tariff_name': cur_t.name,
+                    }
+                    if 'calculation_context' in data:
+                        price_info['calculation_context'] = calculation_ctx
+                    break
+        if not price_info:
+            raise PriceNotFound
+        return price_info
+
+    @transaction()
+    @authenticate
+    @detalize_error(TariffNotFound, 'tariff_id')
+    @detalize_error(TarifficationObjectNotFound, 'tariffication_object_id')
+    @detalize_error(PriceNotFound, ['tariff_id', 'tariffication_object_id'])
+    @detalize_error(RuleProcessingError, ['tariff_id', 'tariffication_object_id'])
+    def get_price(self, data, session, curs=None):
+        price_info = self._price_info(session, curs, data, 'rule')
+        return response_ok(**price_info)
+
+    @transaction()
+    @authenticate
+    @detalize_error(TariffNotFound, 'tariff_id')
+    @detalize_error(TarifficationObjectNotFound, 'tariffication_object_id')
+    @detalize_error(PriceNotFound, ['tariff_id', 'tariffication_object_id'])
+    @detalize_error(RuleProcessingError, ['tariff_id', 'tariffication_object_id'])
+    def get_draft_price(self, data, session, curs=None):
+        price_info = self._price_info(session, curs, data, 'draft_rule')
+        return response_ok(**price_info)
+
+    @transaction()
+    @authenticate
+    def get_prices(self, data, session, curs=None):
+#        f_params = data['filter_params']
+#        if 'user_ids' in f_params:
+#            raise NotImplementedError('user_ids filter parameter not handled in get_price yet')
+#
+#        ts_f_params = {}
+#        if 'tariff_ids' in f_params:
+#            ts_f_params = {'ids': f_params['tariff_ids']}
+#
+#        ts_f = TariffFilter(session, ts_f_params, {}, None)
+#        ts = ts_f.filter_objs(curs)
+##        ts_ids =
+#
+#
         return response_ok()

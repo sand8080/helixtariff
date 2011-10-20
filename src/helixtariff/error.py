@@ -59,3 +59,7 @@ class RuleProcessingError(HelixtariffError):
 
 class RuleCheckingError(HelixtariffError):
     code = error_code.HELIXTARIFF_RULE_CHECKING_ERROR
+
+
+class PriceNotFound(HelixtariffError):
+    code = error_code.HELIXTARIFF_PRICE_NOT_FOUND
