@@ -204,29 +204,37 @@ PRICE_CALCULATION_CONTEXT = {
     Optional('objects_num'): Positive(int),
 }
 
-PRICE_INFO = {
-    'tariffication_object_id': int,
-    'tariffication_object_name': Text(),
-    'rule_from_tariff_id': int,
-    'rule_from_tariff_name': Text(),
-    'price': DecimalText(),
-}
-
-GET_PRICES_REQUEST = dict(
+GET_TARIFFS_PRICES_REQUEST = dict(
     {
         'filter_params': {
             Optional('user_ids'): [int],
             Optional('tariff_ids'): [int],
-            Optional('tariffication_object_ids'): [int],
             Optional('calculation_contexts'): [PRICE_CALCULATION_CONTEXT],
         },
         'paging_params': REQUEST_PAGING_PARAMS,
-        Optional('ordering_params'): [AnyOf('id', '-id', 'view_order', '-view_order')]
+        Optional('ordering_params'): [AnyOf('view_order', '-view_order')]
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-GET_PRICES_RESPONSE = AnyOf(
+PRICE_INFO = {
+    'tariffication_object_id': int,
+    'tariffication_object_name': Text(),
+    Optional('rule'): {
+        'rule_id': int,
+        'rule_from_tariff_id': int,
+        'rule_from_tariff_name': Text(),
+        'price': DecimalText(),
+    },
+    Optional('draft_rule'): {
+        'rule_id': int,
+        'rule_from_tariff_id': int,
+        'rule_from_tariff_name': Text(),
+        'price': DecimalText(),
+    }
+}
+
+GET_TARIFFS_PRICES_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **{
@@ -264,6 +272,7 @@ GET_PRICE_RESPONSE = AnyOf(
 )
 
 GET_DRAFT_PRICE_REQUEST = GET_PRICE_REQUEST
+
 GET_DRAFT_PRICE_RESPONSE = GET_PRICE_RESPONSE
 
 
@@ -326,8 +335,8 @@ protocol = [
     ApiCall('get_draft_price_request', Scheme(GET_DRAFT_PRICE_REQUEST)),
     ApiCall('get_draft_price_response', Scheme(GET_DRAFT_PRICE_RESPONSE)),
 
-    ApiCall('get_prices_request', Scheme(GET_PRICES_REQUEST)),
-    ApiCall('get_prices_response', Scheme(GET_PRICES_RESPONSE)),
+    ApiCall('get_tariffs_prices_request', Scheme(GET_TARIFFS_PRICES_REQUEST)),
+    ApiCall('get_tariffs_prices_response', Scheme(GET_TARIFFS_PRICES_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
