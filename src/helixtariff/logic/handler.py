@@ -458,18 +458,26 @@ class Handler(AbstractHandler):
 
     @transaction()
     @authenticate
-    def get_prices(self, data, session, curs=None):
-#        f_params = data['filter_params']
-#        if 'user_ids' in f_params:
-#            raise NotImplementedError('user_ids filter parameter not handled in get_price yet')
-#
-#        ts_f_params = {}
-#        if 'tariff_ids' in f_params:
-#            ts_f_params = {'ids': f_params['tariff_ids']}
-#
-#        ts_f = TariffFilter(session, ts_f_params, {}, None)
-#        ts = ts_f.filter_objs(curs)
-##        ts_ids =
-#
-#
+    def get_tariffs_prices(self, data, session, curs=None):
+        f_params = data['filter_params']
+        ts_f_params = {'ids': f_params.get('tariff_ids', [])}
+        if 'user_ids' in f_params:
+            raise NotImplementedError('user_ids filter parameter not handled in get_tariffs_prices yet')
+        ts_f = TariffFilter(session, ts_f_params, {}, None)
+        ts = ts_f.filter_objs(curs)
+        ts_idx = build_index(ts)
+
+        r_f_params = {'tariff_ids': ts_idx.keys()}
+        r_o_params = data.get('ordering_params')
+        r_f = RuleFilter(session, r_f_params, {}, r_o_params)
+        rs = r_f.filter_objs(curs)
+
+        tos_ids = [r.tariffication_object_id for r in rs]
+        tos_f = TarifficationObjectFilter(session, {'ids': tos_ids}, {}, None)
+        tos = tos_f.filter_objs(curs)
+        tos_idx = build_index(tos)
+
+        calculation_ctxs = data['calculation_contexts']
+
+
         return response_ok()
