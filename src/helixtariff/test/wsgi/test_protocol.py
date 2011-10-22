@@ -248,8 +248,16 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'prices': []})
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
             'prices': [
-                {'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
-                'rule': {'rule_id': 1, 'rule_from_tariff_id': 1,
+                {'tariffication_object_id': 2, 'tariffication_object_name': 'to0', 'rule':
+                    {'id': 1, 'rule_from_tariff_id': 1, 'status': Rule.STATUS_ACTIVE,
+                    'rule_from_tariff_name': 't0', 'price': '10.1'},
+                }
+            ]
+        })
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'prices': [
+                {'tariffication_object_id': 2, 'tariffication_object_name': 'to0', 'draft_rule':
+                    {'id': 1, 'rule_from_tariff_id': 1, 'status': Rule.STATUS_INACTIVE,
                     'rule_from_tariff_name': 't0', 'price': '10.1'},
                 }
             ]
@@ -257,17 +265,9 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
             'prices': [
                 {'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
-                'draft_rule': {'rule_id': 1, 'rule_from_tariff_id': 1,
+                'rule': {'id': 1, 'rule_from_tariff_id': 1, 'status': Rule.STATUS_ACTIVE,
                     'rule_from_tariff_name': 't0', 'price': '10.1'},
-                }
-            ]
-        })
-        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
-            'prices': [
-                {'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
-                'rule': {'rule_id': 1, 'rule_from_tariff_id': 1,
-                    'rule_from_tariff_name': 't0', 'price': '10.1'},
-                'draft_rule': {'rule_id': 1, 'rule_from_tariff_id': 1,
+                'draft_rule': {'id': 1, 'rule_from_tariff_id': 1, 'status': Rule.STATUS_ACTIVE,
                     'rule_from_tariff_name': 't0', 'price': '10.1'},
                 }
             ]

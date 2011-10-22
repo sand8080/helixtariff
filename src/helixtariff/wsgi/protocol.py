@@ -221,13 +221,15 @@ PRICE_INFO = {
     'tariffication_object_id': int,
     'tariffication_object_name': Text(),
     Optional('rule'): {
-        'rule_id': int,
+        'id': int,
+        'status': RuleStatusValidator,
         'rule_from_tariff_id': int,
         'rule_from_tariff_name': Text(),
         'price': DecimalText(),
     },
     Optional('draft_rule'): {
-        'rule_id': int,
+        'id': int,
+        'status': RuleStatusValidator,
         'rule_from_tariff_id': int,
         'rule_from_tariff_name': Text(),
         'price': DecimalText(),
