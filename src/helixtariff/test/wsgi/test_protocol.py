@@ -233,51 +233,94 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
 
     def test_get_tariffs_prices(self):
         a_name = 'get_tariffs_prices'
+        self.api.validate_request(a_name, {'session_id': 's', 'filter_params': {},
+            'paging_params': {}, 'calculation_contexts': []})
         self.api.validate_request(a_name, {'session_id': 's',
-            'filter_params': {}, 'paging_params': {}})
+            'filter_params': {'user_ids': [1], 'tariff_ids': [1, 2]},
+            'paging_params': {'limit': 0}, 'calculation_contexts': []})
         self.api.validate_request(a_name, {'session_id': 's',
-            'filter_params': {'user_ids': [1], 'tariff_ids': [1, 2],
-            'calculation_contexts': []},
-            'paging_params': {'limit': 0}})
-        self.api.validate_request(a_name, {'session_id': 's',
-            'filter_params': {'user_ids': [1], 'tariff_ids': [1, 2],
-            'calculation_contexts': [{'objects_num': 3}]},
-            'paging_params': {'limit': 0}})
+            'filter_params': {'user_ids': [1], 'tariff_ids': [1, 2]},
+            'paging_params': {'limit': 0}, 'calculation_contexts': [{'objects_num': 3}]})
 
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
-            'prices': []})
+            'tariffs': []})
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
-            'prices': [
-                {'tariffication_object_id': 2, 'tariffication_object_name': 'to0', 'rule':
-                    {'id': 1, 'rule_from_tariff_id': 1, 'status': Rule.STATUS_ACTIVE,
-                    'rule_from_tariff_name': 't0', 'price': '10.1'},
-                }
-            ]
+            'tariffs': [{
+                'tariff_id': 1, 'tariff_name': 't0', 'tariff_status': Tariff.STATUS_ACTIVE,
+                'prices': [
+                    {'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
+                        'calculated_prices': [
+                            {'calculation_context': {},
+                             'rule': {'rule_id': 1, 'rule_status': Rule.STATUS_ACTIVE,
+                                 'rule_from_tariff_id': 1, 'rule_from_tariff_name': 't0',
+                                 'price': '10.1'}
+                             }
+                        ],
+                    }
+                ]
+            }]
         })
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
-            'prices': [
-                {'tariffication_object_id': 2, 'tariffication_object_name': 'to0', 'draft_rule':
-                    {'id': 1, 'rule_from_tariff_id': 1, 'status': Rule.STATUS_INACTIVE,
-                    'rule_from_tariff_name': 't0', 'price': '10.1'},
-                }
-            ]
+            'tariffs': [{
+                'tariff_id': 1, 'tariff_name': 't0', 'tariff_status': Tariff.STATUS_ACTIVE,
+                'prices': [
+                    {'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
+                        'calculated_prices': [
+                            {'calculation_context': {},
+                                 'draft_rule': {'rule_id': 1, 'rule_status': Rule.STATUS_ACTIVE,
+                                     'rule_from_tariff_id': 1, 'rule_from_tariff_name': 't0',
+                                     'price': '10.1'},
+                                 'rule': {'rule_id': 1, 'rule_status': Rule.STATUS_INACTIVE,
+                                     'rule_from_tariff_id': 1, 'rule_from_tariff_name': 't0',
+                                     'price': '10.1'},
+                             }
+                        ],
+                    }
+                ]
+            }]
         })
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
-            'prices': [
-                {'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
-                'rule': {'id': 1, 'rule_from_tariff_id': 1, 'status': Rule.STATUS_ACTIVE,
-                    'rule_from_tariff_name': 't0', 'price': '10.1'},
-                'draft_rule': {'id': 1, 'rule_from_tariff_id': 1, 'status': Rule.STATUS_ACTIVE,
-                    'rule_from_tariff_name': 't0', 'price': '10.1'},
-                }
+            'tariffs': [
+                {'tariff_id': 1, 'tariff_name': 't0', 'tariff_status': Tariff.STATUS_ACTIVE,
+                'prices': [
+                    {'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
+                        'calculated_prices': [
+                            {'calculation_context': {},
+                                 'draft_rule': {'rule_id': 1, 'rule_status': Rule.STATUS_ACTIVE,
+                                     'rule_from_tariff_id': 1, 'rule_from_tariff_name': 't0',
+                                     'price': '10.1'},
+                                 'rule': {'rule_id': 1, 'rule_status': Rule.STATUS_INACTIVE,
+                                     'rule_from_tariff_id': 1, 'rule_from_tariff_name': 't0',
+                                     'price': '10.1'},
+                             }
+                        ],
+                    }
+                ]},
+                {'tariff_id': 12, 'tariff_name': 't02', 'tariff_status': Tariff.STATUS_ARCHIVE,
+                'prices': [
+                    {'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
+                        'calculated_prices': [
+                            {'calculation_context': {},
+                                 'draft_rule': {'rule_id': 1, 'rule_status': Rule.STATUS_ACTIVE,
+                                     'rule_from_tariff_id': 1, 'rule_from_tariff_name': 't0',
+                                     'price': '10.1'},
+                                 'rule': {'rule_id': 1, 'rule_status': Rule.STATUS_INACTIVE,
+                                     'rule_from_tariff_id': 1, 'rule_from_tariff_name': 't0',
+                                     'price': '10.1'},
+                             },
+                            {'calculation_context': {'objects_num': 100},
+                                 'draft_rule': {'rule_id': 1, 'rule_status': Rule.STATUS_ACTIVE,
+                                     'rule_from_tariff_id': 1, 'rule_from_tariff_name': 't0',
+                                     'price': '8.1'},
+                                 'rule': {'rule_id': 1, 'rule_status': Rule.STATUS_INACTIVE,
+                                     'rule_from_tariff_id': 1, 'rule_from_tariff_name': 't0',
+                                     'price': '7.1'},
+                             }
+                        ],
+                    }
+                ]},
             ]
         })
-        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
-            'prices': [
-                {'tariffication_object_id': 2, 'tariffication_object_name': 'to0'}
-            ]
-        })
-        self.validate_error_response(a_name)
 
     def test_get_price(self):
         a_name = 'get_price'

@@ -209,9 +209,9 @@ GET_TARIFFS_PRICES_REQUEST = dict(
         'filter_params': {
             Optional('user_ids'): [int],
             Optional('tariff_ids'): [int],
-            Optional('calculation_contexts'): [PRICE_CALCULATION_CONTEXT],
         },
         'paging_params': REQUEST_PAGING_PARAMS,
+        'calculation_contexts': [PRICE_CALCULATION_CONTEXT],
         Optional('ordering_params'): [AnyOf('view_order', '-view_order')]
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
@@ -220,27 +220,37 @@ GET_TARIFFS_PRICES_REQUEST = dict(
 PRICE_INFO = {
     'tariffication_object_id': int,
     'tariffication_object_name': Text(),
-    Optional('rule'): {
-        'id': int,
-        'status': RuleStatusValidator,
-        'rule_from_tariff_id': int,
-        'rule_from_tariff_name': Text(),
-        'price': DecimalText(),
-    },
-    Optional('draft_rule'): {
-        'id': int,
-        'status': RuleStatusValidator,
-        'rule_from_tariff_id': int,
-        'rule_from_tariff_name': Text(),
-        'price': DecimalText(),
-    }
+    'calculated_prices': [{
+        'calculation_context': PRICE_CALCULATION_CONTEXT,
+        Optional('rule'): {
+            'rule_id': int,
+            'rule_status': RuleStatusValidator,
+            'rule_from_tariff_id': int,
+            'rule_from_tariff_name': Text(),
+            'price': DecimalText(),
+        },
+        Optional('draft_rule'): {
+            'rule_id': int,
+            'rule_status': RuleStatusValidator,
+            'rule_from_tariff_id': int,
+            'rule_from_tariff_name': Text(),
+            'price': DecimalText(),
+        }
+    }]
+}
+
+TARIFF_PRICE_INFO = {
+    'tariff_id': int,
+    'tariff_name': Text(),
+    'tariff_status': TariffStatusValidator,
+    'prices': [PRICE_INFO],
 }
 
 GET_TARIFFS_PRICES_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **{
-            'prices': [PRICE_INFO],
+            'tariffs': [TARIFF_PRICE_INFO],
             'total': NonNegative(int),
         }
     ),
