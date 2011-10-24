@@ -207,34 +207,35 @@ PRICE_CALCULATION_CONTEXT = {
 GET_TARIFFS_PRICES_REQUEST = dict(
     {
         'filter_params': {
-            Optional('user_ids'): [int],
-            Optional('tariff_ids'): [int],
+            Optional('user_id'): int,
+            Optional('ids'): [int],
+            Optional('name'): Text(),
+            Optional('type'): TariffTypeValidator,
+            Optional('status'): TariffStatusValidator,
         },
         'paging_params': REQUEST_PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('id', '-id', 'name', '-name')],
         'calculation_contexts': [PRICE_CALCULATION_CONTEXT],
-        Optional('ordering_params'): [AnyOf('view_order', '-view_order')]
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-PRICE_INFO = {
+TARIFFICATION_OBJECT_PRICE_INFO = {
     'tariffication_object_id': int,
     'tariffication_object_name': Text(),
-    'calculated_prices': [{
+    'prices': [{
         'calculation_context': PRICE_CALCULATION_CONTEXT,
         Optional('rule'): {
+            'price': DecimalText(),
             'rule_id': int,
-            'rule_status': RuleStatusValidator,
             'rule_from_tariff_id': int,
             'rule_from_tariff_name': Text(),
-            'price': DecimalText(),
         },
         Optional('draft_rule'): {
+            'price': DecimalText(),
             'rule_id': int,
-            'rule_status': RuleStatusValidator,
             'rule_from_tariff_id': int,
             'rule_from_tariff_name': Text(),
-            'price': DecimalText(),
         }
     }]
 }
@@ -243,7 +244,7 @@ TARIFF_PRICE_INFO = {
     'tariff_id': int,
     'tariff_name': Text(),
     'tariff_status': TariffStatusValidator,
-    'prices': [PRICE_INFO],
+    'tariffication_objects': [TARIFFICATION_OBJECT_PRICE_INFO],
 }
 
 GET_TARIFFS_PRICES_RESPONSE = AnyOf(
@@ -271,10 +272,10 @@ GET_PRICE_RESPONSE = AnyOf(
     dict(
         RESPONSE_STATUS_OK,
         **{
-            'price': DecimalText(),
-            'rule_id': int,
             'tariffication_object_id': int,
             'tariffication_object_name': Text(),
+            'price': DecimalText(),
+            'rule_id': int,
             'rule_from_tariff_id': int,
             'rule_from_tariff_name': Text(),
             Optional('calculation_context'): PRICE_CALCULATION_CONTEXT

@@ -178,10 +178,9 @@ class PriceTestCase(ActorLogicTestCase):
 
         sess = self.login_actor()
         req = {'session_id': sess.session_id, 'calculation_contexts': [{}],
-            'paging_params': {}, 'filter_params': {'tariff_ids': [t_id_2, t_id_1]},
-            'ordering_params': ['view_order']}
+            'paging_params': {}, 'filter_params': {'ids': [t_id_2, t_id_1]}}
         resp = self.get_tariffs_prices(**req)
-        print '### resp', resp
+#        print '### resp', resp
 
 
 if __name__ == '__main__':
