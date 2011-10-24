@@ -151,6 +151,38 @@ class PriceTestCase(ActorLogicTestCase):
         resp = self._get_price(t_id_2, to_id)
         self.assertEquals('1', resp['price'])
 
+    def test_tariffs_prices(self):
+        to_name_0, to_name_1, to_name_2 = 'to0', 'to1', 'to2'
+        to_id_0 = self._add_tariffication_object(to_name_0)
+        to_id_1 = self._add_tariffication_object(to_name_1)
+        to_id_2 = self._add_tariffication_object(to_name_2)
+
+        t_name_0, t_name_1, t_name_2 = 't0', 't1', 't2'
+        t_id_0 = self._add_tariff(t_name_0)
+        t_id_1 = self._add_tariff(t_name_1, parent_tariff_id=t_id_0,
+            status=Tariff.STATUS_INACTIVE)
+        t_id_2 = self._add_tariff(t_name_2, parent_tariff_id=t_id_1,
+            status=Tariff.STATUS_ARCHIVE)
+
+        # adding rule for checking inheritance
+        r_id_inherited = self._save_rule(t_id_0, to_id_0, 'price = 0.01', view_order=10)
+
+        # adding rule for checking overriding
+        self._save_rule(t_id_0, to_id_1, 'price = 0.02', view_order=5)
+        r_id_overrided = self._save_rule(t_id_2, to_id_1, 'price = 2.02', view_order=5)
+
+        # adding rule for checking rule disabling
+        self._save_rule(t_id_0, to_id_2, 'price = 0.03', view_order=1)
+        self._save_rule(t_id_1, to_id_2, 'price = 1.03', view_order=1,
+            status=Rule.STATUS_INACTIVE)
+
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'calculation_contexts': [{}],
+            'paging_params': {}, 'filter_params': {'tariff_ids': [t_id_2, t_id_1]},
+            'ordering_params': ['view_order']}
+        resp = self.get_tariffs_prices(**req)
+        print '### resp', resp
+
 
 if __name__ == '__main__':
     unittest.main()
