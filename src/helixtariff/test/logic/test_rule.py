@@ -14,6 +14,20 @@ class RuleTestCase(ActorLogicTestCase):
         r_id_1 = self._save_rule(t_id, to_id_1, 'price = 10')
         self._save_rule(t_id, to_id_1, 'price = 10', id=r_id_1)
 
+    def test_save_rule_not_rewrites_actual_rule(self):
+        to_id_0 = self._add_tariffication_object('to0')
+        t_id = self._add_tariff('t')
+        r_id = self._save_rule(t_id, to_id_0, 'price = 10')
+        self._apply_draft_rules(t_id)
+        rules_data = self._get_rules([r_id])
+        self.assertTrue(rules_data[0]['rule'] is not None)
+        self.assertTrue(rules_data[0]['draft_rule'] is None)
+
+        self._save_rule(t_id, to_id_0, 'price = 11', id=r_id)
+        rules_data = self._get_rules([r_id])
+        self.assertTrue(rules_data[0]['rule'] is not None)
+        self.assertTrue(rules_data[0]['draft_rule'] is not None)
+
     def test_saving_rule_duplicate_failed(self):
         to_id = self._add_tariffication_object('to0')
         t_id = self._add_tariff('t')
