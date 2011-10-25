@@ -21,6 +21,14 @@ class ActorLogicTestCase(LogicTestCase):
         self.check_response_ok(resp)
         return resp['id']
 
+    def _add_user_tariff(self, tariff_id, user_id):
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'user_id': user_id,
+            'tariff_id': tariff_id}
+        resp = self.add_user_tariff(**req)
+        self.check_response_ok(resp)
+        return resp['id']
+
     def _tariff_data(self, t_id):
         sess = self.login_actor()
         req = {'session_id': sess.session_id, 'filter_params': {'id': t_id},

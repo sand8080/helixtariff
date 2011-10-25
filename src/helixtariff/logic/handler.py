@@ -10,7 +10,8 @@ from helixtariff.conf import settings
 from helixtariff.conf.db import transaction
 from helixcore.actions.handler import detalize_error, AbstractHandler
 from helixcore.db.wrapper import ObjectCreationError, ObjectDeletionError
-from helixtariff.db.dataobject import TarifficationObject, Tariff, Rule
+from helixtariff.db.dataobject import TarifficationObject, Tariff, Rule,\
+    UserTariff
 from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected,
     TariffUsed, RuleAlreadyExsits, RuleNotFound, RuleCheckingError,
@@ -344,30 +345,6 @@ class Handler(AbstractHandler):
                 mapping.update(curs, r)
         return response_ok()
 
-#    Useful for price plan calculation
-#    def _tariffications_objects_chain_data(self, ts_idx, tos_idx, ts_chain_data):
-#        result = []
-#        processed_tos_ids = set()
-#        for t_data in ts_chain_data:
-#            t_id = t_data['id']
-#            t = ts_idx[t_id]
-#            tos_to_process = t.tariffication_objects_ids
-#            for to_id in tos_to_process:
-#                if to_id not in processed_tos_ids:
-#                    to = tos_idx[to_id]
-#                    to_data = {'id': to.id, 'name': to.name,
-#                        'tariff_id': t.id}
-#                    result.append(to_data)
-#                    processed_tos_ids.add(to_id)
-#        return result
-#
-#    def _filter_exist_tariffication_objects_ids(self, curs, session, tos_ids):
-#        to_f = TarifficationObjectFilter(session, {}, {}, None)
-#        tos = to_f.filter_objs(curs)
-#        exist_tos_idx = build_index(tos)
-#        exist_tos_ids = exist_tos_idx.keys()
-#        return filter(lambda x: x in exist_tos_ids, tos_ids)
-
     def _calculate_rule_info(self, r, r_field_name, t, calculation_ctx):
         raw_rule = getattr(r, r_field_name)
         req = RequestPrice(raw_rule, **calculation_ctx)
@@ -421,7 +398,6 @@ class Handler(AbstractHandler):
         r_f = RuleFilter(session, {'tariff_ids': ts_chain_ids,
             'tariffication_object_id': to_id, 'status': Rule.STATUS_ACTIVE}, {}, None)
         rs = r_f.filter_objs(curs)
-#        rs_tariff_id_idx = build_index(rs, 'tariff_id')
         rs_to_t_idx = build_complex_index(rs, ('tariffication_object_id', 'tariff_id'))
 
         # Generation price info
@@ -531,3 +507,21 @@ class Handler(AbstractHandler):
             tariffs_prices.append(tariff_price_info)
 
         return response_ok(tariffs=tariffs_prices, total=total)
+
+    @transaction()
+    @authenticate
+    @detalize_error(TariffNotFound, ['tariff_id'])
+    @detalize_error(ObjectCreationError, ['tariff_id', 'user_id'])
+    def add_user_tariff(self, data, session, curs=None):
+        # checking tariff exist
+        t_id = data['tariff_id']
+        if t_id:
+            t_f = TariffFilter(session, {'id': t_id}, {}, None)
+            t_f.filter_one_obj(curs)
+
+        ut_data = {'environment_id': session.environment_id,
+            'tariff_id': t_id, 'user_id': data['user_id']}
+        ut = UserTariff(**ut_data)
+        mapping.insert(curs, ut)
+        return response_ok(id=ut.id)
+
