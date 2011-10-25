@@ -34,3 +34,8 @@ class Rule(Mapped):
     __slots__ = ['id', 'environment_id', 'tariff_id', 'status',
         'tariffication_object_id', 'rule', 'draft_rule', 'view_order']
     table = 'rule'
+
+
+class UserTariff(Mapped):
+    __slots__ = ['id', 'environment_id', 'user_id', 'tariff_id']
+    table = 'user_tariff'

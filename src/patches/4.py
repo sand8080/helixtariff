@@ -35,7 +35,7 @@ def apply(curs):
         'rule (environment_id, tariff_id, tariffication_object_id)'
     curs.execute(
     '''
-        CREATE UNIQUE INDEX environment_id_tariff_id_tariffication_object_id_idx ON
+        CREATE UNIQUE INDEX rule_environment_id_tariff_id_tariffication_object_id_idx ON
         rule (environment_id, tariff_id, tariffication_object_id)
     '''
     )
