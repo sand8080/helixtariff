@@ -367,6 +367,20 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'tariff_ids': [1, 2]})
         self.validate_status_response(a_name)
 
+    def test_get_users_tariffs(self):
+        a_name = 'get_user_tariffs'
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {}, 'paging_params': {},})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {'user_ids': [1], 'tariff_ids': [1, 2]},
+            'paging_params': {'limit': 0}})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'user_tariffs': []})
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'user_tariffs': [{'user_id': 1, 'tariff_ids': [1, 2]}]})
+        self.validate_error_response(a_name)
+
 
 if __name__ == '__main__':
     unittest.main()

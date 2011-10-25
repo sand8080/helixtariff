@@ -532,3 +532,19 @@ class Handler(AbstractHandler):
             'tariff_ids': data['tariff_ids']}, {}, None)
         mapping.delete(curs, f.filter_one_obj(curs))
         return response_ok()
+
+    @transaction()
+    @authenticate
+    def get_user_tariffs(self, data, session, curs=None):
+        ut_f = UserTariffFilter(session, data['filter_params'],
+            data['paging_params'], data.get('ordering_params'))
+        uts = ut_f.filter_objs(curs)
+
+        uts_data = {}
+        for ut in uts:
+            if ut.user_id not in uts_data:
+                uts_data[ut.user_id] = []
+            uts_data[ut.user_id].append(ut.tariff_id)
+        uts_info = [{'user_id': k, 'tariff_ids': v} for k, v in uts_data.items()]
+        uts_info.sort(key=lambda x: x['user_id'])
+        return response_ok(user_tariffs=uts_info, total=len(uts_info))

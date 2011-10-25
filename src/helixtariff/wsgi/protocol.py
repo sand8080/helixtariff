@@ -306,6 +306,29 @@ DELETE_USER_TARIFFS_REQUEST = dict(
 
 DELETE_USER_TARIFFS_RESPONSE = RESPONSE_STATUS_ONLY
 
+GET_USER_TARIFFS_REQUEST = dict(
+    {
+        'filter_params': {
+            Optional('user_ids'): [int],
+            Optional('tariff_ids'): [int],
+        },
+        'paging_params': REQUEST_PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('id', '-id')]
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+GET_USER_TARIFFS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'user_tariffs': [{'user_id': int, 'tariff_ids': [int]}],
+            'total': NonNegative(int),
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 
 protocol = [
 
@@ -375,6 +398,9 @@ protocol = [
 
     ApiCall('delete_user_tariffs_request', Scheme(DELETE_USER_TARIFFS_REQUEST)),
     ApiCall('delete_user_tariffs_response', Scheme(DELETE_USER_TARIFFS_RESPONSE)),
+
+    ApiCall('get_user_tariffs_request', Scheme(GET_USER_TARIFFS_REQUEST)),
+    ApiCall('get_user_tariffs_response', Scheme(GET_USER_TARIFFS_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),

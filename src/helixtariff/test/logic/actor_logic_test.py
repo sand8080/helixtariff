@@ -83,3 +83,15 @@ class ActorLogicTestCase(LogicTestCase):
         req = {'session_id': sess.session_id, 'tariff_id': t_id}
         resp = self.apply_draft_rules(**req)
         self.check_response_ok(resp)
+
+    def _get_user_tariffs(self, user_ids, tariff_ids=None):
+        sess = self.login_actor()
+        f_params = {'user_ids': user_ids}
+        if tariff_ids is not None:
+            f_params['tariff_ids'] = tariff_ids
+        req = {'session_id': sess.session_id, 'filter_params': f_params,
+            'paging_params': {}}
+        resp = self.get_user_tariffs(**req)
+        self.check_response_ok(resp)
+        return resp['user_tariffs']
+
