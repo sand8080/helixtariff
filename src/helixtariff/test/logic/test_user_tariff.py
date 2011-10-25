@@ -21,6 +21,18 @@ class UserTariffTestCase(ActorLogicTestCase):
     def test_add_wrong_tariff(self):
         self.assertRaises(RequestProcessingError, self._add_user_tariff, 555, self.u_id)
 
+    def test_delete_user_tariff(self):
+        t_id = self._add_tariff('t')
+        self._add_user_tariff(t_id, self.u_id)
+
+        # TODO: use get user tariffs action
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'user_id': self.u_id,
+            'tariff_ids': [t_id]}
+        resp = self.delete_user_tariffs(**req)
+        self.check_response_ok(resp)
+        # TODO: use get user tariffs action
+
 #    def test_get_tariffs(self):
 #        name_0 = 'tariff_0'
 #        t_id_0 = self._add_tariff(name_0)
@@ -79,25 +91,6 @@ class UserTariffTestCase(ActorLogicTestCase):
 #        req = {'session_id': sess.session_id, 'id': pt_id,
 #            'new_parent_tariff_id': cht_id}
 #        self.assertRaises(RequestProcessingError, self.modify_tariff, **req)
-#
-#    def test_delete_tariff(self):
-#        sess = self.login_actor()
-#
-#        t_id = self._add_tariff('t')
-#        req = {'session_id': sess.session_id, 'filter_params': {'id': t_id},
-#            'paging_params': {}}
-#        resp = self.get_tariffs(**req)
-#        self.check_response_ok(resp)
-#        self.assertEquals(1, resp['total'])
-#
-#        req = {'session_id': sess.session_id, 'id': t_id}
-#        resp = self.delete_tariff(**req)
-#        self.check_response_ok(resp)
-#        req = {'session_id': sess.session_id, 'filter_params': {'id': t_id},
-#            'paging_params': {}}
-#        resp = self.get_tariffs(**req)
-#        self.check_response_ok(resp)
-#        self.assertEquals(0, resp['total'])
 #
 #    def test_delete_used_tariff_failed(self):
 #        pt_id = self._add_tariff('pt')

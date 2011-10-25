@@ -364,7 +364,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
     def test_delete_user_tariffs(self):
         a_name = 'delete_user_tariffs'
         self.api.validate_request(a_name, {'session_id': 's', 'user_id': 1,
-            'ids': [1, 2]})
+            'tariff_ids': [1, 2]})
         self.validate_status_response(a_name)
 
 

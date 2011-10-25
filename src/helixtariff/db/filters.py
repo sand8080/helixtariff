@@ -2,10 +2,10 @@ from helixcore.db.sql import (Eq, Like, MoreEq, LessEq, Any, In, NotEq)
 from helixcore.db.filters import (InSessionFilter, EnvironmentObjectsFilter)
 
 from helixtariff.db.dataobject import (TarifficationObject, ActionLog, Tariff,
-    Rule)
+    Rule, UserTariff)
 from helixcore.db.wrapper import ObjectNotFound, SelectedMoreThanOneRow
-from helixtariff.error import TarifficationObjectNotFound, TariffNotFound,\
-    RuleNotFound
+from helixtariff.error import (TarifficationObjectNotFound, TariffNotFound,
+    RuleNotFound)
 
 
 class TarifficationObjectFilter(InSessionFilter):
@@ -50,12 +50,12 @@ class TariffFilter(InSessionFilter):
 class UserTariffFilter(InSessionFilter):
     cond_map = [
         ('user_id', 'user_id', Eq),
-        ('ids', 'id', In),
+        ('tariff_ids', 'tariff_id', In),
     ]
 
     def __init__(self, session, filter_params, paging_params, ordering_params):
         super(UserTariffFilter, self).__init__(session, filter_params,
-            paging_params, ordering_params, Tariff)
+            paging_params, ordering_params, UserTariff)
 
     def filter_one_obj(self, curs, for_update=False):
         try:

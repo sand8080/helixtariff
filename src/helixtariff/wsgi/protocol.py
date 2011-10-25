@@ -300,7 +300,7 @@ ADD_USER_TARIFF_REQUEST = dict(
 ADD_USER_TARIFF_RESPONSE = ADDING_OBJECT_RESPONSE
 
 DELETE_USER_TARIFFS_REQUEST = dict(
-    {'user_id': int, 'ids': [int]},
+    {'user_id': int, 'tariff_ids': [int]},
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 

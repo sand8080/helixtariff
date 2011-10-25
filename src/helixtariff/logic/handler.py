@@ -527,8 +527,8 @@ class Handler(AbstractHandler):
 
     @transaction()
     @authenticate
-    def delete_user_tariff(self, data, session, curs=None):
+    def delete_user_tariffs(self, data, session, curs=None):
         f = UserTariffFilter(session, {'user_id': data['user_id'],
-            'ids': data['ids']}, {}, None)
+            'tariff_ids': data['tariff_ids']}, {}, None)
         mapping.delete(curs, f.filter_one_obj(curs))
         return response_ok()
