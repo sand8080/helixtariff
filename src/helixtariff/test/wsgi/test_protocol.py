@@ -353,6 +353,14 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         })
         self.validate_error_response(a_name)
 
+    def test_add_user_tariff(self):
+        a_name = 'add_user_tariff'
+        self.api.validate_request(a_name, {'session_id': 's',
+            'tariff_id': 1, 'user_id': 2})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
+        self.validate_error_response(a_name)
+
 
 if __name__ == '__main__':
     unittest.main()

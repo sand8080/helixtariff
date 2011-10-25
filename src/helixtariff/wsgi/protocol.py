@@ -290,6 +290,17 @@ GET_DRAFT_PRICE_REQUEST = GET_PRICE_REQUEST
 GET_DRAFT_PRICE_RESPONSE = GET_PRICE_RESPONSE
 
 
+ADD_USER_TARIFF_REQUEST = dict(
+    {
+        'tariff_id': int,
+        'user_id': int,
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+ADD_USER_TARIFF_RESPONSE = ADDING_OBJECT_RESPONSE
+
+
 protocol = [
 
     ApiCall('ping_request', Scheme(PING_REQUEST)),
@@ -351,6 +362,10 @@ protocol = [
 
     ApiCall('get_tariffs_prices_request', Scheme(GET_TARIFFS_PRICES_REQUEST)),
     ApiCall('get_tariffs_prices_response', Scheme(GET_TARIFFS_PRICES_RESPONSE)),
+
+    # user tariff
+    ApiCall('add_user_tariff_request', Scheme(ADD_USER_TARIFF_REQUEST)),
+    ApiCall('add_user_tariff_response', Scheme(ADD_USER_TARIFF_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
