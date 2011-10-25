@@ -289,7 +289,6 @@ GET_DRAFT_PRICE_REQUEST = GET_PRICE_REQUEST
 
 GET_DRAFT_PRICE_RESPONSE = GET_PRICE_RESPONSE
 
-
 ADD_USER_TARIFF_REQUEST = dict(
     {
         'tariff_id': int,
@@ -299,6 +298,13 @@ ADD_USER_TARIFF_REQUEST = dict(
 )
 
 ADD_USER_TARIFF_RESPONSE = ADDING_OBJECT_RESPONSE
+
+DELETE_USER_TARIFFS_REQUEST = dict(
+    {'user_id': int, 'ids': [int]},
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+DELETE_USER_TARIFFS_RESPONSE = RESPONSE_STATUS_ONLY
 
 
 protocol = [
@@ -366,6 +372,9 @@ protocol = [
     # user tariff
     ApiCall('add_user_tariff_request', Scheme(ADD_USER_TARIFF_REQUEST)),
     ApiCall('add_user_tariff_response', Scheme(ADD_USER_TARIFF_RESPONSE)),
+
+    ApiCall('delete_user_tariffs_request', Scheme(DELETE_USER_TARIFFS_REQUEST)),
+    ApiCall('delete_user_tariffs_response', Scheme(DELETE_USER_TARIFFS_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),

@@ -361,6 +361,12 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
         self.validate_error_response(a_name)
 
+    def test_delete_user_tariffs(self):
+        a_name = 'delete_user_tariffs'
+        self.api.validate_request(a_name, {'session_id': 's', 'user_id': 1,
+            'ids': [1, 2]})
+        self.validate_status_response(a_name)
+
 
 if __name__ == '__main__':
     unittest.main()
