@@ -8,7 +8,7 @@ from helixcore.test.utils_for_testing import ActionsLogTester
 
 from helixtariff.test.logic.actor_logic_test import ActorLogicTestCase
 from helixtariff.test.wsgi.client import Client
-from helixtariff.db.dataobject import Tariff
+from helixtariff.db.dataobject import Tariff, Rule
 
 
 class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
@@ -79,6 +79,51 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         action = 'modify_tariff'
         req = {'session_id': self.sess_id, 'id': t_id, 'new_name': 'tt'}
         self._logged_action(action, req)
+
+    def test_save_rule(self):
+        to_id = self._add_tariffication_object('to0')
+        t_id = self._add_tariff('t0')
+
+        action = 'save_rule'
+        req = {'session_id': self.sess_id, 'tariff_id': t_id, 'tariffication_object_id': to_id,
+            'draft_rule': 'price = 11', 'status': Rule.STATUS_ACTIVE}
+        self._logged_action(action, req)
+
+    def test_apply_draft_rules(self):
+        to_id = self._add_tariffication_object('to0')
+        t_id = self._add_tariff('t0')
+        self._save_rule(t_id, to_id, 'price = 12')
+
+        action = 'apply_draft_rules'
+        req = {'session_id': self.sess_id, 'tariff_id': t_id}
+        self._logged_action(action, req)
+
+    def test_delete_rule(self):
+        to_id = self._add_tariffication_object('to0')
+        t_id = self._add_tariff('t0')
+        r_id = self._save_rule(t_id, to_id, 'price = 12')
+
+        action = 'delete_rule'
+        req = {'session_id': self.sess_id, 'id': r_id}
+        self._logged_action(action, req)
+
+    def test_add_user_tariff(self):
+        t_id = self._add_tariff('t0')
+        u_id = 23
+
+        action = 'add_user_tariff'
+        req = {'session_id': self.sess_id, 'tariff_id': t_id, 'user_id': u_id}
+        self._logged_action(action, req)
+        self._check_subject_users_ids_set(self.sess_id, action, u_id)
+
+    def test_delete_user_tariffs(self):
+        t_id = self._add_tariff('t0')
+        u_id = 23
+
+        action = 'delete_user_tariffs'
+        req = {'session_id': self.sess_id, 'tariff_ids': [t_id], 'user_id': u_id}
+        self._logged_action(action, req)
+        self._check_subject_users_ids_set(self.sess_id, action, u_id)
 
 
 if __name__ == '__main__':

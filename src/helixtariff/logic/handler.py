@@ -8,7 +8,8 @@ from helixcore.server.response import response_ok
 
 from helixtariff.conf import settings
 from helixtariff.conf.db import transaction
-from helixcore.actions.handler import detalize_error, AbstractHandler
+from helixcore.actions.handler import detalize_error, AbstractHandler,\
+    set_subject_users_ids
 from helixcore.db.wrapper import ObjectCreationError, ObjectDeletionError
 from helixtariff.db.dataobject import TarifficationObject, Tariff, Rule,\
     UserTariff
@@ -508,6 +509,7 @@ class Handler(AbstractHandler):
 
         return response_ok(tariffs=tariffs_prices, total=total)
 
+    @set_subject_users_ids('user_id')
     @transaction()
     @authenticate
     @detalize_error(TariffNotFound, ['tariff_id'])
@@ -525,12 +527,13 @@ class Handler(AbstractHandler):
         mapping.insert(curs, ut)
         return response_ok(id=ut.id)
 
+    @set_subject_users_ids('user_id')
     @transaction()
     @authenticate
     def delete_user_tariffs(self, data, session, curs=None):
         f = UserTariffFilter(session, {'user_id': data['user_id'],
-            'tariff_ids': data['tariff_ids']}, {}, None)
-        mapping.delete(curs, f.filter_one_obj(curs))
+            'tariff_ids': data['tariff_ids']}, {}, ['id'])
+        mapping.delete_objects(curs, f.filter_objs(curs, for_update=True))
         return response_ok()
 
     @transaction()
