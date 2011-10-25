@@ -47,6 +47,24 @@ class TariffFilter(InSessionFilter):
             raise TariffNotFound(**self.filter_params)
 
 
+class UserTariffFilter(InSessionFilter):
+    cond_map = [
+        ('user_id', 'user_id', Eq),
+        ('ids', 'id', In),
+    ]
+
+    def __init__(self, session, filter_params, paging_params, ordering_params):
+        super(UserTariffFilter, self).__init__(session, filter_params,
+            paging_params, ordering_params, Tariff)
+
+    def filter_one_obj(self, curs, for_update=False):
+        try:
+            return super(UserTariffFilter, self).filter_one_obj(curs,
+                for_update=for_update)
+        except (ObjectNotFound, SelectedMoreThanOneRow):
+            raise TariffNotFound(**self.filter_params)
+
+
 class RuleFilter(InSessionFilter):
     cond_map = [
         ('id', 'id', Eq),

@@ -18,7 +18,7 @@ from helixtariff.error import (HelixtariffObjectAlreadyExists,
     PriceNotFound, RuleProcessingError)
 from helixcore.error import DataIntegrityError
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
-    TariffFilter, RuleFilter)
+    TariffFilter, RuleFilter, UserTariffFilter)
 from helixcore.db.filters import build_index, build_complex_index
 from helixtariff.rulesengine.checker import RuleChecker
 from helixtariff.rulesengine import engine
@@ -525,3 +525,10 @@ class Handler(AbstractHandler):
         mapping.insert(curs, ut)
         return response_ok(id=ut.id)
 
+    @transaction()
+    @authenticate
+    def delete_user_tariff(self, data, session, curs=None):
+        f = UserTariffFilter(session, {'user_id': data['user_id'],
+            'ids': data['ids']}, {}, None)
+        mapping.delete(curs, f.filter_one_obj(curs))
+        return response_ok()

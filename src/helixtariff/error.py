@@ -33,6 +33,12 @@ class TariffNotFound(HelixtariffObjectNotFound):
         self.code = error_code.HELIXTARIFF_TARIFF_NOT_FOUND
 
 
+class UserTariffNotFound(HelixtariffObjectNotFound):
+    def __init__(self, **kwargs):
+        super(UserTariffNotFound, self).__init__('Tariff', **kwargs)
+        self.code = error_code.HELIXTARIFF_USER_TARIFF_NOT_FOUND
+
+
 class TariffCycleDetected(HelixtariffError):
     code = error_code.HELIXTARIFF_TARIFF_CYCLE_DETECTED
 
