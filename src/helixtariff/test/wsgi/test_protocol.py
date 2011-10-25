@@ -249,6 +249,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
                 'tariff_id': 1, 'tariff_name': 't0', 'tariff_status': Tariff.STATUS_ACTIVE,
                 'tariffication_objects': [
                     {'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
+                        'view_order': 1,
                         'prices': [
                             {'calculation_context': {},
                              'rule': {'rule_id': 1, 'rule_from_tariff_id': 1,
@@ -264,6 +265,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
                 'tariff_id': 1, 'tariff_name': 't0', 'tariff_status': Tariff.STATUS_ACTIVE,
                 'tariffication_objects': [
                     {'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
+                        'view_order': 1,
                         'prices': [
                             {'calculation_context': {},
                                  'draft_rule': {'rule_id': 1, 'rule_from_tariff_id': 1,
@@ -281,6 +283,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
                 {'tariff_id': 1, 'tariff_name': 't0', 'tariff_status': Tariff.STATUS_ACTIVE,
                 'tariffication_objects': [
                     {'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
+                        'view_order': 1,
                         'prices': [
                             {'calculation_context': {},
                                  'draft_rule': {'rule_id': 1, 'rule_from_tariff_id': 1,
@@ -294,6 +297,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
                 {'tariff_id': 12, 'tariff_name': 't02', 'tariff_status': Tariff.STATUS_ARCHIVE,
                 'tariffication_objects': [
                     {'tariffication_object_id': 2, 'tariffication_object_name': 'to0',
+                        'view_order': 2,
                         'prices': [
                             {'calculation_context': {},
                                  'draft_rule': {'rule_id': 1, 'rule_from_tariff_id': 1,

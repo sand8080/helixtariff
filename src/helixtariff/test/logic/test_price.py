@@ -165,11 +165,11 @@ class PriceTestCase(ActorLogicTestCase):
             status=Tariff.STATUS_ARCHIVE)
 
         # adding rule for checking inheritance
-        r_id_inherited = self._save_rule(t_id_0, to_id_0, 'price = 0.01', view_order=10)
+        self._save_rule(t_id_0, to_id_0, 'price = 0.01', view_order=10)
 
         # adding rule for checking overriding
         self._save_rule(t_id_0, to_id_1, 'price = 0.02', view_order=5)
-        r_id_overrided = self._save_rule(t_id_2, to_id_1, 'price = 2.02', view_order=5)
+        self._save_rule(t_id_2, to_id_1, 'price = 2.02', view_order=5)
 
         # adding rule for checking rule disabling
         self._save_rule(t_id_0, to_id_2, 'price = 0.03', view_order=1)
@@ -180,7 +180,33 @@ class PriceTestCase(ActorLogicTestCase):
         req = {'session_id': sess.session_id, 'calculation_contexts': [{}],
             'paging_params': {}, 'filter_params': {'ids': [t_id_2, t_id_1]}}
         resp = self.get_tariffs_prices(**req)
-#        print '### resp', resp
+        self.check_response_ok(resp)
+
+        # checking correct tariff data
+        self.assertEquals(2, len(resp['tariffs']))
+        t_data_0 = resp['tariffs'][0]
+
+        self.assertEquals(t_name_2, t_data_0['tariff_name'])
+        self.assertEquals(t_id_2, t_data_0['tariff_id'])
+
+        # checking tos order
+        tos_data = t_data_0['tariffication_objects']
+        self.assertEquals(3, len(tos_data))
+
+        to_data_0 = tos_data[0]
+        self.assertEquals(to_id_2, to_data_0['tariffication_object_id'])
+        self.assertEquals(t_id_0, to_data_0['prices'][0]['draft_rule']['rule_from_tariff_id'])
+        self.assertEquals('0.03', to_data_0['prices'][0]['draft_rule']['price'])
+
+        to_data_1 = tos_data[1]
+        self.assertEquals(to_id_1, to_data_1['tariffication_object_id'])
+        self.assertEquals(t_id_2, to_data_1['prices'][0]['draft_rule']['rule_from_tariff_id'])
+        self.assertEquals('2.02', to_data_1['prices'][0]['draft_rule']['price'])
+
+        view_order = 0
+        for to_data in tos_data:
+            self.assertTrue(view_order <= to_data['view_order'])
+            view_order = to_data['view_order']
 
 
 if __name__ == '__main__':

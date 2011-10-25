@@ -471,14 +471,16 @@ class Handler(AbstractHandler):
         for to_id in tos_ids:
             to = all_tos_idx[to_id]
             prices = []
+            view_order = 0
             for calculation_ctx in calculation_ctxs:
                 price_info = {}
                 for r_field_name in ('rule', 'draft_rule'):
-                    r, t = self._find_rule_tariff(to, ts_chain_ids, all_ts_idx,
+                    cur_r, cur_t = self._find_rule_tariff(to, ts_chain_ids, all_ts_idx,
                         active_rs_to_t_id_idx, r_field_name, calculation_ctx)
-                    if r is not None and getattr(r, r_field_name) is not None:
-                        price_info[r_field_name] = self._calculate_rule_info(r,
-                            r_field_name, t, calculation_ctx)
+                    if cur_r is not None and getattr(cur_r, r_field_name) is not None:
+                        price_info[r_field_name] = self._calculate_rule_info(cur_r,
+                            r_field_name, cur_t, calculation_ctx)
+                        view_order = max(view_order, cur_r.view_order)
                 # actual or draft price found
                 if len(price_info):
                     price_info['calculation_context'] = calculation_ctx
@@ -486,10 +488,11 @@ class Handler(AbstractHandler):
             if len(price_info):
                 to_info = {'tariffication_object_id': to.id,
                     'tariffication_object_name': to.name,
+                    'view_order': view_order,
                     'prices': prices}
                 processed_tos.append(to_info)
 
-#        TODO: add rules sorting by view_order in processed_tos
+        processed_tos.sort(key=lambda tos_data: tos_data['view_order'])
         t_p_info = {'tariff_id': t.id, 'tariff_name': t.name,
             'tariff_status': t.status, 'tariffication_objects': processed_tos}
 
@@ -504,8 +507,8 @@ class Handler(AbstractHandler):
         t_f = TariffFilter(session, data['filter_params'],
             data['paging_params'], data.get('ordering_params'))
         ts, total = t_f.filter_counted(curs)
-        ts_ids = [t.id for t in ts]
         ts_idx = build_index(ts)
+        ts_ids = filter(lambda x: x in ts_idx, data['filter_params']['ids'])
 
         all_tos_f = TarifficationObjectFilter(session, {}, {}, None)
         all_tos = all_tos_f.filter_objs(curs)

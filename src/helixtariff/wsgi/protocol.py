@@ -223,6 +223,7 @@ GET_TARIFFS_PRICES_REQUEST = dict(
 TARIFFICATION_OBJECT_PRICE_INFO = {
     'tariffication_object_id': int,
     'tariffication_object_name': Text(),
+    'view_order': int,
     'prices': [{
         'calculation_context': PRICE_CALCULATION_CONTEXT,
         Optional('rule'): {
