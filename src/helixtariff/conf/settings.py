@@ -8,6 +8,12 @@ DSN = {
     'password': '_DBC_DBPASS_'
 }
 
+DSN = {
+    'user': 'helixtariff',
+    'database': 'helixtariff',
+    'host': 'localhost',
+    'password': 'qazwsx'
+}
 
 patch_table_name = 'patches'
 
