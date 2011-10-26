@@ -68,12 +68,14 @@ class ActorLogicTestCase(LogicTestCase):
         self.check_response_ok(resp)
         return resp['rules']
 
-    def _get_price(self, t_id, to_id, calculation_ctx=None):
+    def _get_price(self, t_id, to_id, calculation_ctx=None, user_id=None):
         sess = self.login_actor()
         req = {'session_id': sess.session_id, 'tariff_id': t_id,
             'tariffication_object_id': to_id}
         if calculation_ctx is not None:
             req['calculation_context'] = calculation_ctx
+        if user_id is not None:
+            req['user_id'] = user_id
         resp = self.get_price(**req)
         self.check_response_ok(resp)
         return resp

@@ -5,7 +5,7 @@ from helixtariff.db.dataobject import (TarifficationObject, ActionLog, Tariff,
     Rule, UserTariff)
 from helixcore.db.wrapper import ObjectNotFound, SelectedMoreThanOneRow
 from helixtariff.error import (TarifficationObjectNotFound, TariffNotFound,
-    RuleNotFound)
+    RuleNotFound, UserTariffNotFound)
 
 
 class TarifficationObjectFilter(InSessionFilter):
@@ -50,6 +50,7 @@ class TariffFilter(InSessionFilter):
 class UserTariffFilter(InSessionFilter):
     cond_map = [
         ('user_id', 'user_id', Eq),
+        ('tariff_id', 'tariff_id', Eq),
         ('tariff_ids', 'tariff_id', In),
     ]
 
@@ -62,7 +63,7 @@ class UserTariffFilter(InSessionFilter):
             return super(UserTariffFilter, self).filter_one_obj(curs,
                 for_update=for_update)
         except (ObjectNotFound, SelectedMoreThanOneRow):
-            raise TariffNotFound(**self.filter_params)
+            raise UserTariffNotFound(**self.filter_params)
 
 
 class RuleFilter(InSessionFilter):

@@ -16,7 +16,7 @@ from helixtariff.db.dataobject import TarifficationObject, Tariff, Rule,\
 from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected,
     TariffUsed, RuleAlreadyExsits, RuleNotFound, RuleCheckingError,
-    PriceNotFound, RuleProcessingError)
+    PriceNotFound, RuleProcessingError, UserTariffNotFound)
 from helixcore.error import DataIntegrityError
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
     TariffFilter, RuleFilter, UserTariffFilter)
@@ -373,9 +373,6 @@ class Handler(AbstractHandler):
         return None, None
 
     def _price_info(self, session, curs, data, rule_field_name):
-        if 'user_id' in data:
-            # TODO: handle after user tariffs implementation
-            raise NotImplementedError('user_id not handled in get_price yet')
 
         # Getting required data for price calculation
         to_id = data['tariffication_object_id']
@@ -390,6 +387,10 @@ class Handler(AbstractHandler):
         t_id = data['tariff_id']
         if t_id not in all_ts_idx:
             raise TariffNotFound(tariff_id=t_id)
+        if 'user_id' in data:
+            ut_f = UserTariffFilter(session, {'user_id': data['user_id'],
+                'tariff_id': t_id}, {}, None)
+            ut_f.filter_one_obj(curs)
 
         t = all_ts_idx[t_id]
         ts_chain_data = self._tariffs_chain_data(all_ts_idx, t)
@@ -420,6 +421,7 @@ class Handler(AbstractHandler):
     @authenticate
     @detalize_error(TariffNotFound, 'tariff_id')
     @detalize_error(TarifficationObjectNotFound, 'tariffication_object_id')
+    @detalize_error(UserTariffNotFound, ['user_id', 'tariff_id'])
     @detalize_error(PriceNotFound, ['tariff_id', 'tariffication_object_id'])
     @detalize_error(RuleProcessingError, ['tariff_id', 'tariffication_object_id'])
     def get_price(self, data, session, curs=None):
@@ -430,6 +432,7 @@ class Handler(AbstractHandler):
     @authenticate
     @detalize_error(TariffNotFound, 'tariff_id')
     @detalize_error(TarifficationObjectNotFound, 'tariffication_object_id')
+    @detalize_error(UserTariffNotFound, ['user_id', 'tariff_id'])
     @detalize_error(PriceNotFound, ['tariff_id', 'tariffication_object_id'])
     @detalize_error(RuleProcessingError, ['tariff_id', 'tariffication_object_id'])
     def get_draft_price(self, data, session, curs=None):
@@ -478,8 +481,17 @@ class Handler(AbstractHandler):
     @transaction()
     @authenticate
     def get_tariffs_prices(self, data, session, curs=None):
-        if 'user_id' in data['filter_params']:
-            raise NotImplementedError('user_id filter parameter not handled in get_tariffs_prices yet')
+        f_params = data['filter_params']
+        if 'user_id' in f_params:
+            user_id = f_params['user_id']
+            ts_ids = f_params['ids']
+            ut_f = UserTariffFilter(session, {'user_id': user_id,
+                'tariff_ids': ts_ids}, {}, None)
+            uts = ut_f.filter_objs(curs)
+            uts_tariff_ids = [ut.tariff_id for ut in uts]
+            ts_ids = filter(lambda x: x in uts_tariff_ids, ts_ids)
+            f_params['ids'] = ts_ids
+
 
         t_f = TariffFilter(session, data['filter_params'],
             data['paging_params'], data.get('ordering_params'))

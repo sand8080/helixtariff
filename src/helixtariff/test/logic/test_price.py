@@ -208,6 +208,46 @@ class PriceTestCase(ActorLogicTestCase):
             self.assertTrue(view_order <= to_data['view_order'])
             view_order = to_data['view_order']
 
+    def test_user_tariff_price(self):
+        to_id = self._add_tariffication_object('to0')
+        t_id = self._add_tariff('t0')
+        self._save_rule(t_id, to_id, 'price = 2')
+
+        # checking user without tariff
+        u_id = 24
+        self.assertRaises(RequestProcessingError, self._get_price,
+            t_id, to_id, calculation_ctx={}, user_id=u_id)
+
+        # checking user with tariff
+        self._add_user_tariff(t_id, u_id)
+        self._apply_draft_rules(t_id)
+        resp = self._get_price(t_id, to_id, calculation_ctx={}, user_id=u_id)
+        self.assertEquals('2', resp['price'])
+
+    def test_user_tariffs_prices(self):
+        to_id = self._add_tariffication_object('to0')
+        t_id = self._add_tariff('t0')
+        self._save_rule(t_id, to_id, 'price = 2')
+
+        # checking user without tariff
+        u_id = 24
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'calculation_contexts': [{}],
+            'paging_params': {}, 'filter_params': {'ids': [t_id],
+                'user_id': u_id}}
+        resp = self.get_tariffs_prices(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(0, resp['total'])
+
+        self._add_user_tariff(t_id, u_id)
+        self._apply_draft_rules(t_id)
+        req = {'session_id': sess.session_id, 'calculation_contexts': [{}],
+            'paging_params': {}, 'filter_params': {'ids': [t_id],
+                'user_id': u_id}}
+        resp = self.get_tariffs_prices(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(1, resp['total'])
+
 
 if __name__ == '__main__':
     unittest.main()
