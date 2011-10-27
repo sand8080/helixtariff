@@ -8,11 +8,11 @@ from helixcore.server.response import response_ok
 
 from helixtariff.conf import settings
 from helixtariff.conf.db import transaction
-from helixcore.actions.handler import detalize_error, AbstractHandler,\
-    set_subject_users_ids
+from helixcore.actions.handler import (detalize_error, AbstractHandler,
+    set_subject_users_ids)
 from helixcore.db.wrapper import ObjectCreationError, ObjectDeletionError
-from helixtariff.db.dataobject import TarifficationObject, Tariff, Rule,\
-    UserTariff
+from helixtariff.db.dataobject import (TarifficationObject, Tariff, Rule,
+    UserTariff)
 from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected,
     TariffUsed, RuleAlreadyExsits, RuleNotFound, RuleCheckingError,

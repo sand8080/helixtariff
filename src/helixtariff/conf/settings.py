@@ -1,5 +1,5 @@
 import logging
-
+import os
 
 DSN = {
     'user': '_DBC_DBUSER_',
@@ -9,8 +9,8 @@ DSN = {
 }
 
 DSN = {
-    'user': 'helixtariff',
-    'database': 'helixtariff',
+    'user': 'helixtest',
+    'database': 'test_helixtariff',
     'host': 'localhost',
     'password': 'qazwsx'
 }
@@ -21,7 +21,8 @@ server_host = 'localhost'
 server_port = 9997
 server_connections = 50
 
-log_filename = '/var/log/helixtariff/helixtariff.log'
+log_filename = os.path.join(os.path.dirname(__file__), '..', '..', 'log',
+    'helixtariff.log')
 log_level = logging.DEBUG
 log_format = "%(asctime)s [%(levelname)s] - %(message)s"
 log_console = False
