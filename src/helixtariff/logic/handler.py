@@ -56,6 +56,8 @@ def authenticate(method):
                 result = {'status': 'error', 'code': error_code.HELIX_AUTH_ERROR,
                     'message': 'Access denied'}
             _add_log_info(data, session, custom_actor_info)
+        else:
+            result = resp
         return result
     return decroated
 
