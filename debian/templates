@@ -1,6 +1,0 @@
-Template: helixtariff/hostname
-Type: string
-Default: localhost
-Description: Helixtariff hostname:
- Hostname will be added into nginx config.
- It proxies external requests to helixtariff.
