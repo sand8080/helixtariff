@@ -18,6 +18,8 @@ class Server(object):
         sock = socket.socket() #@UndefinedVariable
         sock.bind((settings.server_host, settings.server_port))
         sock.listen(settings.server_connections)
+        logger.debug('Tariffication service started on %s:%s',
+            settings.server_host, settings.server_port)
         wsgi.server(
             sock,
             HelixtariffApplication(handle_action, protocol, logger),
