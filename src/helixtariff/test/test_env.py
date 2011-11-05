@@ -11,6 +11,7 @@ settings.DSN = {
     'password': 'qazwsx'
 }
 
+settings.auth_server_url = 'http://localhost:10999'
 settings.server_host = 'localhost'
 settings.server_port = 10997
 
