@@ -1,0 +1,7 @@
+#!/usr/bin/env python
+import helixtariff.test.test_env
+from helixtariff.wsgi.server import Server
+
+
+if __name__ == '__main__':
+    Server.run()
