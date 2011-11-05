@@ -16,7 +16,8 @@ from helixtariff.db.dataobject import (TarifficationObject, Tariff, Rule,
 from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected,
     TariffUsed, RuleAlreadyExsits, RuleNotFound, RuleCheckingError,
-    PriceNotFound, RuleProcessingError, UserTariffNotFound)
+    PriceNotFound, RuleProcessingError, UserTariffNotFound,
+    TarifficationObjectAlreadyExsits)
 from helixcore.error import DataIntegrityError
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
     TariffFilter, RuleFilter, UserTariffFilter)
@@ -41,7 +42,7 @@ def authenticate(method):
         auth = CoreAuthenticator(settings.auth_server_url)
         session_id = data['session_id']
         custom_actor_info = data.pop('custom_actor_info', None)
-        resp = auth.check_access(session_id, 'billing', method.__name__)
+        resp = auth.check_access(session_id, 'tariff', method.__name__)
         if resp.get('status') == 'ok':
             session = Session(session_id, '%s' % resp['environment_id'],
                 '%s' % resp['user_id'])
@@ -82,12 +83,16 @@ class Handler(AbstractHandler):
 
     @transaction()
     @authenticate
-    @detalize_error(ObjectCreationError, ['name'])
+    @detalize_error(TarifficationObjectAlreadyExsits, ['name'])
     def add_tariffication_object(self, data, session, curs=None):
+        name = data['name']
         to_data = {'environment_id': session.environment_id,
-            'name': data['name']}
+            'name': name}
         to = TarifficationObject(**to_data)
-        mapping.insert(curs, to)
+        try:
+            mapping.insert(curs, to)
+        except ObjectCreationError:
+            raise TarifficationObjectAlreadyExsits(name)
         return response_ok(id=to.id)
 
     @transaction()
