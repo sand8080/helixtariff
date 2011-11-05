@@ -198,7 +198,7 @@ APPLY_DRAFT_RULES_REQUEST = dict(
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-APPLY_DRAFT_RULE_RESPONSE = RESPONSE_STATUS_ONLY
+APPLY_DRAFT_RULES_RESPONSE = RESPONSE_STATUS_ONLY
 
 PRICE_CALCULATION_CONTEXT = {
     Optional('objects_num'): Positive(int),
@@ -380,7 +380,7 @@ protocol = [
     ApiCall('delete_rule_response', Scheme(DELETE_RULE_RESPONSE)),
 
     ApiCall('apply_draft_rules_request', Scheme(APPLY_DRAFT_RULES_REQUEST)),
-    ApiCall('apply_draft_rules_response', Scheme(APPLY_DRAFT_RULE_RESPONSE)),
+    ApiCall('apply_draft_rules_response', Scheme(APPLY_DRAFT_RULES_RESPONSE)),
 
     # pricing
     ApiCall('get_price_request', Scheme(GET_PRICE_REQUEST)),
