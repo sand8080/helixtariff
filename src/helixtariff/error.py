@@ -27,6 +27,12 @@ class TarifficationObjectNotFound(HelixtariffObjectNotFound):
         self.code = error_code.HELIXTARIFF_TARIFFICATION_OBJECT_NOT_FOUND
 
 
+class TarifficationObjectAlreadyExsits(HelixtariffObjectAlreadyExists):
+    def __init__(self, name):
+        super(TarifficationObjectAlreadyExsits, self).__init__('%s already exists' % name)
+        self.code = error_code.HELIXTARIFF_TARIFFICATION_OBJECT_ALREADY_EXISTS
+
+
 class TariffNotFound(HelixtariffObjectNotFound):
     def __init__(self, **kwargs):
         super(TariffNotFound, self).__init__('Tariff', **kwargs)
