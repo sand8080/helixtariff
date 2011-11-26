@@ -1,50 +1,21 @@
 def apply(curs):
-    print 'Creating table tariff'
+    print 'Creating table currency'
     curs.execute(
     '''
-        CREATE TABLE tariff (
+        CREATE TABLE currency (
             id serial,
+            code varchar NOT NULL,
+            cent_factor int NOT NULL,
+            name varchar,
+            location varchar,
             PRIMARY KEY(id),
-            environment_id integer NOT NULL,
-            parent_tariff_id integer,
-            FOREIGN KEY (parent_tariff_id) REFERENCES tariff(id),
-            name varchar NOT NULL,
-            type varchar NOT NULL CHECK(type in ('public', 'personal')),
-            status varchar NOT NULL CHECK(status in ('active', 'archive', 'inactive'))
+            UNIQUE(code),
+            CHECK(cent_factor > 0)
         )
     ''')
 
-    print 'Creating index tariff_environment_id_idx on tariff (environment_id)'
-    curs.execute(
-    '''
-        CREATE INDEX tariff_environment_id_idx ON tariff (environment_id)
-    '''
-    )
-
-    print 'Creating unique index tariff_environment_id_name_type_idx on tariff (environment_id, name, type)'
-    curs.execute(
-    '''
-        CREATE UNIQUE INDEX tariff_environment_id_name_type_idx ON tariff (environment_id, name, type)
-    '''
-    )
-
-    print 'Creating index tariff_parent_tariff_id_idx on tariff (parent_tariff_id)'
-    curs.execute(
-    '''
-        CREATE INDEX tariff_parent_tariff_id_idx ON tariff (parent_tariff_id)
-    '''
-    )
 
 def revert(curs):
-    print 'Dropping index tariff_parent_tariff_id_idx on tariff'
-    curs.execute('DROP INDEX IF EXISTS tariff_parent_tariff_id_idx')
-
-    print 'Dropping unique index tariff_environment_id_name_type_idx on tariff'
-    curs.execute('DROP INDEX IF EXISTS tariff_environment_id_name_type_idx')
-
-    print 'Dropping index tariff_environment_id_idx on tariff'
-    curs.execute('DROP INDEX IF EXISTS tariff_environment_id_idx')
-
-    print 'Dropping table tariff'
-    curs.execute('DROP TABLE IF EXISTS tariff')
+    print 'Dropping table currency'
+    curs.execute('DROP TABLE IF EXISTS currency')
 

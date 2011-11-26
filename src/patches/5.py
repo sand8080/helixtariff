@@ -1,49 +1,50 @@
 def apply(curs):
-    print 'Creating table user_tariff'
+    print 'Creating table tariff'
     curs.execute(
     '''
-        CREATE TABLE user_tariff (
+        CREATE TABLE tariff (
             id serial,
             PRIMARY KEY(id),
             environment_id integer NOT NULL,
-            tariff_id integer NOT NULL,
-            FOREIGN KEY (tariff_id) REFERENCES tariff(id),
-            user_id integer NOT NULL
+            parent_tariff_id integer,
+            FOREIGN KEY (parent_tariff_id) REFERENCES tariff(id),
+            name varchar NOT NULL,
+            type varchar NOT NULL CHECK(type in ('public', 'personal')),
+            status varchar NOT NULL CHECK(status in ('active', 'archive', 'inactive'))
         )
     ''')
 
-    print 'Creating index user_tariff_environment_id_idx on user_tariff (environment_id)'
+    print 'Creating index tariff_environment_id_idx on tariff (environment_id)'
     curs.execute(
     '''
-        CREATE INDEX user_tariff_environment_id_idx ON user_tariff (environment_id)
+        CREATE INDEX tariff_environment_id_idx ON tariff (environment_id)
     '''
     )
 
-    print 'Creating index user_tariff_environment_id_tariff_id_idx on user_tariff (environment_id, tariff_id)'
+    print 'Creating unique index tariff_environment_id_name_type_idx on tariff (environment_id, name, type)'
     curs.execute(
     '''
-        CREATE INDEX user_tariff_environment_id_tariff_id_idx ON user_tariff (environment_id, tariff_id)
+        CREATE UNIQUE INDEX tariff_environment_id_name_type_idx ON tariff (environment_id, name, type)
     '''
     )
 
-    print 'Creating unique index user_tariff_environment_id_tariff_id_user_id_idx on ' \
-        'user_tariff (environment_id, tariff_id, user_id)'
+    print 'Creating index tariff_parent_tariff_id_idx on tariff (parent_tariff_id)'
     curs.execute(
     '''
-        CREATE UNIQUE INDEX user_tariff_environment_id_tariff_id_user_id_idx ON
-        user_tariff (environment_id, tariff_id, user_id)
+        CREATE INDEX tariff_parent_tariff_id_idx ON tariff (parent_tariff_id)
     '''
     )
 
 def revert(curs):
-    print 'Dropping unique index user_tariff_environment_id_tariff_id_user_id_idx on user_tariff'
-    curs.execute('DROP INDEX IF EXISTS user_tariff_environment_id_tariff_id_user_id_idx')
+    print 'Dropping index tariff_parent_tariff_id_idx on tariff'
+    curs.execute('DROP INDEX IF EXISTS tariff_parent_tariff_id_idx')
 
-    print 'Dropping index user_tariff_environment_id_tariff_id_idx on user_tariff'
-    curs.execute('DROP INDEX IF EXISTS user_tariff_environment_id_tariff_id_idx')
+    print 'Dropping unique index tariff_environment_id_name_type_idx on tariff'
+    curs.execute('DROP INDEX IF EXISTS tariff_environment_id_name_type_idx')
 
-    print 'Dropping index user_tariff_environment_id_idx on user_tariff'
-    curs.execute('DROP INDEX IF EXISTS user_tariff_environment_id_idx')
+    print 'Dropping index tariff_environment_id_idx on tariff'
+    curs.execute('DROP INDEX IF EXISTS tariff_environment_id_idx')
 
-    print 'Dropping table user_tariff'
-    curs.execute('DROP TABLE IF EXISTS user_tariff')
+    print 'Dropping table tariff'
+    curs.execute('DROP TABLE IF EXISTS tariff')
+
