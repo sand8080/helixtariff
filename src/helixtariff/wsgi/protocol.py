@@ -1,6 +1,6 @@
 from helixcore.server.api import ApiCall
-from helixcore.json_validator import (Scheme, Text, Optional, AnyOf,
-    NonNegative, NullableText, DecimalText, Positive)
+from helixcore.json_validator import (Scheme, TEXT, Optional, AnyOf,
+    NON_NEGATIVE_INT, NULLABLE_TEXT, DECIMAL_TEXT, NULLABLE_INT, POSITIVE_INT)
 from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
     LOGIN_REQUEST, LOGIN_RESPONSE, LOGOUT_REQUEST, LOGOUT_RESPONSE,
     AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE, RESPONSE_STATUS_ONLY,
@@ -9,14 +9,13 @@ from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
     REQUEST_PAGING_PARAMS, RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
 
 
-TariffParentIdValidator = AnyOf(None, int)
-TariffTypeValidator = AnyOf('public', 'personal')
-TariffStatusValidator = AnyOf('active', 'archive', 'inactive')
-RuleStatusValidator = AnyOf('active', 'inactive')
+TARIFF_TYPE_VALIDATOR = AnyOf('public', 'personal')
+TARIFF_STATUS_VALIDATOR = AnyOf('active', 'archive', 'inactive')
+RULE_STATUS_VALIDATOR = AnyOf('active', 'inactive')
 
 
 ADD_TARIFFICATION_OBJECT_REQUEST = dict(
-    {'name': Text()},
+    {'name': TEXT},
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
@@ -27,7 +26,7 @@ GET_TARIFFICATION_OBJECTS_REQUEST = dict(
         'filter_params': {
             Optional('id'): int,
             Optional('ids'): [int],
-            Optional('name'): Text(),
+            Optional('name'): TEXT,
         },
         'paging_params': REQUEST_PAGING_PARAMS,
         Optional('ordering_params'): [AnyOf('id', '-id')]
@@ -37,7 +36,7 @@ GET_TARIFFICATION_OBJECTS_REQUEST = dict(
 
 TARIFFICATION_OBJECT_INFO = {
     'id': int,
-    'name': Text(),
+    'name': TEXT,
 }
 
 GET_TARIFFICATION_OBJECTS_RESPONSE = AnyOf(
@@ -45,7 +44,7 @@ GET_TARIFFICATION_OBJECTS_RESPONSE = AnyOf(
         RESPONSE_STATUS_OK,
         **{
             'tariffication_objects': [TARIFFICATION_OBJECT_INFO],
-            'total': NonNegative(int),
+            'total': NON_NEGATIVE_INT,
         }
     ),
     RESPONSE_STATUS_ERROR
@@ -54,7 +53,7 @@ GET_TARIFFICATION_OBJECTS_RESPONSE = AnyOf(
 MODIFY_TARIFFICATION_OBJECT_REQUEST = dict(
     {
         'id': int,
-        'new_name': Text(),
+        'new_name': TEXT,
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
@@ -70,8 +69,9 @@ DELETE_TARIFFICATION_OBJECT_RESPONSE = RESPONSE_STATUS_ONLY
 
 ADD_TARIFF_REQUEST = dict(
     {
-        'name': Text(),
-        'parent_tariff_id': TariffParentIdValidator,
+        'name': TEXT,
+        'parent_tariff_id': NULLABLE_INT,
+        'currency_id': NULLABLE_INT,
         'type': AnyOf('public', 'personal'),
         'status': AnyOf('active', 'archive', 'inactive'),
     },
@@ -85,9 +85,9 @@ GET_TARIFFS_REQUEST = dict(
         'filter_params': {
             Optional('id'): int,
             Optional('ids'): [int],
-            Optional('name'): Text(),
-            Optional('type'): TariffTypeValidator,
-            Optional('status'): TariffStatusValidator,
+            Optional('name'): TEXT,
+            Optional('type'): TARIFF_TYPE_VALIDATOR,
+            Optional('status'): TARIFF_STATUS_VALIDATOR,
         },
         'paging_params': REQUEST_PAGING_PARAMS,
         Optional('ordering_params'): [AnyOf('id', '-id', 'name', '-name')]
@@ -97,10 +97,10 @@ GET_TARIFFS_REQUEST = dict(
 
 TARIFF_INFO = {
     'id': int,
-    'name': Text(),
-    'parent_tariffs': [{'id': int, 'name': Text(), 'status': TariffStatusValidator}],
-    'type': TariffTypeValidator,
-    'status': TariffStatusValidator,
+    'name': TEXT,
+    'parent_tariffs': [{'id': int, 'name': TEXT, 'status': TARIFF_STATUS_VALIDATOR}],
+    'type': TARIFF_TYPE_VALIDATOR,
+    'status': TARIFF_STATUS_VALIDATOR,
 }
 
 GET_TARIFFS_RESPONSE = AnyOf(
@@ -108,7 +108,7 @@ GET_TARIFFS_RESPONSE = AnyOf(
         RESPONSE_STATUS_OK,
         **{
             'tariffs': [TARIFF_INFO],
-            'total': NonNegative(int),
+            'total': NON_NEGATIVE_INT,
         }
     ),
     RESPONSE_STATUS_ERROR
@@ -117,10 +117,10 @@ GET_TARIFFS_RESPONSE = AnyOf(
 MODIFY_TARIFF_REQUEST = dict(
     {
         'id': int,
-        Optional('new_name'): Text(),
-        Optional('new_parent_tariff_id'): TariffParentIdValidator,
-        Optional('new_type'): TariffTypeValidator,
-        Optional('new_status'): TariffStatusValidator,
+        Optional('new_name'): TEXT,
+        Optional('new_parent_tariff_id'): NULLABLE_INT,
+        Optional('new_type'): TARIFF_TYPE_VALIDATOR,
+        Optional('new_status'): TARIFF_STATUS_VALIDATOR,
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
@@ -139,8 +139,8 @@ SAVE_RULE_REQUEST = dict(
         Optional('id'): int,
         'tariff_id': int,
         'tariffication_object_id': int,
-        'draft_rule': Text(),
-        'status': RuleStatusValidator,
+        'draft_rule': TEXT,
+        'status': RULE_STATUS_VALIDATOR,
         Optional('view_order'): int,
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
@@ -155,7 +155,7 @@ GET_RULES_REQUEST = dict(
             Optional('ids'): [int],
             Optional('tariff_id'): int,
             Optional('tariffication_object_id'): int,
-            Optional('status'): RuleStatusValidator,
+            Optional('status'): RULE_STATUS_VALIDATOR,
         },
         'paging_params': REQUEST_PAGING_PARAMS,
         Optional('ordering_params'): [AnyOf('id', '-id', 'view_order', '-view_order')]
@@ -166,12 +166,12 @@ GET_RULES_REQUEST = dict(
 RULE_INFO = {
     'id': int,
     'tariff_id': int,
-    'tariff_name': Text(),
-    'tariffication_object_id': id,
-    'tariffication_object_name': Text(),
-    'status': RuleStatusValidator,
-    'rule': NullableText(),
-    'draft_rule': NullableText(),
+    'tariff_name': TEXT,
+    'tariffication_object_id': int,
+    'tariffication_object_name': TEXT,
+    'status': RULE_STATUS_VALIDATOR,
+    'rule': NULLABLE_TEXT,
+    'draft_rule': NULLABLE_TEXT,
     'view_order': int,
 }
 
@@ -180,7 +180,7 @@ GET_RULES_RESPONSE = AnyOf(
         RESPONSE_STATUS_OK,
         **{
             'rules': [RULE_INFO],
-            'total': NonNegative(int),
+            'total': NON_NEGATIVE_INT,
         }
     ),
     RESPONSE_STATUS_ERROR
@@ -201,7 +201,7 @@ APPLY_DRAFT_RULES_REQUEST = dict(
 APPLY_DRAFT_RULES_RESPONSE = RESPONSE_STATUS_ONLY
 
 PRICE_CALCULATION_CONTEXT = {
-    Optional('objects_num'): Positive(int),
+    Optional('objects_num'): POSITIVE_INT,
 }
 
 GET_TARIFFS_PRICES_REQUEST = dict(
@@ -209,9 +209,9 @@ GET_TARIFFS_PRICES_REQUEST = dict(
         'filter_params': {
             Optional('user_id'): int,
             Optional('ids'): [int],
-            Optional('name'): Text(),
-            Optional('type'): TariffTypeValidator,
-            Optional('status'): TariffStatusValidator,
+            Optional('name'): TEXT,
+            Optional('type'): TARIFF_TYPE_VALIDATOR,
+            Optional('status'): TARIFF_STATUS_VALIDATOR,
         },
         'paging_params': REQUEST_PAGING_PARAMS,
         Optional('ordering_params'): [AnyOf('id', '-id', 'name', '-name')],
@@ -222,29 +222,29 @@ GET_TARIFFS_PRICES_REQUEST = dict(
 
 TARIFFICATION_OBJECT_PRICE_INFO = {
     'tariffication_object_id': int,
-    'tariffication_object_name': Text(),
+    'tariffication_object_name': TEXT,
     'view_order': int,
     'prices': [{
         'calculation_context': PRICE_CALCULATION_CONTEXT,
         Optional('rule'): {
-            'price': DecimalText(),
+            'price': DECIMAL_TEXT,
             'rule_id': int,
             'rule_from_tariff_id': int,
-            'rule_from_tariff_name': Text(),
+            'rule_from_tariff_name': TEXT,
         },
         Optional('draft_rule'): {
-            'price': DecimalText(),
+            'price': DECIMAL_TEXT,
             'rule_id': int,
             'rule_from_tariff_id': int,
-            'rule_from_tariff_name': Text(),
+            'rule_from_tariff_name': TEXT,
         }
     }]
 }
 
 TARIFF_PRICE_INFO = {
     'tariff_id': int,
-    'tariff_name': Text(),
-    'tariff_status': TariffStatusValidator,
+    'tariff_name': TEXT,
+    'tariff_status': TARIFF_STATUS_VALIDATOR,
     'tariffication_objects': [TARIFFICATION_OBJECT_PRICE_INFO],
 }
 
@@ -253,7 +253,7 @@ GET_TARIFFS_PRICES_RESPONSE = AnyOf(
         RESPONSE_STATUS_OK,
         **{
             'tariffs': [TARIFF_PRICE_INFO],
-            'total': NonNegative(int),
+            'total': NON_NEGATIVE_INT,
         }
     ),
     RESPONSE_STATUS_ERROR
@@ -274,11 +274,11 @@ GET_PRICE_RESPONSE = AnyOf(
         RESPONSE_STATUS_OK,
         **{
             'tariffication_object_id': int,
-            'tariffication_object_name': Text(),
-            'price': DecimalText(),
+            'tariffication_object_name': TEXT,
+            'price': DECIMAL_TEXT,
             'rule_id': int,
             'rule_from_tariff_id': int,
-            'rule_from_tariff_name': Text(),
+            'rule_from_tariff_name': TEXT,
             Optional('calculation_context'): PRICE_CALCULATION_CONTEXT
         }
     ),
@@ -323,7 +323,7 @@ GET_USER_TARIFFS_RESPONSE = AnyOf(
         RESPONSE_STATUS_OK,
         **{
             'user_tariffs': [{'user_id': int, 'tariff_ids': [int]}],
-            'total': NonNegative(int),
+            'total': NON_NEGATIVE_INT,
         }
     ),
     RESPONSE_STATUS_ERROR
