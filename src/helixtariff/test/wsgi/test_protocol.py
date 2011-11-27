@@ -132,11 +132,11 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
     def test_add_tariff(self):
         a_name = 'add_tariff'
         self.api.validate_request(a_name, {'session_id': 's', 'name': 'one',
-            'parent_tariff_id': None, 'type': Tariff.TYPE_PERSONAL,
-            'status': Tariff.STATUS_ACTIVE})
+            'parent_tariff_id': None,
+            'type': Tariff.TYPE_PERSONAL, 'status': Tariff.STATUS_ACTIVE})
         self.api.validate_request(a_name, {'session_id': 's', 'name': 'one',
-            'parent_tariff_id': 1, 'type': Tariff.TYPE_PUBLIC,
-            'status': Tariff.STATUS_INACTIVE})
+            'parent_tariff_id': 1, 'currency_id': 3,
+            'type': Tariff.TYPE_PUBLIC, 'status': Tariff.STATUS_INACTIVE})
 
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
         self.validate_error_response(a_name)

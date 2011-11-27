@@ -21,6 +21,11 @@ class HelixtariffObjectNotFound(HelixtariffError, ObjectNotFound):
         self.code = error_code.HELIXTARIFF_OBJECT_NOT_FOUND
 
 
+class CurrencyNotFound(HelixtariffObjectNotFound):
+    def __init__(self, **kwargs):
+        super(CurrencyNotFound, self).__init__('Currency', **kwargs)
+
+
 class TarifficationObjectNotFound(HelixtariffObjectNotFound):
     def __init__(self, **kwargs):
         super(TarifficationObjectNotFound, self).__init__('TarifficationObject', **kwargs)

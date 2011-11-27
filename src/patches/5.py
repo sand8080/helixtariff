@@ -8,6 +8,8 @@ def apply(curs):
             environment_id integer NOT NULL,
             parent_tariff_id integer,
             FOREIGN KEY (parent_tariff_id) REFERENCES tariff(id),
+            currency_id integer,
+            FOREIGN KEY (currency_id) REFERENCES currency(id),
             name varchar NOT NULL,
             type varchar NOT NULL CHECK(type in ('public', 'personal')),
             status varchar NOT NULL CHECK(status in ('active', 'archive', 'inactive'))
