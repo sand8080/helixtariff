@@ -30,6 +30,21 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_request(a_name, {'session_id': 'i'})
         self.validate_status_response(a_name)
 
+    def test_get_currencies(self):
+        a_name = 'get_currencies'
+        self.api.validate_request(a_name, {'session_id': 's'})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'ordering_params': ['code']})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'ordering_params': ['-code']})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'currencies': []})
+        self.api.validate_response(a_name, {'status': 'ok', 'currencies': [
+            {'id': 1, 'code': 'YYY', 'name': 'y',
+                'location': 'y', 'cent_factor': 100}
+        ]})
+        self.validate_error_response(a_name)
+
     def test_add_tariffication_object(self):
         a_name = 'add_tariffication_object'
         self.api.validate_request(a_name, {'session_id': 's', 'name': 'one'})

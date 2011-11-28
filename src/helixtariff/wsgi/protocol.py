@@ -6,7 +6,8 @@ from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
     AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE, RESPONSE_STATUS_ONLY,
     GET_ACTION_LOGS_REQUEST, GET_ACTION_LOGS_RESPONSE,
     GET_ACTION_LOGS_SELF_REQUEST, GET_ACTION_LOGS_SELF_RESPONSE,
-    REQUEST_PAGING_PARAMS, RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR)
+    REQUEST_PAGING_PARAMS, RESPONSE_STATUS_OK, RESPONSE_STATUS_ERROR,
+    GET_CURRENCIES_REQUEST, GET_CURRENCIES_RESPONSE)
 
 
 TARIFF_TYPE_VALIDATOR = AnyOf('public', 'personal')
@@ -342,6 +343,10 @@ protocol = [
     # logout user
     ApiCall('logout_request', Scheme(LOGOUT_REQUEST)),
     ApiCall('logout_response', Scheme(LOGOUT_RESPONSE)),
+
+    # currencies
+    ApiCall('get_currencies_request', Scheme(GET_CURRENCIES_REQUEST)),
+    ApiCall('get_currencies_response', Scheme(GET_CURRENCIES_RESPONSE)),
 
     # tariffication object
     ApiCall('add_tariffication_object_request', Scheme(ADD_TARIFFICATION_OBJECT_REQUEST)),
