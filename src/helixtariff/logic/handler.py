@@ -4,13 +4,14 @@ from helixcore import error_code, mapping
 from helixcore.security import Session
 from helixcore.security.auth import CoreAuthenticator
 from helixcore.server.response import response_ok
-
-
-from helixtariff.conf import settings
-from helixtariff.conf.db import transaction
 from helixcore.actions.handler import (detalize_error, AbstractHandler,
     set_subject_users_ids)
 from helixcore.db.wrapper import ObjectCreationError, ObjectDeletionError
+from helixcore.db.filters import (build_index, build_complex_index)
+from helixcore.error import DataIntegrityError
+
+from helixtariff.conf import settings
+from helixtariff.conf.db import transaction
 from helixtariff.db.dataobject import (TarifficationObject, Tariff, Rule,
     UserTariff)
 from helixtariff.error import (HelixtariffObjectAlreadyExists,
@@ -18,10 +19,8 @@ from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TariffUsed, RuleAlreadyExsits, RuleNotFound, RuleCheckingError,
     PriceNotFound, RuleProcessingError, UserTariffNotFound,
     TarifficationObjectAlreadyExsits)
-from helixcore.error import DataIntegrityError
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
-    TariffFilter, RuleFilter, UserTariffFilter)
-from helixcore.db.filters import build_index, build_complex_index
+    TariffFilter, RuleFilter, UserTariffFilter, CurrencyFilter)
 from helixtariff.rulesengine.checker import RuleChecker
 from helixtariff.rulesengine import engine
 from helixtariff.rulesengine.engine import RequestPrice
@@ -156,6 +155,21 @@ class Handler(AbstractHandler):
             return result
         return response_ok(action_logs=self.objects_info(action_logs, viewer),
             total=total)
+
+    @transaction()
+    @authenticate
+    def get_currencies(self, data, session, curs=None):
+        f = CurrencyFilter({}, {}, data.get('ordering_params'))
+        currencies = f.filter_objs(curs)
+        def viewer(currency):
+            return {
+                'id': currency.id,
+                'code': currency.code,
+                'cent_factor': currency.cent_factor,
+                'name': currency.name,
+                'location': currency.location,
+            }
+        return response_ok(currencies=self.objects_info(currencies, viewer))
 
     @transaction()
     @authenticate

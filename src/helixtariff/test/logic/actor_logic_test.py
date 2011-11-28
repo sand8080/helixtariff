@@ -99,3 +99,11 @@ class ActorLogicTestCase(LogicTestCase):
         self.check_response_ok(resp)
         return resp['user_tariffs']
 
+    def _get_currencies(self):
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'paging_params': {},
+            'ordering_params': ['view_order']}
+        resp = self.get_rules(**req)
+        self.check_response_ok(resp)
+        return resp['currencies']
+
