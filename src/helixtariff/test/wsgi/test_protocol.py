@@ -32,10 +32,10 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
 
     def test_get_currencies(self):
         a_name = 'get_currencies'
-        self.api.validate_request(a_name, {'session_id': 's'})
-        self.api.validate_request(a_name, {'session_id': 's',
+        self.api.validate_request(a_name, {'session_id': 's', 'paging_params': {}})
+        self.api.validate_request(a_name, {'session_id': 's', 'paging_params': {},
             'ordering_params': ['code']})
-        self.api.validate_request(a_name, {'session_id': 's',
+        self.api.validate_request(a_name, {'session_id': 's', 'paging_params': {},
             'ordering_params': ['-code']})
 
         self.api.validate_response(a_name, {'status': 'ok', 'currencies': []})

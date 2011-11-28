@@ -18,7 +18,8 @@ from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected,
     TariffUsed, RuleAlreadyExsits, RuleNotFound, RuleCheckingError,
     PriceNotFound, RuleProcessingError, UserTariffNotFound,
-    TarifficationObjectAlreadyExsits)
+    TarifficationObjectAlreadyExsits, CurrencyNotFound,
+    TariffParentWithoutCurrency, TariffCurrencyInNonParent)
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
     TariffFilter, RuleFilter, UserTariffFilter, CurrencyFilter)
 from helixtariff.rulesengine.checker import RuleChecker
@@ -174,10 +175,21 @@ class Handler(AbstractHandler):
     @transaction()
     @authenticate
     @detalize_error(TariffNotFound, ['parent_tariff_id'])
+    @detalize_error(CurrencyNotFound, ['currency_id'])
+    @detalize_error(TariffParentWithoutCurrency, ['parent_tariff_id', 'currency_id'])
+    @detalize_error(TariffCurrencyInNonParent, ['parent_tariff_id', 'currency_id'])
     @detalize_error(ObjectCreationError, ['name'])
     def add_tariff(self, data, session, curs=None):
-        # checking parent tariff exist
         pt_id = data['parent_tariff_id']
+        cur_id = data.get('currency_id', None)
+        # checking currency for parent tariff only
+        if pt_id is None and cur_id is None:
+            raise TariffParentWithoutCurrency()
+
+        if cur_id is not None and pt_id is None:
+            raise TariffCurrencyInNonParent()
+
+        # checking parent tariff exist
         if pt_id:
             t_f = TariffFilter(session, {'id': pt_id}, {}, None)
             t_f.filter_one_obj(curs)

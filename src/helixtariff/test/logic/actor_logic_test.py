@@ -101,9 +101,8 @@ class ActorLogicTestCase(LogicTestCase):
 
     def _get_currencies(self):
         sess = self.login_actor()
-        req = {'session_id': sess.session_id, 'paging_params': {},
-            'ordering_params': ['view_order']}
-        resp = self.get_rules(**req)
+        req = {'session_id': sess.session_id, 'paging_params': {}}
+        resp = self.get_currencies(**req)
         self.check_response_ok(resp)
         return resp['currencies']
 

@@ -54,6 +54,14 @@ class TariffCycleDetected(HelixtariffError):
     code = error_code.HELIXTARIFF_TARIFF_CYCLE_DETECTED
 
 
+class TariffParentWithoutCurrency(HelixtariffError):
+    code = error_code.HELIXTARIFF_TARIFF_PARENT_WITHOUT_CURRENCY
+
+
+class TariffCurrencyInNonParent(HelixtariffError):
+    code = error_code.HELIXTARIFF_TARIFF_CURRENCY_IN_NON_PARENT
+
+
 class TariffUsed(HelixtariffError):
     code = error_code.HELIXTARIFF_TARIFF_USED
 
