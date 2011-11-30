@@ -37,4 +37,5 @@ class HelixtariffApplication(Application):
             'request': s_req,
             'response': s_resp,
         }
-        mapping.insert(curs, ActionLog(**data))
+        if environment_id is not None:
+            mapping.insert(curs, ActionLog(**data))
