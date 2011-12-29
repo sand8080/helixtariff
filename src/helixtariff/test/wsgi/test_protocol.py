@@ -135,7 +135,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'parent_tariff_id': None,
             'type': Tariff.TYPE_PERSONAL, 'status': Tariff.STATUS_ACTIVE})
         self.api.validate_request(a_name, {'session_id': 's', 'name': 'one',
-            'parent_tariff_id': 1, 'currency_id': 3,
+            'parent_tariff_id': 1, 'currency': 'RUB',
             'type': Tariff.TYPE_PUBLIC, 'status': Tariff.STATUS_INACTIVE})
 
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
@@ -155,18 +155,18 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
             'tariffs': [
                 {'id': 1, 'name': 't0', 'parent_tariffs': [{'id': 1, 'name': 'pt0',
-                'status': Tariff.STATUS_ACTIVE}], 'type': Tariff.TYPE_PUBLIC,
-                'status': Tariff.STATUS_ACTIVE}
+                'status': Tariff.STATUS_ACTIVE, 'currency': 'RUB'}], 'type': Tariff.TYPE_PUBLIC,
+                'status': Tariff.STATUS_ACTIVE, 'currency': 'RUB'}
         ]})
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
             'tariffs': [
                 {'id': 1, 'name': 't0', 'parent_tariffs': [{'id': 2, 'name': 'pt2',
-                'status': Tariff.STATUS_ACTIVE}, {'id': 3, 'name': 'pt3',
-                'status': Tariff.STATUS_ARCHIVE}],
-                'type': Tariff.TYPE_PUBLIC, 'status': Tariff.STATUS_ACTIVE},
+                'status': Tariff.STATUS_ACTIVE, 'currency': None}, {'id': 3, 'name': 'pt3',
+                'status': Tariff.STATUS_ARCHIVE, 'currency': 'RUB'}],
+                'type': Tariff.TYPE_PUBLIC, 'status': Tariff.STATUS_ACTIVE, 'currency': 'RUB'},
                 {'id': 1, 'name': 't0', 'parent_tariffs': [{'id': 1, 'name': 'pt0',
-                'status': Tariff.STATUS_ACTIVE}], 'type': Tariff.TYPE_PUBLIC,
-                'status': Tariff.STATUS_ACTIVE},
+                'status': Tariff.STATUS_ACTIVE, 'currency': None}], 'type': Tariff.TYPE_PUBLIC,
+                'status': Tariff.STATUS_ACTIVE, 'currency': None},
         ]})
         self.validate_error_response(a_name)
 
@@ -175,7 +175,10 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_request(a_name, {'session_id': 's', 'id': 1, 'new_name': 'n'})
         self.api.validate_request(a_name, {'session_id': 's', 'id': 1,
             'new_name': 'n', 'new_status': Tariff.STATUS_ARCHIVE,
-            'new_type': Tariff.TYPE_PERSONAL, 'new_parent_tariff_id': 1})
+            'new_type': Tariff.TYPE_PERSONAL, 'new_parent_tariff_id': 1,
+            'new_currency': 'RUB'})
+        self.api.validate_request(a_name, {'session_id': 's', 'id': 1,
+            'new_currency': None})
         self.validate_status_response(a_name)
 
     def test_delete_tariff(self):
