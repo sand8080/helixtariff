@@ -71,7 +71,7 @@ ADD_TARIFF_REQUEST = dict(
     {
         'name': TEXT,
         'parent_tariff_id': NULLABLE_INT,
-        Optional('currency_id'): int,
+        Optional('currency'): NULLABLE_TEXT,
         'type': AnyOf('public', 'personal'),
         'status': AnyOf('active', 'archive', 'inactive'),
     },
@@ -98,9 +98,10 @@ GET_TARIFFS_REQUEST = dict(
 TARIFF_INFO = {
     'id': int,
     'name': TEXT,
-    'parent_tariffs': [{'id': int, 'name': TEXT, 'status': TARIFF_STATUS_VALIDATOR}],
+    'parent_tariffs': [{'id': int, 'name': TEXT, 'status': TARIFF_STATUS_VALIDATOR, 'currency': NULLABLE_TEXT}],
     'type': TARIFF_TYPE_VALIDATOR,
     'status': TARIFF_STATUS_VALIDATOR,
+    'currency': NULLABLE_TEXT,
 }
 
 GET_TARIFFS_RESPONSE = AnyOf(

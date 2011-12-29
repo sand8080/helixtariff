@@ -12,13 +12,13 @@ class ActorLogicTestCase(LogicTestCase):
         return Session('ACTOR_LOGIC_TEST_CASE', GRANTED_ENV_ID, GRANTED_USER_ID)
 
     def _add_tariff(self, name, parent_tariff_id=None, type=Tariff.TYPE_PUBLIC,
-        status=Tariff.STATUS_ACTIVE, currency_id=None):
+        status=Tariff.STATUS_ACTIVE, currency=None):
         sess = self.login_actor()
         req = {'session_id': sess.session_id, 'name': name,
             'parent_tariff_id': parent_tariff_id,
             'type': type, 'status': status}
-        if currency_id is not None:
-            req['currency_id'] = currency_id
+        if currency is not None:
+            req['currency'] = currency
         resp = self.add_tariff(**req)
         self.check_response_ok(resp)
         return resp['id']

@@ -4,24 +4,25 @@ from helixcore import error_code, mapping
 from helixcore.security import Session
 from helixcore.security.auth import CoreAuthenticator
 from helixcore.server.response import response_ok
-
+from helixcore.actions.handler import (detalize_error, AbstractHandler,
+    set_subject_users_ids)
+from helixcore.db.filters import (build_index, build_complex_index,
+    CurrencyFilter)
+from helixcore.db.wrapper import ObjectCreationError, ObjectDeletionError
+from helixcore.error import DataIntegrityError, CurrencyNotFound
 
 from helixtariff.conf import settings
 from helixtariff.conf.db import transaction
-from helixcore.actions.handler import (detalize_error, AbstractHandler,
-    set_subject_users_ids)
-from helixcore.db.wrapper import ObjectCreationError, ObjectDeletionError
 from helixtariff.db.dataobject import (TarifficationObject, Tariff, Rule,
     UserTariff)
 from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected,
     TariffUsed, RuleAlreadyExsits, RuleNotFound, RuleCheckingError,
     PriceNotFound, RuleProcessingError, UserTariffNotFound,
-    TarifficationObjectAlreadyExsits)
-from helixcore.error import DataIntegrityError
+    TarifficationObjectAlreadyExsits, ParentTariffWithoutCurrency,
+    NonParentTariffWithCurrency)
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
     TariffFilter, RuleFilter, UserTariffFilter)
-from helixcore.db.filters import build_index, build_complex_index
 from helixtariff.rulesengine.checker import RuleChecker
 from helixtariff.rulesengine import engine
 from helixtariff.rulesengine.engine import RequestPrice
@@ -160,26 +161,39 @@ class Handler(AbstractHandler):
     @transaction()
     @authenticate
     @detalize_error(TariffNotFound, ['parent_tariff_id'])
+    @detalize_error(ParentTariffWithoutCurrency, ['currency'])
+    @detalize_error(NonParentTariffWithCurrency, ['currency'])
     @detalize_error(ObjectCreationError, ['name'])
+    @detalize_error(CurrencyNotFound, ['name'])
     def add_tariff(self, data, session, curs=None):
         # checking parent tariff exist
         pt_id = data['parent_tariff_id']
-        if pt_id:
-            t_f = TariffFilter(session, {'id': pt_id}, {}, None)
-            t_f.filter_one_obj(curs)
-
+        currency = data.get('currency', None)
         t_data = {'environment_id': session.environment_id,
             'parent_tariff_id': pt_id, 'name': data['name'],
             'type': data['type'], 'status': data['status']}
+        if pt_id is not None:
+            if currency is not None:
+                raise NonParentTariffWithCurrency
+            else:
+                t_f = TariffFilter(session, {'id': pt_id}, {}, None)
+                t_f.filter_one_obj(curs)
+        elif currency is None:
+            raise ParentTariffWithoutCurrency
+        else:
+            c_f = CurrencyFilter({'code': currency}, {}, None)
+            c = c_f.filter_one_obj(curs)
+            t_data['currency_id'] = c.id
+
         t = Tariff(**t_data)
 
         mapping.insert(curs, t)
         return response_ok(id=t.id)
 
-    def _tariffs_chain_data(self, tariffs_idx, leaf_tariff):
+    def _tariffs_chain_data(self, tariffs_idx, leaf_tariff, curs_idx):
         '''
         returns list of dicts: [{'id': 1, 'name': 'a',
-            'status': 'active'}]
+            'status': 'active', 'currency': 'RUB' or None}]
         '''
         result = [{'id': leaf_tariff.id, 'name': leaf_tariff.name,
             'status': leaf_tariff.status}]
@@ -188,8 +202,13 @@ class Handler(AbstractHandler):
             pt_id = leaf_tariff.parent_tariff_id
             if pt_id:
                 parent_tariff = tariffs_idx[leaf_tariff.parent_tariff_id]
+                if parent_tariff.currency_id in curs_idx:
+                    cur_code = curs_idx[parent_tariff.currency_id].code
+                else:
+                    cur_code = None
+
                 result.append({'id': parent_tariff.id, 'name': parent_tariff.name,
-                    'status': parent_tariff.status})
+                    'status': parent_tariff.status, 'currency': cur_code})
                 leaf_tariff = parent_tariff
 
                 if pt_id in chain_tariffs_ids:
@@ -210,10 +229,20 @@ class Handler(AbstractHandler):
         all_ts = all_ts_f.filter_objs(curs)
         all_ts_idx = build_index(all_ts)
 
+        all_curs_f = CurrencyFilter({}, {}, None)
+        all_curs = all_curs_f.filter_objs(curs)
+        all_curs_idx = build_index(all_curs)
+
         def viewer(t):
-            ts_chain_data = self._tariffs_chain_data(all_ts_idx, t)
+            ts_chain_data = self._tariffs_chain_data(all_ts_idx, t, all_curs_idx)
+            if t.currency_id in all_curs_idx:
+                cur_code = all_curs_idx[t.currency_id].code
+            else:
+                cur_code = None
+
             return {'id': t.id, 'name': t.name, 'type': t.type,
-                'status': t.status, 'parent_tariffs': ts_chain_data[1:]}
+                'status': t.status, 'parent_tariffs': ts_chain_data[1:],
+                'currency': cur_code}
         return response_ok(tariffs=self.objects_info(ts, viewer), total=total)
 
     @transaction()
