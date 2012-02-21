@@ -250,13 +250,32 @@ class Handler(AbstractHandler):
     @detalize_error(HelixtariffObjectAlreadyExists, 'new_name')
     @detalize_error(TarifficationObjectNotFound, 'id')
     @detalize_error(TariffCycleDetected, 'new_parent_name')
+    @detalize_error(ParentTariffWithoutCurrency, ['new_parent_tariff_id', 'new_currency'])
+    @detalize_error(NonParentTariffWithCurrency, ['new_currency'])
+    @detalize_error(CurrencyNotFound, ['new_currency'])
     def modify_tariff(self, data, session, curs=None):
         f = TariffFilter(session, {'id': data.get('id')}, {}, None)
         loader = partial(f.filter_one_obj, curs, for_update=True)
 
+        if 'new_currency' in data:
+            curr = data.pop('new_currency')
+            if curr is not None:
+                c_f = CurrencyFilter({'code': curr}, {}, None)
+                c = c_f.filter_one_obj(curs)
+                curr_id = c.id
+            else:
+                curr_id = None
+            data['new_currency_id'] = curr_id
+
         try:
             updated_objs = self.update_obj(curs, data, loader)
             t = updated_objs[0]
+
+            # checking only parent tariff with currency
+            if t.parent_tariff_id is None and t.currency_id is None:
+                raise ParentTariffWithoutCurrency
+            if t.currency_id is not None and t.parent_tariff_id is not None:
+                raise NonParentTariffWithCurrency
 
             # checking tariff cycle
             all_ts_f = TariffFilter(session, {}, {}, None)
