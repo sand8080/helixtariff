@@ -88,31 +88,39 @@ class TariffTestCase(ActorLogicTestCase):
             'new_currency': 'RUB'}
         self.assertRaises(RequestProcessingError, self.modify_tariff, **req)
 
+    def test_modify_tariff(self):
+        pt_id = self._add_tariff('pt', currency='RUB')
+        name = 'ch_t'
+        t_type = Tariff.TYPE_PERSONAL
+        status = Tariff.STATUS_ACTIVE
+        t_id = self._add_tariff(name, parent_tariff_id=pt_id, type=t_type,
+            status=status)
+        t_data = self._tariff_data(t_id)
+        self.assertEquals(name, t_data['name'])
+        self.assertEquals(pt_id, t_data['parent_tariffs'][0]['id'])
+        self.assertEquals(t_type, t_data['type'])
+        self.assertEquals(status, t_data['status'])
 
-# TODO: implement test_add_tariff
-#        t_data = self._tariff_data(t_id)
-#        self.assertEquals(name, t_data['name'])
-#        self.assertEquals(pt_id, t_data['parent_tariffs'][0]['id'])
-#        self.assertEquals(type, t_data['type'])
-#        self.assertEquals(status, t_data['status'])
-#
-#        new_name = 'newt'
-#        new_status = Tariff.STATUS_ARCHIVE
-#        new_type = Tariff.TYPE_PUBLIC
-#        new_pt_id = None
-#        sess = self.login_actor()
-#        req = {'session_id': sess.session_id, 'id': t_id,
-#            'new_name': new_name, 'new_parent_tariff_id': new_pt_id,
-#            'new_type': new_type, 'new_status': new_status}
-#        resp = self.modify_tariff(**req)
-#        self.check_response_ok(resp)
-#
-#        t_data = self._tariff_data(t_id)
-#        self.assertEquals(new_name, t_data['name'])
-#        self.assertEquals([], t_data['parent_tariffs'])
-#        self.assertEquals(new_type, t_data['type'])
-#        self.assertEquals(new_status, t_data['status'])
-#
+        new_name = 'newt'
+        new_status = Tariff.STATUS_ARCHIVE
+        new_type = Tariff.TYPE_PUBLIC
+        new_pt_id = None
+        new_currency = 'USD'
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'id': t_id,
+            'new_name': new_name, 'new_parent_tariff_id': new_pt_id,
+            'new_currency': new_currency, 'new_type': new_type,
+            'new_status': new_status}
+        resp = self.modify_tariff(**req)
+        self.check_response_ok(resp)
+
+        t_data = self._tariff_data(t_id)
+        self.assertEquals(new_name, t_data['name'])
+        self.assertEquals([], t_data['parent_tariffs'])
+        self.assertEquals(new_type, t_data['type'])
+        self.assertEquals(new_status, t_data['status'])
+        self.assertEquals(new_currency, t_data['currency'])
+
 #    def test_tariff_cycle_detection(self):
 #        pt_id = self._add_tariff('pt')
 #        cht_id = self._add_tariff('cht', parent_tariff_id=pt_id)
