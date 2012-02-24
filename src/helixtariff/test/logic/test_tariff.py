@@ -121,41 +121,42 @@ class TariffTestCase(ActorLogicTestCase):
         self.assertEquals(new_status, t_data['status'])
         self.assertEquals(new_currency, t_data['currency'])
 
-#    def test_tariff_cycle_detection(self):
-#        pt_id = self._add_tariff('pt')
-#        cht_id = self._add_tariff('cht', parent_tariff_id=pt_id)
-#
-#        sess = self.login_actor()
-#        req = {'session_id': sess.session_id, 'id': pt_id,
-#            'new_parent_tariff_id': cht_id}
-#        self.assertRaises(RequestProcessingError, self.modify_tariff, **req)
+    def test_tariff_cycle_detection(self):
+        pt_id = self._add_tariff('pt', currency='RUB')
+        cht_id_0 = self._add_tariff('cht0', parent_tariff_id=pt_id)
+        cht_id_1 = self._add_tariff('cht1', parent_tariff_id=cht_id_0)
 
-#    def test_delete_tariff(self):
-#        sess = self.login_actor()
-#
-#        t_id = self._add_tariff('t', currency='RUB')
-#        req = {'session_id': sess.session_id, 'filter_params': {'id': t_id},
-#            'paging_params': {}}
-#        resp = self.get_tariffs(**req)
-#        self.check_response_ok(resp)
-#        self.assertEquals(1, resp['total'])
-#
-#        req = {'session_id': sess.session_id, 'id': t_id}
-#        resp = self.delete_tariff(**req)
-#        self.check_response_ok(resp)
-#        req = {'session_id': sess.session_id, 'filter_params': {'id': t_id},
-#            'paging_params': {}}
-#        resp = self.get_tariffs(**req)
-#        self.check_response_ok(resp)
-#        self.assertEquals(0, resp['total'])
-#
-#    def test_delete_used_tariff_failed(self):
-#        pt_id = self._add_tariff('pt', currency='RUB')
-#        self._add_tariff('cht', parent_tariff_id=pt_id)
-#
-#        sess = self.login_actor()
-#        req = {'session_id': sess.session_id, 'id': pt_id}
-#        self.assertRaises(RequestProcessingError, self.delete_tariff, **req)
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'id': cht_id_0,
+            'new_parent_tariff_id': cht_id_1}
+        self.assertRaises(RequestProcessingError, self.modify_tariff, **req)
+
+    def test_delete_tariff(self):
+        sess = self.login_actor()
+
+        t_id = self._add_tariff('t', currency='RUB')
+        req = {'session_id': sess.session_id, 'filter_params': {'id': t_id},
+            'paging_params': {}}
+        resp = self.get_tariffs(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(1, resp['total'])
+
+        req = {'session_id': sess.session_id, 'id': t_id}
+        resp = self.delete_tariff(**req)
+        self.check_response_ok(resp)
+        req = {'session_id': sess.session_id, 'filter_params': {'id': t_id},
+            'paging_params': {}}
+        resp = self.get_tariffs(**req)
+        self.check_response_ok(resp)
+        self.assertEquals(0, resp['total'])
+
+    def test_delete_used_tariff_failed(self):
+        pt_id = self._add_tariff('pt', currency='RUB')
+        self._add_tariff('cht', parent_tariff_id=pt_id)
+
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'id': pt_id}
+        self.assertRaises(RequestProcessingError, self.delete_tariff, **req)
 
 
 if __name__ == '__main__':
