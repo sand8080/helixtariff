@@ -229,9 +229,7 @@ class Handler(AbstractHandler):
         all_ts = all_ts_f.filter_objs(curs)
         all_ts_idx = build_index(all_ts)
 
-        all_curs_f = CurrencyFilter({}, {}, None)
-        all_curs = all_curs_f.filter_objs(curs)
-        all_curs_idx = build_index(all_curs)
+        all_curs_idx = self._all_curs_idx(curs)
 
         def viewer(t):
             ts_chain_data = self._tariffs_chain_data(all_ts_idx, t, all_curs_idx)
@@ -282,9 +280,7 @@ class Handler(AbstractHandler):
             all_ts = all_ts_f.filter_objs(curs)
             all_ts_idx = build_index(all_ts)
 
-            all_curs_f = CurrencyFilter({}, {}, None)
-            all_curs = all_curs_f.filter_objs(curs)
-            all_curs_idx = build_index(all_curs)
+            all_curs_idx = self._all_curs_idx(curs)
 
             self._tariffs_chain_data(all_ts_idx, t, all_curs_idx)
 
@@ -451,8 +447,10 @@ class Handler(AbstractHandler):
                 'tariff_id': t_id}, {}, None)
             ut_f.filter_one_obj(curs)
 
+        all_curs_idx = self._all_curs_idx(curs)
+
         t = all_ts_idx[t_id]
-        ts_chain_data = self._tariffs_chain_data(all_ts_idx, t)
+        ts_chain_data = self._tariffs_chain_data(all_ts_idx, t, all_curs_idx)
         ts_chain_ids = [t_data['id'] for t_data in ts_chain_data]
 
         # Fetching active rules
@@ -498,10 +496,17 @@ class Handler(AbstractHandler):
         price_info = self._price_info(session, curs, data, 'draft_rule')
         return response_ok(**price_info)
 
+    def _all_curs_idx(self, curs):
+        all_curs_f = CurrencyFilter({}, {}, None)
+        all_curs = all_curs_f.filter_objs(curs)
+        return build_index(all_curs)
+
     def _tariff_price_info(self, session, curs, t, all_tos_idx, all_ts_idx,
         active_rs_to_t_id_idx, calculation_ctxs):
+
+        all_curs_idx = self._all_curs_idx(curs)
         processed_tos = []
-        tariff_chain_data = self._tariffs_chain_data(all_ts_idx, t)
+        tariff_chain_data = self._tariffs_chain_data(all_ts_idx, t, all_curs_idx)
 
         ts_chain_ids = [t_data['id'] for t_data in tariff_chain_data]
         tos_ids = set([x.tariffication_object_id for x in active_rs_to_t_id_idx.values()

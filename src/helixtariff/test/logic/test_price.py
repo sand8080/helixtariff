@@ -8,7 +8,7 @@ from helixtariff.db.dataobject import Rule, Tariff
 
 class PriceTestCase(ActorLogicTestCase):
     def test_get_price_no_tariffication_object(self):
-        t_id = self._add_tariff('t')
+        t_id = self._add_tariff('t', currency='RUB')
         self.assertRaises(RequestProcessingError, self._get_price, t_id, 555)
 
     def test_get_price_no_tariff(self):
@@ -16,19 +16,19 @@ class PriceTestCase(ActorLogicTestCase):
         self.assertRaises(RequestProcessingError, self._get_price, 555, to_id)
 
     def test_price_not_found(self):
-        t_id = self._add_tariff('t')
+        t_id = self._add_tariff('t', currency='RUB')
         to_id = self._add_tariffication_object('to0')
         self.assertRaises(RequestProcessingError, self._get_price, t_id, to_id)
 
     def test_price_not_found_with_only_draft_rule(self):
-        t_id = self._add_tariff('t')
+        t_id = self._add_tariff('t', currency='RUB')
         to_id = self._add_tariffication_object('to0')
         self._save_rule(t_id, to_id, 'price = 10')
         self.assertRaises(RequestProcessingError, self._get_price, t_id, to_id)
 
     def test_price(self):
         t_name = 't'
-        t_id = self._add_tariff(t_name)
+        t_id = self._add_tariff(t_name, currency='RUB')
         self._add_tariffication_object('to0')
         to_name = 'to1'
         to_id = self._add_tariffication_object(to_name)
@@ -47,7 +47,7 @@ class PriceTestCase(ActorLogicTestCase):
     def test_price_inheritance(self):
         # Adding tariffs
         p_t_name = 'p_t'
-        p_t_id = self._add_tariff(p_t_name)
+        p_t_id = self._add_tariff(p_t_name, currency='RUB')
         ch_t_name = 'ch_t'
         ch_t_id = self._add_tariff(ch_t_name, parent_tariff_id=p_t_id)
 
@@ -89,7 +89,8 @@ class PriceTestCase(ActorLogicTestCase):
 
     def test_tariff_inactivated(self):
         t_name = 'p_t'
-        p_t_id = self._add_tariff(t_name, status=Tariff.STATUS_INACTIVE)
+        p_t_id = self._add_tariff(t_name, status=Tariff.STATUS_INACTIVE,
+            currency='RUB')
         ch_t_name = 'ch_t'
         ch_t_id = self._add_tariff(ch_t_name, parent_tariff_id=p_t_id)
         self._add_tariffication_object('to0')
@@ -109,7 +110,7 @@ class PriceTestCase(ActorLogicTestCase):
 
     def test_rule_inactivated(self):
         t_name = 'p_t'
-        t_id = self._add_tariff(t_name)
+        t_id = self._add_tariff(t_name, currency='RUB')
         to_id = self._add_tariffication_object('to')
         r_id = self._save_rule(t_id, to_id, 'price = 1')
         self._apply_draft_rules(t_id)
@@ -127,7 +128,7 @@ class PriceTestCase(ActorLogicTestCase):
 
     def test_inactive_tariff_in_chain(self):
         to_id = self._add_tariffication_object('to')
-        t_id_0 = self._add_tariff('t0')
+        t_id_0 = self._add_tariff('t0', currency='RUB')
         t_id_1 = self._add_tariff('t1', parent_tariff_id=t_id_0)
         t_id_2 = self._add_tariff('t2', parent_tariff_id=t_id_1)
 
@@ -158,7 +159,7 @@ class PriceTestCase(ActorLogicTestCase):
         to_id_2 = self._add_tariffication_object(to_name_2)
 
         t_name_0, t_name_1, t_name_2 = 't0', 't1', 't2'
-        t_id_0 = self._add_tariff(t_name_0)
+        t_id_0 = self._add_tariff(t_name_0, currency='RUB')
         t_id_1 = self._add_tariff(t_name_1, parent_tariff_id=t_id_0,
             status=Tariff.STATUS_INACTIVE)
         t_id_2 = self._add_tariff(t_name_2, parent_tariff_id=t_id_1,
@@ -210,7 +211,7 @@ class PriceTestCase(ActorLogicTestCase):
 
     def test_user_tariff_price(self):
         to_id = self._add_tariffication_object('to0')
-        t_id = self._add_tariff('t0')
+        t_id = self._add_tariff('t0', currency='RUB')
         self._save_rule(t_id, to_id, 'price = 2')
 
         # checking user without tariff
@@ -226,7 +227,7 @@ class PriceTestCase(ActorLogicTestCase):
 
     def test_user_tariffs_prices(self):
         to_id = self._add_tariffication_object('to0')
-        t_id = self._add_tariff('t0')
+        t_id = self._add_tariff('t0', currency='RUB')
         self._save_rule(t_id, to_id, 'price = 2')
 
         # checking user without tariff
