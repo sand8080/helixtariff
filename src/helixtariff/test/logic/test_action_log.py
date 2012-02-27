@@ -55,13 +55,15 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
     def test_add_tariff(self):
         action = 'add_tariff'
         req = {'session_id': self.sess_id, 'name': 't', 'parent_tariff_id': None,
-            'status': Tariff.STATUS_ACTIVE, 'type': Tariff.TYPE_PERSONAL}
+            'status': Tariff.STATUS_ACTIVE, 'type': Tariff.TYPE_PERSONAL,
+            'currency': 'RUB'}
         self._logged_action(action, req)
 
     def test_delete_tariff(self):
         action = 'add_tariff'
         req = {'session_id': self.sess_id, 'name': 't', 'parent_tariff_id': None,
-            'status': Tariff.STATUS_ACTIVE, 'type': Tariff.TYPE_PERSONAL}
+            'status': Tariff.STATUS_ACTIVE, 'type': Tariff.TYPE_PERSONAL,
+            'currency': 'RUB'}
         resp = self._logged_action(action, req)
         t_id = resp['id']
 
@@ -72,7 +74,8 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
     def test_modify_tariff(self):
         action = 'add_tariff'
         req = {'session_id': self.sess_id, 'name': 't', 'parent_tariff_id': None,
-            'status': Tariff.STATUS_ACTIVE, 'type': Tariff.TYPE_PERSONAL}
+            'status': Tariff.STATUS_ACTIVE, 'type': Tariff.TYPE_PERSONAL,
+            'currency': 'RUB'}
         resp = self._logged_action(action, req)
         t_id = resp['id']
 
@@ -82,7 +85,7 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
 
     def test_save_rule(self):
         to_id = self._add_tariffication_object('to0')
-        t_id = self._add_tariff('t0')
+        t_id = self._add_tariff('t0', currency='RUB')
 
         action = 'save_rule'
         req = {'session_id': self.sess_id, 'tariff_id': t_id, 'tariffication_object_id': to_id,
@@ -91,7 +94,7 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
 
     def test_apply_draft_rules(self):
         to_id = self._add_tariffication_object('to0')
-        t_id = self._add_tariff('t0')
+        t_id = self._add_tariff('t0', currency='RUB')
         self._save_rule(t_id, to_id, 'price = 12')
 
         action = 'apply_draft_rules'
@@ -100,7 +103,7 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
 
     def test_delete_rule(self):
         to_id = self._add_tariffication_object('to0')
-        t_id = self._add_tariff('t0')
+        t_id = self._add_tariff('t0', currency='RUB')
         r_id = self._save_rule(t_id, to_id, 'price = 12')
 
         action = 'delete_rule'
@@ -108,7 +111,7 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         self._logged_action(action, req)
 
     def test_add_user_tariff(self):
-        t_id = self._add_tariff('t0')
+        t_id = self._add_tariff('t0', currency='RUB')
         u_id = 23
 
         action = 'add_user_tariff'
@@ -117,7 +120,7 @@ class ActionLogTestCase(ActorLogicTestCase, ActionsLogTester):
         self._check_subject_users_ids_set(self.sess_id, action, u_id)
 
     def test_delete_user_tariffs(self):
-        t_id = self._add_tariff('t0')
+        t_id = self._add_tariff('t0', currency='RUB')
         u_id = 23
 
         action = 'delete_user_tariffs'
