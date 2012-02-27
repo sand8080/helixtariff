@@ -32,3 +32,10 @@ class Rule(Mapped):
 class UserTariff(Mapped):
     __slots__ = ['id', 'environment_id', 'user_id', 'tariff_id']
     table = 'user_tariff'
+
+
+class TariffViewingContext(Mapped):
+    __slots__ = ['id', 'environment_id', 'tariff_id', 'view_order', 'serialized_context']
+    table = 'tariff_viewing_context'
+
+
