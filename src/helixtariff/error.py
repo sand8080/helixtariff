@@ -52,6 +52,13 @@ class NonParentTariffWithCurrency(HelixtariffError):
     code = error_code.HELIXTARIFF_NON_PARENT_TARIFF_WITH_CURRENCY
 
 
+class UserTariffAlreadyExsits(HelixtariffObjectAlreadyExists):
+    def __init__(self, tariff_id=None, user_id=None):
+        super(UserTariffAlreadyExsits, self).__init__('User tariff %s already exists for user %s' %
+            (tariff_id, user_id))
+        self.code = error_code.HELIXTARIFF_USER_TARIFF_ALREADY_EXISTS
+
+
 class UserTariffNotFound(HelixtariffObjectNotFound):
     def __init__(self, **kwargs):
         super(UserTariffNotFound, self).__init__('Tariff', **kwargs)

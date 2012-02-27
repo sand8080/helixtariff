@@ -20,7 +20,7 @@ from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TariffUsed, RuleAlreadyExsits, RuleNotFound, RuleCheckingError,
     PriceNotFound, RuleProcessingError, UserTariffNotFound,
     TarifficationObjectAlreadyExsits, ParentTariffWithoutCurrency,
-    NonParentTariffWithCurrency)
+    NonParentTariffWithCurrency, UserTariffAlreadyExsits)
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
     TariffFilter, RuleFilter, UserTariffFilter)
 from helixtariff.rulesengine.checker import RuleChecker
@@ -584,18 +584,22 @@ class Handler(AbstractHandler):
     @transaction()
     @authenticate
     @detalize_error(TariffNotFound, ['tariff_id'])
-    @detalize_error(ObjectCreationError, ['tariff_id', 'user_id'])
+    @detalize_error(UserTariffAlreadyExsits, ['tariff_id', 'user_id'])
     def add_user_tariff(self, data, session, curs=None):
         # checking tariff exist
         t_id = data['tariff_id']
+        u_id = data['user_id']
         if t_id:
             t_f = TariffFilter(session, {'id': t_id}, {}, None)
             t_f.filter_one_obj(curs)
 
         ut_data = {'environment_id': session.environment_id,
-            'tariff_id': t_id, 'user_id': data['user_id']}
+            'tariff_id': t_id, 'user_id': u_id}
         ut = UserTariff(**ut_data)
-        mapping.insert(curs, ut)
+        try:
+            mapping.insert(curs, ut)
+        except ObjectCreationError:
+            raise UserTariffAlreadyExsits(tariff_id=t_id, user_id=u_id)
         return response_ok(id=ut.id)
 
     @set_subject_users_ids('user_id')

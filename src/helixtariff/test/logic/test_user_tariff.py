@@ -9,12 +9,12 @@ class UserTariffTestCase(ActorLogicTestCase):
     u_id = 22
 
     def test_add_user_tariff(self):
-        t_id = self._add_tariff('tariff one')
+        t_id = self._add_tariff('tariff one', currency='RUB')
         self._add_user_tariff(t_id, self.u_id)
 
     def test_add_user_tariff_duplication(self):
         name = 'tariff one'
-        t_id = self._add_tariff(name)
+        t_id = self._add_tariff(name, currency='RUB')
         self._add_user_tariff(t_id, self.u_id)
         self.assertRaises(RequestProcessingError, self._add_user_tariff, t_id, self.u_id)
 
@@ -22,7 +22,7 @@ class UserTariffTestCase(ActorLogicTestCase):
         self.assertRaises(RequestProcessingError, self._add_user_tariff, 555, self.u_id)
 
     def test_delete_user_tariff(self):
-        t_id = self._add_tariff('t')
+        t_id = self._add_tariff('t', currency='RUB')
         self._add_user_tariff(t_id, self.u_id)
 
         user_tariffs = self._get_user_tariffs([self.u_id])
@@ -38,8 +38,8 @@ class UserTariffTestCase(ActorLogicTestCase):
         self.assertEquals(0, len(user_tariffs))
 
     def test_get_user_tariffs(self):
-        self._add_tariff('t0')
-        t_id_1 = self._add_tariff('t1')
+        self._add_tariff('t0', currency='RUB')
+        t_id_1 = self._add_tariff('t1', currency='RUB')
 
         user_tariffs = self._get_user_tariffs([self.u_id])
         self.assertEquals(0, len(user_tariffs))
