@@ -7,7 +7,7 @@ from helixcore.error import RequestProcessingError
 class RuleTestCase(ActorLogicTestCase):
     def test_save_rule(self):
         to_id_0 = self._add_tariffication_object('to0')
-        t_id = self._add_tariff('t')
+        t_id = self._add_tariff('t', currency='RUB')
         self._save_rule(t_id, to_id_0, 'price = 10')
 
         to_id_1 = self._add_tariffication_object('to1')
@@ -16,7 +16,7 @@ class RuleTestCase(ActorLogicTestCase):
 
     def test_save_rule_not_rewrites_actual_rule(self):
         to_id_0 = self._add_tariffication_object('to0')
-        t_id = self._add_tariff('t')
+        t_id = self._add_tariff('t', currency='RUB')
         r_id = self._save_rule(t_id, to_id_0, 'price = 10')
         self._apply_draft_rules(t_id)
         rules_data = self._get_rules([r_id])
@@ -30,7 +30,7 @@ class RuleTestCase(ActorLogicTestCase):
 
     def test_saving_rule_duplicate_failed(self):
         to_id = self._add_tariffication_object('to0')
-        t_id = self._add_tariff('t')
+        t_id = self._add_tariff('t', currency='RUB')
         self._save_rule(t_id, to_id, 'price = 1')
         self.assertRaises(RequestProcessingError, self._save_rule, t_id, to_id, 'price = 1')
 
@@ -39,18 +39,18 @@ class RuleTestCase(ActorLogicTestCase):
         self.assertRaises(RequestProcessingError, self._save_rule, 555, to_id, 'price = 2')
 
     def test_saving_rule_with_wrong_tariffication_object_failed(self):
-        t_id = self._add_tariff('t0')
+        t_id = self._add_tariff('t0', currency='RUB')
         self.assertRaises(RequestProcessingError, self._save_rule, t_id, 555, 'price = 3')
 
     def test_saving_rule_with_wrong_id_failed(self):
         to_id = self._add_tariffication_object('to0')
-        t_id = self._add_tariff('t0')
+        t_id = self._add_tariff('t0', currency='RUB')
         self.assertRaises(RequestProcessingError, self._save_rule, t_id, to_id,
             {'id': 555})
 
     def test_saving_wrong_rule_failed(self):
         to_id = self._add_tariffication_object('to0')
-        t_id = self._add_tariff('t0')
+        t_id = self._add_tariff('t0', currency='RUB')
         self.assertRaises(RequestProcessingError, self._save_rule, t_id, to_id,
             'price_fail = 10')
 
@@ -60,7 +60,7 @@ class RuleTestCase(ActorLogicTestCase):
         to_name_1 = 'to 1'
         to_id_1 = self._add_tariffication_object(to_name_1)
         t_name_0 = 'tariff_0'
-        t_id_0 = self._add_tariff(t_name_0)
+        t_id_0 = self._add_tariff(t_name_0, currency='RUB')
         r_id_0 = self._save_rule(t_id_0, to_id_0, 'price = 10', view_order=2)
 
         sess = self.login_actor()
@@ -89,7 +89,7 @@ class RuleTestCase(ActorLogicTestCase):
         self.assertEquals(r_id_0, resp['rules'][1]['id'])
 
     def test_delete_rule(self):
-        t_id = self._add_tariff('t')
+        t_id = self._add_tariff('t', currency='RUB')
         to_id = self._add_tariffication_object('to')
         r_id = self._save_rule(t_id, to_id, 'price = 10')
 
@@ -101,7 +101,7 @@ class RuleTestCase(ActorLogicTestCase):
         self.assertEquals(0, len(rs_data))
 
     def test_apply_draft_rules(self):
-        t_id = self._add_tariff('t')
+        t_id = self._add_tariff('t', currency='RUB')
         to_id = self._add_tariffication_object('to')
 
         r = 'price = 10'
@@ -115,7 +115,7 @@ class RuleTestCase(ActorLogicTestCase):
         self.assertEquals(None, r_data['draft_rule'])
 
     def test_apply_draft_rules_with_empty_draft_rule(self):
-        t_id = self._add_tariff('t')
+        t_id = self._add_tariff('t', currency='RUB')
         to_id = self._add_tariffication_object('to')
 
         r = 'price = 10'
