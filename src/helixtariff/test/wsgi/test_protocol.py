@@ -181,6 +181,20 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'new_currency': None})
         self.validate_status_response(a_name)
 
+    def test_add_viewing_tariff_context(self):
+        a_name = 'add_viewing_tariff_context'
+        self.api.validate_request(a_name, {'session_id': 's', 'name': None,
+            'tariff_id': 1, 'view_order': 2, 'context': []})
+        self.api.validate_request(a_name, {'session_id': 's', 'name': None,
+            'tariff_id': 1, 'view_order': 2, 'context': [
+                {'name': 'num', 'type': 'int', 'value': 2},
+                {'name': 'num', 'type': 'int', 'value': 3},
+                {'name': 'name', 'type': 'string', 'value': 'n'},
+            ]})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
+        self.validate_error_response(a_name)
+
     def test_delete_tariff(self):
         a_name = 'delete_tariff'
         self.api.validate_request(a_name, {'session_id': 's', 'id': 1})

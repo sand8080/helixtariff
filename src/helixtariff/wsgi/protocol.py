@@ -1,6 +1,7 @@
 from helixcore.server.api import ApiCall
 from helixcore.json_validator import (Scheme, TEXT, Optional, AnyOf,
-    NON_NEGATIVE_INT, NULLABLE_TEXT, DECIMAL_TEXT, NULLABLE_INT, POSITIVE_INT)
+    NON_NEGATIVE_INT, NULLABLE_TEXT, DECIMAL_TEXT, NULLABLE_INT, POSITIVE_INT,
+    ID, INT)
 from helixcore.server.protocol_primitives import (PING_REQUEST, PING_RESPONSE,
     LOGIN_REQUEST, LOGIN_RESPONSE, LOGOUT_REQUEST, LOGOUT_RESPONSE,
     AUTHORIZED_REQUEST_AUTH_INFO, ADDING_OBJECT_RESPONSE, RESPONSE_STATUS_ONLY,
@@ -135,6 +136,23 @@ DELETE_TARIFF_REQUEST = dict(
 )
 
 DELETE_TARIFF_RESPONSE = RESPONSE_STATUS_ONLY
+
+VIEW_TARIFF_CONTEXT_PARAM = AnyOf(
+    {'name': TEXT, 'type': 'int', 'value': INT},
+    {'name': TEXT, 'type': 'string', 'value': TEXT},
+)
+
+ADD_VIEWING_TARIFF_CONTEXT_REQUEST = dict(
+    {
+        'tariff_id': ID,
+        'name': NULLABLE_TEXT,
+        'view_order': NON_NEGATIVE_INT,
+        'context': [VIEW_TARIFF_CONTEXT_PARAM],
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+ADD_VIEWING_TARIFF_CONTEXT_RESPONSE = ADDING_OBJECT_RESPONSE
 
 SAVE_RULE_REQUEST = dict(
     {
@@ -403,6 +421,10 @@ protocol = [
 
     ApiCall('get_user_tariffs_request', Scheme(GET_USER_TARIFFS_REQUEST)),
     ApiCall('get_user_tariffs_response', Scheme(GET_USER_TARIFFS_RESPONSE)),
+
+    # viewing tariff context
+    ApiCall('add_viewing_tariff_context_request', Scheme(ADD_VIEWING_TARIFF_CONTEXT_REQUEST)),
+    ApiCall('add_viewing_tariff_context_response', Scheme(ADD_VIEWING_TARIFF_CONTEXT_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
