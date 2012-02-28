@@ -8,6 +8,7 @@ def apply(curs):
             environment_id integer NOT NULL,
             tariff_id integer NOT NULL,
             FOREIGN KEY (tariff_id) REFERENCES tariff(id),
+            name varchar DEFAULT NULL,
             view_order integer DEFAULT 0,
             serialized_context varchar NOT NULL
         )

@@ -35,7 +35,8 @@ class UserTariff(Mapped):
 
 
 class TariffViewingContext(Mapped):
-    __slots__ = ['id', 'environment_id', 'tariff_id', 'view_order', 'serialized_context']
+    __slots__ = ['id', 'environment_id', 'tariff_id', 'name', 'view_order',
+        'serialized_context']
     table = 'tariff_viewing_context'
 
 
