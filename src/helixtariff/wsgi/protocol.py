@@ -154,6 +154,19 @@ ADD_VIEWING_TARIFF_CONTEXT_REQUEST = dict(
 
 ADD_VIEWING_TARIFF_CONTEXT_RESPONSE = ADDING_OBJECT_RESPONSE
 
+MODIFY_VIEWING_TARIFF_CONTEXT_REQUEST = dict(
+    {
+        'id': int,
+        Optional('new_tariff_id'): ID,
+        Optional('new_name'): NULLABLE_TEXT,
+        Optional('new_view_order'): NON_NEGATIVE_INT,
+        Optional('new_context'): [VIEW_TARIFF_CONTEXT_PARAM],
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+MODIFY_VIEWING_TARIFF_CONTEXT_RESPONSE = RESPONSE_STATUS_ONLY
+
 SAVE_RULE_REQUEST = dict(
     {
         Optional('id'): int,
@@ -425,6 +438,9 @@ protocol = [
     # viewing tariff context
     ApiCall('add_viewing_tariff_context_request', Scheme(ADD_VIEWING_TARIFF_CONTEXT_REQUEST)),
     ApiCall('add_viewing_tariff_context_response', Scheme(ADD_VIEWING_TARIFF_CONTEXT_RESPONSE)),
+
+    ApiCall('modify_viewing_tariff_context_request', Scheme(MODIFY_VIEWING_TARIFF_CONTEXT_REQUEST)),
+    ApiCall('modify_viewing_tariff_context_response', Scheme(MODIFY_VIEWING_TARIFF_CONTEXT_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
