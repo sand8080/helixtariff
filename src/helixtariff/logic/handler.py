@@ -220,7 +220,7 @@ class Handler(AbstractHandler):
 
     @transaction()
     @authenticate
-    def get_tariffs(self, data, session, curs=None):
+    def get_tariff_viewing_contexts(self, data, session, curs=None):
         t_f = TariffFilter(session, data['filter_params'],
             data['paging_params'], data.get('ordering_params'))
         ts, total = t_f.filter_counted(curs)
