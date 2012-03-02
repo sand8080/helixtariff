@@ -23,6 +23,15 @@ class ActorLogicTestCase(LogicTestCase):
         self.check_response_ok(resp)
         return resp['id']
 
+    def _add_tariff_viewing_context(self, name, tariff_id, context, view_order=0):
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'name': name,
+            'tariff_id': tariff_id, 'view_order': view_order,
+            'context': context}
+        resp = self.add_tariff_viewing_context(**req)
+        self.check_response_ok(resp)
+        return resp['id']
+
     def _add_user_tariff(self, tariff_id, user_id):
         sess = self.login_actor()
         req = {'session_id': sess.session_id, 'user_id': user_id,

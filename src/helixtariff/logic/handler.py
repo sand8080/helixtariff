@@ -14,7 +14,7 @@ from helixcore.error import DataIntegrityError, CurrencyNotFound
 from helixtariff.conf import settings
 from helixtariff.conf.db import transaction
 from helixtariff.db.dataobject import (TarifficationObject, Tariff, Rule,
-    UserTariff)
+    UserTariff, TariffViewingContext)
 from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TarifficationObjectNotFound, TariffNotFound, TariffCycleDetected,
     TariffUsed, RuleAlreadyExsits, RuleNotFound, RuleCheckingError,
@@ -300,6 +300,31 @@ class Handler(AbstractHandler):
         except ObjectDeletionError:
             raise TariffUsed('Tariff %s used' % data['id'])
         return response_ok()
+
+    def _prepare_context(self, raw_context):
+        res = {}
+        for d in raw_context:
+            res[d['name']] = d['value']
+        return res
+
+    @transaction()
+    @authenticate
+    @detalize_error(TariffNotFound, ['tariff_id'])
+    def add_tariff_viewing_context(self, data, session, curs=None):
+        # checking parent tariff exist
+        t_id = data['tariff_id']
+        t_f = TariffFilter(session, {'id': t_id}, {}, None)
+        t_f.filter_one_obj(curs)
+
+        raw_ctx = data['context']
+        ctx = self._prepare_context(raw_ctx)
+        t_v_data = {'environment_id': session.environment_id,
+            'tariff_id': t_id, 'name': data['name'],
+            'view_order': data['view_order'], 'context': ctx}
+
+        t_v_ctx = TariffViewingContext(**t_v_data)
+        mapping.insert(curs, t_v_ctx)
+        return response_ok(id=t_v_ctx.id)
 
     @transaction()
     @authenticate

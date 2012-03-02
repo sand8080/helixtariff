@@ -1,4 +1,4 @@
-from helixcore.mapping.objects import Mapped
+from helixcore.mapping.objects import Mapped, serialize_field
 from helixcore.db.dataobject import Currency, ActionLog #@UnusedImport
 
 
@@ -39,4 +39,6 @@ class TariffViewingContext(Mapped):
         'serialized_context']
     table = 'tariff_viewing_context'
 
-
+    def __init__(self, **kwargs):
+        d = serialize_field(kwargs, 'context', 'serialized_context')
+        super(TariffViewingContext, self).__init__(**d)

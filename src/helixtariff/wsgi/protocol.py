@@ -138,11 +138,12 @@ DELETE_TARIFF_REQUEST = dict(
 DELETE_TARIFF_RESPONSE = RESPONSE_STATUS_ONLY
 
 VIEW_TARIFF_CONTEXT_PARAM = AnyOf(
+    {'name': TEXT, 'value': TEXT},
     {'name': TEXT, 'value': INT},
     {'name': TEXT, 'value': TEXT},
 )
 
-ADD_VIEWING_TARIFF_CONTEXT_REQUEST = dict(
+ADD_TARIFF_VIEWING_CONTEXT_REQUEST = dict(
     {
         'tariff_id': ID,
         'name': NULLABLE_TEXT,
@@ -152,7 +153,7 @@ ADD_VIEWING_TARIFF_CONTEXT_REQUEST = dict(
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-ADD_VIEWING_TARIFF_CONTEXT_RESPONSE = ADDING_OBJECT_RESPONSE
+ADD_TARIFF_VIEWING_CONTEXT_RESPONSE = ADDING_OBJECT_RESPONSE
 
 MODIFY_VIEWING_TARIFF_CONTEXT_REQUEST = dict(
     {
@@ -436,8 +437,8 @@ protocol = [
     ApiCall('get_user_tariffs_response', Scheme(GET_USER_TARIFFS_RESPONSE)),
 
     # viewing tariff context
-    ApiCall('add_viewing_tariff_context_request', Scheme(ADD_VIEWING_TARIFF_CONTEXT_REQUEST)),
-    ApiCall('add_viewing_tariff_context_response', Scheme(ADD_VIEWING_TARIFF_CONTEXT_RESPONSE)),
+    ApiCall('add_tariff_viewing_context_request', Scheme(ADD_TARIFF_VIEWING_CONTEXT_REQUEST)),
+    ApiCall('add_tariff_viewing_context_response', Scheme(ADD_TARIFF_VIEWING_CONTEXT_RESPONSE)),
 
     ApiCall('modify_viewing_tariff_context_request', Scheme(MODIFY_VIEWING_TARIFF_CONTEXT_REQUEST)),
     ApiCall('modify_viewing_tariff_context_response', Scheme(MODIFY_VIEWING_TARIFF_CONTEXT_RESPONSE)),
