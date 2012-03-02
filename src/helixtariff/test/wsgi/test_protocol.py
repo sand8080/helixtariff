@@ -192,9 +192,9 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'tariff_id': 1, 'view_order': 2, 'context': []})
         self.api.validate_request(a_name, {'session_id': 's', 'name': None,
             'tariff_id': 1, 'view_order': 2, 'context': [
-                {'name': 'num', 'type': 'int', 'value': 2},
-                {'name': 'num', 'type': 'int', 'value': 3},
-                {'name': 'name', 'type': 'string', 'value': 'n'},
+                {'name': 'num', 'value': 2},
+                {'name': 'num', 'value': 3},
+                {'name': 'name', 'value': 'n'},
             ]})
 
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
@@ -206,7 +206,7 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_request(a_name, {'session_id': 's', 'id': 1,
             'new_name': 'n', 'new_tariff_id': 4,
             'new_view_order': 3, 'new_context': [
-                {'name': 'num', 'type': 'int', 'value': 2},
+                {'name': 'num', 'value': 2},
             ]})
 
         self.validate_status_response(a_name)

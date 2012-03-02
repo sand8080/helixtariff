@@ -138,8 +138,8 @@ DELETE_TARIFF_REQUEST = dict(
 DELETE_TARIFF_RESPONSE = RESPONSE_STATUS_ONLY
 
 VIEW_TARIFF_CONTEXT_PARAM = AnyOf(
-    {'name': TEXT, 'type': 'int', 'value': INT},
-    {'name': TEXT, 'type': 'string', 'value': TEXT},
+    {'name': TEXT, 'value': INT},
+    {'name': TEXT, 'value': TEXT},
 )
 
 ADD_VIEWING_TARIFF_CONTEXT_REQUEST = dict(
