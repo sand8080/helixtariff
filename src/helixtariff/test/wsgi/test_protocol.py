@@ -200,6 +200,39 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
         self.api.validate_response(a_name, {'status': 'ok', 'id': 1})
         self.validate_error_response(a_name)
 
+    def test_get_tariff_viewing_contexts(self):
+        a_name = 'get_tariff_viewing_contexts'
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {'tariff_id': 4}, 'paging_params': {},})
+        self.api.validate_request(a_name, {'session_id': 's',
+            'filter_params': {'id': 1, 'ids': [1, 2], 'tariff_id': 2},
+            'paging_params': {'limit': 0}})
+
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'tariff_contexts': []})
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'tariff_contexts': [
+                {'id': 1, 'name': 't0', 'tariff_id': 3, 'viewing_order': 3,
+                'context': [
+                    {'name': 'n', 'value': 'v'},
+                    {'name': 'm', 'value': 1},
+                ]}
+            ]})
+        self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
+            'tariff_contexts': [
+                {'id': 1, 'name': 't0', 'tariff_id': 3, 'viewing_order': 3,
+                'context': [
+                    {'name': 'n', 'value': 'v'},
+                    {'name': 'm', 'value': 1},
+                ]},
+                {'id': 1, 'name': 't0', 'tariff_id': 3, 'viewing_order': 4,
+                'context': [
+                    {'name': 'n', 'value': 'v'},
+                    {'name': 'm', 'value': 1},
+                ]}
+            ]})
+        self.validate_error_response(a_name)
+
 #    def test_modify_viewing_tariff_context(self):
 #        a_name = 'modify_viewing_tariff_context'
 #        self.api.validate_request(a_name, {'session_id': 's', 'id': 1, 'new_name': 'n'})

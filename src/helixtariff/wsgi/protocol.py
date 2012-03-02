@@ -155,6 +155,38 @@ ADD_TARIFF_VIEWING_CONTEXT_REQUEST = dict(
 
 ADD_TARIFF_VIEWING_CONTEXT_RESPONSE = ADDING_OBJECT_RESPONSE
 
+GET_TARIFF_VIEWING_CONTEXTS_REQUEST = dict(
+    {
+        'filter_params': {
+            'tariff_id': ID,
+            Optional('id'): ID,
+            Optional('ids'): [ID],
+        },
+        'paging_params': REQUEST_PAGING_PARAMS,
+        Optional('ordering_params'): [AnyOf('id', '-id', 'viewing_order', '-viewing_order')]
+    },
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+TARIFF_CONTEXT_INFO = {
+    'id': ID,
+    'tariff_id': ID,
+    'name': NULLABLE_TEXT,
+    'viewing_order': NON_NEGATIVE_INT,
+    'context': [VIEW_TARIFF_CONTEXT_PARAM],
+}
+
+GET_TARIFF_VIEWING_CONTEXTS_RESPONSE = AnyOf(
+    dict(
+        RESPONSE_STATUS_OK,
+        **{
+            'tariff_contexts': [TARIFF_CONTEXT_INFO],
+            'total': NON_NEGATIVE_INT,
+        }
+    ),
+    RESPONSE_STATUS_ERROR
+)
+
 MODIFY_VIEWING_TARIFF_CONTEXT_REQUEST = dict(
     {
         'id': int,
@@ -439,6 +471,9 @@ protocol = [
     # viewing tariff context
     ApiCall('add_tariff_viewing_context_request', Scheme(ADD_TARIFF_VIEWING_CONTEXT_REQUEST)),
     ApiCall('add_tariff_viewing_context_response', Scheme(ADD_TARIFF_VIEWING_CONTEXT_RESPONSE)),
+
+    ApiCall('get_tariff_viewing_contexts_request', Scheme(GET_TARIFF_VIEWING_CONTEXTS_REQUEST)),
+    ApiCall('get_tariff_viewing_contexts_response', Scheme(GET_TARIFF_VIEWING_CONTEXTS_RESPONSE)),
 
     ApiCall('modify_viewing_tariff_context_request', Scheme(MODIFY_VIEWING_TARIFF_CONTEXT_REQUEST)),
     ApiCall('modify_viewing_tariff_context_response', Scheme(MODIFY_VIEWING_TARIFF_CONTEXT_RESPONSE)),
