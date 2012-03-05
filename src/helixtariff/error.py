@@ -44,6 +44,12 @@ class TariffNotFound(HelixtariffObjectNotFound):
         self.code = error_code.HELIXTARIFF_TARIFF_NOT_FOUND
 
 
+class TariffViewingContextNotFound(HelixtariffObjectNotFound):
+    def __init__(self, **kwargs):
+        super(TariffViewingContextNotFound, self).__init__('TariffViewingContext', **kwargs)
+        self.code = error_code.HELIXTARIFF_TARIFF_NOT_FOUND
+
+
 class ParentTariffWithoutCurrency(HelixtariffError):
     code = error_code.HELIXTARIFF_PARENT_TARIFF_WITHOUT_CURRENCY
 

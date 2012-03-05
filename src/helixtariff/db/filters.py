@@ -3,10 +3,10 @@ from helixcore.db.filters import (InSessionFilter,
     CurrencyFilter, ActionLogFilter) #@UnusedImport
 
 from helixtariff.db.dataobject import (TarifficationObject, Tariff,
-    Rule, UserTariff)
+    Rule, UserTariff, TariffViewingContext)
 from helixcore.db.wrapper import ObjectNotFound, SelectedMoreThanOneRow
 from helixtariff.error import (TarifficationObjectNotFound, TariffNotFound,
-    RuleNotFound, UserTariffNotFound)
+    RuleNotFound, UserTariffNotFound, TariffViewingContextNotFound)
 
 
 class TarifficationObjectFilter(InSessionFilter):
@@ -46,6 +46,25 @@ class TariffFilter(InSessionFilter):
                 for_update=for_update)
         except (ObjectNotFound, SelectedMoreThanOneRow):
             raise TariffNotFound(**self.filter_params)
+
+
+class TariffViewingContextFilter(InSessionFilter):
+    cond_map = [
+        ('id', 'id', Eq),
+        ('ids', 'id', In),
+        ('tariff_id', 'tariff_id', Eq),
+    ]
+
+    def __init__(self, session, filter_params, paging_params, ordering_params):
+        super(TariffViewingContextFilter, self).__init__(session, filter_params,
+            paging_params, ordering_params, TariffViewingContext)
+
+    def filter_one_obj(self, curs, for_update=False):
+        try:
+            return super(TariffViewingContextFilter, self).filter_one_obj(curs,
+                for_update=for_update)
+        except (ObjectNotFound, SelectedMoreThanOneRow):
+            raise TariffViewingContextNotFound(**self.filter_params)
 
 
 class UserTariffFilter(InSessionFilter):

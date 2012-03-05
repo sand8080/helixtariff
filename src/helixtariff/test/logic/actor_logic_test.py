@@ -50,6 +50,14 @@ class ActorLogicTestCase(LogicTestCase):
         t_data = resp['tariffs'][0]
         return t_data
 
+    def _tariff_viewing_contexts_data(self, t_id):
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'filter_params': {'tariff_id': t_id},
+            'paging_params': {}}
+        resp = self.get_tariff_viewing_contexts(**req)
+        self.check_response_ok(resp)
+        return resp['tariff_contexts']
+
     def _add_tariffication_object(self, name):
         sess = self.login_actor()
         req = {'session_id': sess.session_id, 'name': name}

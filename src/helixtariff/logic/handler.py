@@ -22,7 +22,7 @@ from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TarifficationObjectAlreadyExsits, ParentTariffWithoutCurrency,
     NonParentTariffWithCurrency, UserTariffAlreadyExsits)
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
-    TariffFilter, RuleFilter, UserTariffFilter)
+    TariffFilter, RuleFilter, UserTariffFilter, TariffViewingContextFilter)
 from helixtariff.rulesengine.checker import RuleChecker
 from helixtariff.rulesengine import engine
 from helixtariff.rulesengine.engine import RequestPrice
@@ -221,27 +221,18 @@ class Handler(AbstractHandler):
     @transaction()
     @authenticate
     def get_tariff_viewing_contexts(self, data, session, curs=None):
-        t_f = TariffFilter(session, data['filter_params'],
-            data['paging_params'], data.get('ordering_params'))
+        ordering_params = data.get('ordering_params', ['view_order'])
+        t_f = TariffViewingContextFilter(session, data['filter_params'],
+            data['paging_params'], ordering_params)
         ts, total = t_f.filter_counted(curs)
 
-        all_ts_f = TariffFilter(session, {}, {}, None)
-        all_ts = all_ts_f.filter_objs(curs)
-        all_ts_idx = build_index(all_ts)
-
-        all_curs_idx = self._all_curs_idx(curs)
-
-        def viewer(t):
-            ts_chain_data = self._tariffs_chain_data(all_ts_idx, t, all_curs_idx)
-            if t.currency_id in all_curs_idx:
-                cur_code = all_curs_idx[t.currency_id].code
-            else:
-                cur_code = None
-
-            return {'id': t.id, 'name': t.name, 'type': t.type,
-                'status': t.status, 'parent_tariffs': ts_chain_data[1:],
-                'currency': cur_code}
-        return response_ok(tariffs=self.objects_info(ts, viewer), total=total)
+        def viewer(t_v_ctx):
+            res = t_v_ctx.to_dict()
+            res = mapping.objects.deserialize_field(res, 'serialized_context', 'context')
+            res['context'] = self._expand_context(res['context'])
+            res.pop('environment_id')
+            return res
+        return response_ok(tariff_contexts=self.objects_info(ts, viewer), total=total)
 
     @transaction()
     @authenticate
@@ -301,10 +292,16 @@ class Handler(AbstractHandler):
             raise TariffUsed('Tariff %s used' % data['id'])
         return response_ok()
 
-    def _prepare_context(self, raw_context):
+    def _collapse_context(self, raw_context):
         res = {}
         for d in raw_context:
             res[d['name']] = d['value']
+        return res
+
+    def _expand_context(self, context):
+        res = []
+        for k, v in context.items():
+            res.append({'name': k, 'value': v})
         return res
 
     @transaction()
@@ -317,7 +314,7 @@ class Handler(AbstractHandler):
         t_f.filter_one_obj(curs)
 
         raw_ctx = data['context']
-        ctx = self._prepare_context(raw_ctx)
+        ctx = self._collapse_context(raw_ctx)
         t_v_data = {'environment_id': session.environment_id,
             'tariff_id': t_id, 'name': data['name'],
             'view_order': data['view_order'], 'context': ctx}
