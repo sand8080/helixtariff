@@ -206,13 +206,14 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             'filter_params': {'tariff_id': 4}, 'paging_params': {},})
         self.api.validate_request(a_name, {'session_id': 's',
             'filter_params': {'id': 1, 'ids': [1, 2], 'tariff_id': 2},
-            'paging_params': {'limit': 0}})
+            'paging_params': {'limit': 0},
+            'ordering_params': ['view_order']})
 
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
             'tariff_contexts': []})
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
             'tariff_contexts': [
-                {'id': 1, 'name': 't0', 'tariff_id': 3, 'viewing_order': 3,
+                {'id': 1, 'name': 't0', 'tariff_id': 3, 'view_order': 3,
                 'context': [
                     {'name': 'n', 'value': 'v'},
                     {'name': 'm', 'value': 1},
@@ -220,12 +221,12 @@ class ProtocolTestCase(RootTestCase, ProtocolTester):
             ]})
         self.api.validate_response(a_name, {'status': 'ok', 'total': 2,
             'tariff_contexts': [
-                {'id': 1, 'name': 't0', 'tariff_id': 3, 'viewing_order': 3,
+                {'id': 1, 'name': 't0', 'tariff_id': 3, 'view_order': 3,
                 'context': [
                     {'name': 'n', 'value': 'v'},
                     {'name': 'm', 'value': 1},
                 ]},
-                {'id': 1, 'name': 't0', 'tariff_id': 3, 'viewing_order': 4,
+                {'id': 1, 'name': 't0', 'tariff_id': 3, 'view_order': 4,
                 'context': [
                     {'name': 'n', 'value': 'v'},
                     {'name': 'm', 'value': 1},

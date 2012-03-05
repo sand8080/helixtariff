@@ -163,7 +163,7 @@ GET_TARIFF_VIEWING_CONTEXTS_REQUEST = dict(
             Optional('ids'): [ID],
         },
         'paging_params': REQUEST_PAGING_PARAMS,
-        Optional('ordering_params'): [AnyOf('id', '-id', 'viewing_order', '-viewing_order')]
+        Optional('ordering_params'): [AnyOf('view_order', '-view_order')]
     },
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
@@ -172,7 +172,7 @@ TARIFF_CONTEXT_INFO = {
     'id': ID,
     'tariff_id': ID,
     'name': NULLABLE_TEXT,
-    'viewing_order': NON_NEGATIVE_INT,
+    'view_order': NON_NEGATIVE_INT,
     'context': [VIEW_TARIFF_CONTEXT_PARAM],
 }
 
