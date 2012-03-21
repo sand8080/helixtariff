@@ -475,8 +475,8 @@ protocol = [
     ApiCall('get_tariff_viewing_contexts_request', Scheme(GET_TARIFF_VIEWING_CONTEXTS_REQUEST)),
     ApiCall('get_tariff_viewing_contexts_response', Scheme(GET_TARIFF_VIEWING_CONTEXTS_RESPONSE)),
 
-    ApiCall('modify_viewing_tariff_context_request', Scheme(MODIFY_VIEWING_TARIFF_CONTEXT_REQUEST)),
-    ApiCall('modify_viewing_tariff_context_response', Scheme(MODIFY_VIEWING_TARIFF_CONTEXT_RESPONSE)),
+    ApiCall('modify_tariff_viewing_context_request', Scheme(MODIFY_VIEWING_TARIFF_CONTEXT_REQUEST)),
+    ApiCall('modify_tariff_viewing_context_response', Scheme(MODIFY_VIEWING_TARIFF_CONTEXT_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),

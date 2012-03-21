@@ -20,7 +20,8 @@ from helixtariff.error import (HelixtariffObjectAlreadyExists,
     TariffUsed, RuleAlreadyExsits, RuleNotFound, RuleCheckingError,
     PriceNotFound, RuleProcessingError, UserTariffNotFound,
     TarifficationObjectAlreadyExsits, ParentTariffWithoutCurrency,
-    NonParentTariffWithCurrency, UserTariffAlreadyExsits)
+    NonParentTariffWithCurrency, UserTariffAlreadyExsits,
+    TariffViewingContextNotFound)
 from helixtariff.db.filters import (TarifficationObjectFilter, ActionLogFilter,
     TariffFilter, RuleFilter, UserTariffFilter, TariffViewingContextFilter)
 from helixtariff.rulesengine.checker import RuleChecker
@@ -220,24 +221,8 @@ class Handler(AbstractHandler):
 
     @transaction()
     @authenticate
-    def get_tariff_viewing_contexts(self, data, session, curs=None):
-        ordering_params = data.get('ordering_params', ['view_order'])
-        t_f = TariffViewingContextFilter(session, data['filter_params'],
-            data['paging_params'], ordering_params)
-        ts, total = t_f.filter_counted(curs)
-
-        def viewer(t_v_ctx):
-            res = t_v_ctx.to_dict()
-            res = mapping.objects.deserialize_field(res, 'serialized_context', 'context')
-            res['context'] = self._expand_context(res['context'])
-            res.pop('environment_id')
-            return res
-        return response_ok(tariff_contexts=self.objects_info(ts, viewer), total=total)
-
-    @transaction()
-    @authenticate
     @detalize_error(HelixtariffObjectAlreadyExists, 'new_name')
-    @detalize_error(TarifficationObjectNotFound, 'id')
+    @detalize_error(TariffNotFound, 'id')
     @detalize_error(TariffCycleDetected, 'new_parent_name')
     @detalize_error(ParentTariffWithoutCurrency, ['new_parent_tariff_id', 'new_currency'])
     @detalize_error(NonParentTariffWithCurrency, ['new_currency'])
@@ -322,6 +307,43 @@ class Handler(AbstractHandler):
         t_v_ctx = TariffViewingContext(**t_v_data)
         mapping.insert(curs, t_v_ctx)
         return response_ok(id=t_v_ctx.id)
+
+    @transaction()
+    @authenticate
+    def get_tariff_viewing_contexts(self, data, session, curs=None):
+        ordering_params = data.get('ordering_params', ['view_order'])
+        t_f = TariffViewingContextFilter(session, data['filter_params'],
+            data['paging_params'], ordering_params)
+        ts, total = t_f.filter_counted(curs)
+
+        def viewer(t_v_ctx):
+            res = t_v_ctx.to_dict()
+            res = mapping.objects.deserialize_field(res, 'serialized_context', 'context')
+            res['context'] = self._expand_context(res['context'])
+            res.pop('environment_id')
+            return res
+        return response_ok(tariff_contexts=self.objects_info(ts, viewer), total=total)
+
+    @transaction()
+    @authenticate
+    @detalize_error(TariffViewingContextNotFound, 'id')
+    @detalize_error(TariffNotFound, 'new_tariff_id')
+    def modify_tariff_viewing_context(self, data, session, curs=None):
+        f = TariffViewingContextFilter(session, {'id': data.get('id')}, {}, None)
+        loader = partial(f.filter_one_obj, curs, for_update=True)
+
+        if 'new_tariff_id' in data:
+            t_id = data.get('new_tariff_id')
+            t_f = TariffFilter(session, {'id': t_id}, {}, None)
+            t_f.filter_one_obj(curs)
+
+        if 'new_context' in data:
+            data['new_context'] = self._collapse_context(data['new_context'])
+            data = mapping.objects.serialize_field(data, 'new_context',
+                'new_serialized_context')
+
+        self.update_obj(curs, data, loader)
+        return response_ok()
 
     @transaction()
     @authenticate
