@@ -6,13 +6,22 @@ from helixcore.error import RequestProcessingError
 
 
 class TariffViewingContextCase(ActorLogicTestCase):
-#    def test_add_tariff_viewing_context(self):
-#        t_id = self._add_tariff('t', currency='RUB')
-#        t_v_name = 'first'
-#        context = [{'name': 'num', 'value': 4}, {'name': 'param', 'value': 'like'}]
-#        view_order = 1
-#        t_v_id = self._add_tariff_viewing_context(t_v_name,
-#            t_id, context, view_order=view_order)
+    def test_add_tariff_viewing_context(self):
+        t_id = self._add_tariff('t', currency='RUB')
+        t_v_name = 'first'
+        context = [{'name': 'num', 'value': 4}, {'name': 'param', 'value': 'like'}]
+        view_order = 1
+        t_v_id = self._add_tariff_viewing_context(t_v_name,
+            t_id, context, view_order=view_order)
+        t_v_ctxs = self._tariff_viewing_contexts_data(t_id)
+        self.assertEquals(1, len(t_v_ctxs))
+
+        t_v_ctx = t_v_ctxs[0]
+        self.assertEquals(t_id, t_v_ctx['tariff_id'])
+        self.assertEquals(t_v_id, t_v_ctx['id'])
+        self.assertEquals(t_v_name, t_v_ctx['name'])
+        self.assertEquals(view_order, t_v_ctx['view_order'])
+        self.assertEquals(context, t_v_ctx['context'])
 
     def test_get_tariff_viewing_contexts(self):
         t_id = self._add_tariff('t', currency='RUB')
