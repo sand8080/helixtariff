@@ -187,7 +187,7 @@ GET_TARIFF_VIEWING_CONTEXTS_RESPONSE = AnyOf(
     RESPONSE_STATUS_ERROR
 )
 
-MODIFY_VIEWING_TARIFF_CONTEXT_REQUEST = dict(
+MODIFY_TARIFF_VIEWING_CONTEXT_REQUEST = dict(
     {
         'id': int,
         Optional('new_tariff_id'): ID,
@@ -198,7 +198,14 @@ MODIFY_VIEWING_TARIFF_CONTEXT_REQUEST = dict(
     **AUTHORIZED_REQUEST_AUTH_INFO
 )
 
-MODIFY_VIEWING_TARIFF_CONTEXT_RESPONSE = RESPONSE_STATUS_ONLY
+MODIFY_TARIFF_VIEWING_CONTEXT_RESPONSE = RESPONSE_STATUS_ONLY
+
+DELETE_TARIFF_VIEWING_CONTEXT_REQUEST = dict(
+    {'id': int},
+    **AUTHORIZED_REQUEST_AUTH_INFO
+)
+
+DELETE_TARIFF_VIEWING_CONTEXT_RESPONSE = RESPONSE_STATUS_ONLY
 
 SAVE_RULE_REQUEST = dict(
     {
@@ -475,8 +482,11 @@ protocol = [
     ApiCall('get_tariff_viewing_contexts_request', Scheme(GET_TARIFF_VIEWING_CONTEXTS_REQUEST)),
     ApiCall('get_tariff_viewing_contexts_response', Scheme(GET_TARIFF_VIEWING_CONTEXTS_RESPONSE)),
 
-    ApiCall('modify_tariff_viewing_context_request', Scheme(MODIFY_VIEWING_TARIFF_CONTEXT_REQUEST)),
-    ApiCall('modify_tariff_viewing_context_response', Scheme(MODIFY_VIEWING_TARIFF_CONTEXT_RESPONSE)),
+    ApiCall('modify_tariff_viewing_context_request', Scheme(MODIFY_TARIFF_VIEWING_CONTEXT_REQUEST)),
+    ApiCall('modify_tariff_viewing_context_response', Scheme(MODIFY_TARIFF_VIEWING_CONTEXT_RESPONSE)),
+
+    ApiCall('delete_tariff_viewing_context_request', Scheme(DELETE_TARIFF_VIEWING_CONTEXT_REQUEST)),
+    ApiCall('delete_tariff_viewing_context_response', Scheme(DELETE_TARIFF_VIEWING_CONTEXT_RESPONSE)),
 
     # action log
     ApiCall('get_action_logs_request', Scheme(GET_ACTION_LOGS_REQUEST)),
