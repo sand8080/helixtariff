@@ -124,6 +124,25 @@ class TariffViewingContextCase(ActorLogicTestCase):
         self.assertEquals(new_view_order, t_v_ctx['view_order'])
         self.assertEquals(new_context, t_v_ctx['context'])
 
+    def test_delete_tariff_viewing_context_not_found(self):
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'id': 1000}
+        self.assertRaises(RequestProcessingError, self.delete_tariff_viewing_context,
+            **req)
+
+    def test_delete_tariff_viewing_context(self):
+        t_id = self._add_tariff('t', currency='RUB')
+        t_v_id = self._add_tariff_viewing_context('n', t_id, [])
+        t_v_ctxs_before = self._tariff_viewing_contexts_data(t_id)
+
+        sess = self.login_actor()
+        req = {'session_id': sess.session_id, 'id': t_v_id}
+        resp = self.delete_tariff_viewing_context(**req)
+        self.check_response_ok(resp)
+
+        t_v_ctxs_after = self._tariff_viewing_contexts_data(t_id)
+        self.assertEquals(len(t_v_ctxs_before) - 1, len(t_v_ctxs_after))
+
 
 if __name__ == '__main__':
     unittest.main()

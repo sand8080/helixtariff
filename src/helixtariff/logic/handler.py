@@ -347,6 +347,15 @@ class Handler(AbstractHandler):
 
     @transaction()
     @authenticate
+    @detalize_error(TariffViewingContextNotFound, 'id')
+    def delete_tariff_viewing_context(self, data, session, curs=None):
+        f = TariffViewingContextFilter(session, {'id': data['id']}, {}, None)
+        mapping.delete(curs, f.filter_one_obj(curs))
+        return response_ok()
+
+
+    @transaction()
+    @authenticate
     @detalize_error(RuleAlreadyExsits, ['tariff_id', 'tariffication_object_id'])
     @detalize_error(RuleNotFound, 'id')
     @detalize_error(TariffNotFound, 'tariff_id')
