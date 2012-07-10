@@ -353,7 +353,6 @@ class Handler(AbstractHandler):
         mapping.delete(curs, f.filter_one_obj(curs))
         return response_ok()
 
-
     @transaction()
     @authenticate
     @detalize_error(RuleAlreadyExsits, ['tariff_id', 'tariffication_object_id'])
